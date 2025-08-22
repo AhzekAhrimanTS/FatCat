@@ -15,12 +15,10 @@
           crossorigin=""></script>
 
   <style>
-    :root {
-      --bg:#0f1115; --bg-elev:#161a22; --fg:#d7dce2; --muted:#9aa3ad;
-      --accent:#7aa2f7; --danger:#ef5350; --cat:#f1a33c; --border:#232839;
-    }
+    :root { --bg:#0f1115; --bg-elev:#161a22; --fg:#d7dce2; --muted:#9aa3ad;
+      --accent:#7aa2f7; --danger:#ef5350; --cat:#f1a33c; --border:#232839; }
     html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Tenorite,Arial,sans-serif;}
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;}
     #app{display:grid;grid-template-columns:360px 1fr;grid-template-rows:100vh}
     #sidebar{background:var(--bg-elev);border-right:1px solid var(--border);display:flex;flex-direction:column;min-width:320px}
     .brand{padding:14px 16px;color:var(--muted);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
@@ -32,6 +30,7 @@
     button:hover,label.btn:hover{border-color:#2d3652}
     button.primary{background:#1a2744;border-color:#243154}
     button.danger{border-color:#4a2626;background:#2b1414;color:#ffb3b3}
+    button[disabled]{opacity:.6;cursor:not-allowed}
     #locationList{list-style:none;padding:0;margin:0;overflow:auto;flex:1}
     .loc{border-bottom:1px solid var(--border);padding:10px 12px;display:grid;grid-template-columns:1fr auto;gap:4px 8px;align-items:center}
     .loc .title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -48,12 +47,9 @@
     #gate .card{width:min(520px,92%);background:var(--bg-elev);border:1px solid var(--border);border-radius:12px;padding:18px}
     #gate h2{margin:0 0 6px 0}
     #gate .muted{color:var(--muted);font-size:14px;margin-bottom:12px}
-    .input{width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:#111521;color:var(--fg)}
     .stack{display:grid;gap:8px}
-    .sep{height:1px;background:var(--border);margin:10px 0}
     .error{color:#ff9a9a;font-size:13px;min-height:18px}
     .ok{color:#b2f5d6}
-
     body.auth #gate{display:none}
     body:not(.auth) #app{filter:blur(4px);pointer-events:none;user-select:none}
 
@@ -64,7 +60,7 @@
     .modal h3{margin:0 0 10px 0}
     .modal .f{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
     .modal .f label{font-size:13px;color:var(--muted);margin-bottom:6px;display:block}
-    .modal input[type="text"], .modal textarea{width:100%;background:#111521;border:1px solid var(--border);color:var(--fg);padding:10px;border-radius:8px;outline:none;resize:vertical}
+    .modal input[type="text"], .modal textarea{width:100%;background:#111521;border:1px solid var(--border);color:#fff;padding:10px;border-radius:8px;outline:none;resize:vertical}
     .modal textarea{min-height:80px;grid-column:1/-1}
     .type-group{display:flex;gap:12px;align-items:center}
     .type-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:#101522}
@@ -73,7 +69,7 @@
     .photo-prev{grid-column:1/-1;width:100%;max-height:220px;object-fit:cover;border-radius:10px;display:none}
     .mini-note{grid-column:1/-1;color:var(--muted);font-size:12px}
 
-    /* Marker with optional image */
+    /* Marker */
     .pin-icon{background:transparent!important;border:0!important}
     .pin{position:relative;width:46px;height:60px;pointer-events:auto}
     .pin .bubble{width:46px;height:46px;border-radius:50%;overflow:hidden;background:#0f1422;display:flex;align-items:center;justify-content:center;border:2px solid #4a5a88;box-shadow:0 8px 18px rgba(0,0,0,.45)}
@@ -82,7 +78,7 @@
     .pin .stem{position:absolute;left:50%;bottom:4px;transform:translateX(-50%);width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-top:14px solid #4a5a88;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
     .pin.cat .bubble{border-color:var(--cat)} .pin.cat .stem{border-top-color:var(--cat)}
     .pin.danger .bubble{border-color:var(--danger)} .pin.danger .stem{border-top-color:var(--danger)}
-    .leaflet-tooltip.pin-tooltip{background:rgba(12,16,26,.96);color:var(--fg);border:1px solid var(--border);border-radius:10px;box-shadow:0 10px 25px rgba(0,0,0,.35)}
+    .leaflet-tooltip.pin-tooltip{background:rgba(12,16,26,.96);color:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 10px 25px rgba(0,0,0,.35)}
     .tt-title{margin-bottom:4px}.tt-meta{color:var(--muted);font-size:12px;margin-bottom:4px}.tt-desc{font-size:13px;max-width:260px;white-space:normal}
 
     @media(max-width:960px){#app{grid-template-columns:1fr;grid-template-rows:45vh 55vh}#sidebar{order:2}#map{order:1}}
@@ -94,16 +90,9 @@
   <div id="gate">
     <div class="card">
       <h2>KAUST Pins</h2>
-      <div class="muted">Sign up with email. You’ll see pins only after approval.</div>
+      <div class="muted">Sign in with Google to view and drop pins. <b>Only @gmail.com</b> accounts are allowed.</div>
       <div class="stack">
-        <input id="email" class="input" type="email" placeholder="you@example.com" />
-<!--         <input id="uname" class="input" type="text" placeholder="username (3–20 letters/numbers . _ -)" /> -->
-        <input id="pass"  class="input" type="password" placeholder="Password (min 6)" />
-        <div class="row" style="display:flex;gap:8px;justify-content:space-between">
-          <button id="emailSignin">Sign in</button>
-          <button id="emailSignup" class="primary">Request access</button>
-          <button id="resetBtn" style="margin-left:auto">Forgot password?</button>
-        </div>
+        <button id="googleBtn" class="primary">Continue with Google</button>
         <div id="gateInfo" class="ok"></div>
         <div id="gateError" class="error"></div>
       </div>
@@ -118,12 +107,6 @@
           <span id="whoami" class="who"></span>
           <button id="logoutBtn" style="margin-left:8px">Sign out</button>
         </div>
-      </div>
-
-      <!-- Admin panel -->
-      <div id="adminPanel" style="display:none;border-bottom:1px solid var(--border);padding:12px">
-        <div style="margin-bottom:8px;color:var(--muted)">Registration requests</div>
-        <div id="reqList" style="display:grid;gap:8px"></div>
       </div>
 
       <div class="controls">
@@ -192,15 +175,14 @@
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js';
     import {
       getAuth, onAuthStateChanged, signOut,
-      createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail
+      GoogleAuthProvider, signInWithRedirect, getRedirectResult
     } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
     import {
       getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc,
-      onSnapshot, query, orderBy, where, writeBatch, serverTimestamp
+      onSnapshot, query, orderBy, writeBatch, serverTimestamp
     } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
 
-    // Paste your Firebase config here (from Console → Project settings → Your apps → Web app → CDN)
-  // Your web app's Firebase configuration
+    // ==== Your Firebase config (from Console → Project settings → Web app → CDN) ====
     const firebaseConfig = {
       apiKey: "AIzaSyCVxRVywtfJIV6G55r1se3BoYVjtHxWDFM",
       authDomain: "fat-fat-cat.firebaseapp.com",
@@ -209,11 +191,13 @@
       messagingSenderId: "409243971382",
       appId: "1:409243971382:web:646a6858479a9740d04d97"
     };
-  
+    // ================================================================================
 
     const appFB = initializeApp(firebaseConfig);
     const auth = getAuth(appFB);
     const db = getFirestore(appFB);
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' }); // let user pick account
 
     // Constants / helpers
     const ADMIN_EMAIL = 'lenatif09@gmail.com';
@@ -225,14 +209,13 @@
     const typeName=(t)=>t===TYPE_DANGER?'Danger':'Lost Cat';
     const typeClass=(t)=>t===TYPE_DANGER?'danger':'cat';
     const escapeHtml=(s)=>String(s).replace(/[&<>"']/g,(m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+    const isGmailLocal = (email) => /@(gmail|googlemail)\.com$/i.test(email || '');
 
     // DOM
     const $ = (id)=>document.getElementById(id);
     const whoami=$('whoami'), logoutBtn=$('logoutBtn');
     const gate=$('gate'), gateError=$('gateError'), gateInfo=$('gateInfo');
-    const emailInput=$('email'), passInput=$('pass'), unameInput=$('uname');
-    const emailSignin=$('emailSignin'), emailSignup=$('emailSignup'), resetBtn=$('resetBtn');
-    const adminPanel=$('adminPanel'), reqList=$('reqList');
+    const googleBtn=$('googleBtn');
     const listEl=$('locationList'), toggleAddBtn=$('toggleAddBtn'), locateBtn=$('locateBtn');
     const searchInput=$('searchInput'), searchBtn=$('searchBtn'), pinHint=$('pinHint');
     const modalBackdrop=$('modalBackdrop'), modalTitle=$('modalTitle'),
@@ -268,119 +251,53 @@
         { enableHighAccuracy:true, timeout:10000, maximumAge:60000 });
     };
 
-    // App state
+    // App state + “Saving…” guard (prevents double submits)
     const state = { adding:false, markers:new Map(), locations:[], draftLatLng:null, draftPhoto:null, editingId:null, saving:false, pendingPinId:null };
     function setAddMode(on){ state.adding=!!on; toggleAddBtn.textContent=`Drop pin mode: ${state.adding?'on':'off'}`; pinHint.style.display = state.adding ? 'block' : 'none'; }
-    // Helper to toggle the modal's controls during save:
     function setSaving(on) {
       state.saving = !!on;
-      saveBtn.disabled = on;
-      cancelBtn.disabled = on;
-      photoInput.disabled = on;
+      saveBtn.disabled = on; cancelBtn.disabled = on; photoInput.disabled = on;
       document.querySelectorAll('input[name="pinType"]').forEach(r => r.disabled = on);
-      titleInput.readOnly = on;
-      descInput.readOnly = on;
-      if (on) {
-        saveBtn.dataset._old = saveBtn.textContent;
-        saveBtn.textContent = 'Saving…';
-      } else {
-        saveBtn.textContent = saveBtn.dataset._old || 'Save';
-      }
+      titleInput.readOnly = on; descInput.readOnly = on;
+      if (on) { saveBtn.dataset._old = saveBtn.textContent; saveBtn.textContent = 'Saving…'; }
+      else { saveBtn.textContent = saveBtn.dataset._old || 'Save'; }
     }
 
     toggleAddBtn.onclick = ()=> setAddMode(!state.adding);
     map.on('click',(e)=>{ if(state.adding) openCreateModal(e.latlng); });
 
-    // Auth
-    // emailSignup.onclick = async () => {
-    //   gateError.textContent=''; gateInfo.textContent='';
-    //   const email=emailInput.value.trim(), pass=passInput.value, uname=(unameInput.value||'').trim();
-    //   const unameLC = uname.toLowerCase();
-    //   if(!email || (pass||'').length<6){ gateError.textContent='Enter email and a 6+ char password.'; return; }
-    //   if(!/^[a-z0-9._-]{3,20}$/.test(unameLC)){ gateError.textContent='Username must be 3–20 chars: a–z, 0–9, dot, underscore, hyphen.'; return; }
-    //   try{
-    //     const cred = await createUserWithEmailAndPassword(auth,email,pass);
-    //     const u = cred.user;
-    //     const batch = writeBatch(db);
-    //     const userRef = doc(db,'users',u.uid);
-    //     const regRef  = doc(db,'usernames',unameLC);
-    //     batch.set(userRef,{ email:u.email, approved:false, username:uname, username_lc:unameLC, createdAt:serverTimestamp() });
-    //     batch.set(regRef,{ uid:u.uid, createdAt:serverTimestamp() });
-    //     await batch.commit();
-    //     gateInfo.textContent='Request submitted. You’ll get access after approval.';
-    //     await signOut(auth);
-    //   }catch{ gateError.textContent='Sign-up failed (username taken or rules not published).'; }
-    // };
-    emailSignup.onclick = async () => {
-      gateError.textContent = ''; gateInfo.textContent = '';
-    
-      const email = emailInput.value.trim();
-      const pass  = passInput.value;
-    
-      if (!email || (pass || '').length < 6) {
-        gateError.textContent = 'Enter email and a 6+ char password.';
-        return;
-      }
-    
-      try {
-        const cred = await createUserWithEmailAndPassword(auth, email, pass);
-        const u = cred.user;
-    
-        // Create user profile (no username fields)
-        await setDoc(doc(db, 'users', u.uid), {
-          email: u.email,
-          approved: true,                 // auto-approve; set to false if you want manual review
-          createdAt: serverTimestamp()
-        });
-    
-        gateInfo.textContent = 'Account created. Loading…';
-        // (Do NOT sign out; onAuthStateChanged will load the app)
-      } catch (e) {
-        console.error(e);
-        gateError.textContent = 'Sign-up failed.';
-      }
-    };
-
-
-    emailSignin.onclick = async ()=>{
+    // Google sign-in
+    googleBtn.onclick = () => {
       gateError.textContent=''; gateInfo.textContent='';
-      const email=emailInput.value.trim(), pass=passInput.value;
-      if(!email||!pass){ gateError.textContent='Enter email and password.'; return; }
-      try{ await signInWithEmailAndPassword(auth,email,pass); }
-      catch{ gateError.textContent='Sign-in failed. Check email/password.'; }
+      signInWithRedirect(auth, provider);
     };
-    resetBtn.onclick = async ()=>{
-      gateError.textContent=''; gateInfo.textContent='';
-      const email=emailInput.value.trim(); if(!email){ gateError.textContent='Enter your email first.'; return; }
-      try{ await sendPasswordResetEmail(auth,email); gateInfo.textContent='Reset link sent (check inbox and spam folder).'; }
-      catch{ gateError.textContent='Could not send reset email.'; }
-    };
+    getRedirectResult(auth).catch(err=>{
+      console.error('Google sign-in error', err); gateError.textContent = 'Google sign-in failed.';
+    });
     logoutBtn.onclick = ()=> signOut(auth);
 
-    let unsubPins=null, unsubReq=null;
+    // Auth state
     onAuthStateChanged(auth, async (user)=>{
-      if(!user){ document.body.classList.remove('auth'); whoami.textContent=''; stopFeeds(); return; }
+      if(!user){ document.body.classList.remove('auth'); whoami.textContent=''; stopPinsFeed(); return; }
+      // Enforce Gmail-only (also enforced in rules)
+      if(!isGmailLocal(user.email)){ alert('Only @gmail.com accounts are allowed.'); await signOut(auth); return; }
+
       document.body.classList.add('auth');
       const isAdmin = (user.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase();
       whoami.textContent = `${user.email}${isAdmin?' • admin':''}`;
 
-      // Ensure profile doc exists (if user signed up elsewhere)
+      // Ensure profile doc exists (auto-approve)
       const uref = doc(db,'users',user.uid);
       const udoc = await getDoc(uref);
       if(!udoc.exists()){
-        await setDoc(uref,{ email:user.email, approved:isAdmin?true:false, createdAt:serverTimestamp() });
+        await setDoc(uref,{ email:user.email, approved:true, createdAt:serverTimestamp() });
       }
 
-      if(isAdmin){ startPendingRequests(); } else { stopPendingRequests(); }
-
-      // Gate by approval (admin treated as approved)
-      // const approved = isAdmin ? true : ((await getDoc(uref)).data()?.approved===true);
-      // if(approved){ startPinsFeed(); } else { stopPinsFeed(); alert('Your account is pending approval.'); signOut(auth); }
       startPinsFeed();
     });
 
-    function stopFeeds(){ stopPinsFeed(); stopPendingRequests(); }
     function stopPinsFeed(){ if(unsubPins){unsubPins();unsubPins=null;} clearMarkers(); }
+    let unsubPins=null;
     function startPinsFeed(){
       if(unsubPins) return;
       const qPins = query(collection(db,'pins'), orderBy('createdAt','desc'));
@@ -396,34 +313,9 @@
       });
     }
 
-    function startPendingRequests(){
-      adminPanel.style.display='block';
-      if(unsubReq) return;
-      const qReq = query(collection(db,'users'), where('approved','==',false), orderBy('createdAt','asc'));
-      unsubReq = onSnapshot(qReq,(snap)=>{
-        reqList.innerHTML='';
-        if(snap.empty){ reqList.innerHTML='<div style="color:var(--muted)">No pending requests.</div>'; return; }
-        snap.forEach(docu=>{
-          const u=docu.data();
-          const row=document.createElement('div'); row.style.display='grid'; row.style.gridTemplateColumns='1fr auto'; row.style.gap='8px';
-          const left=document.createElement('div'); left.innerHTML=`<div>${escapeHtml(u.email||'')}</div><div class="who">uid: ${docu.id} ${u.username?('• '+escapeHtml(u.username)) : ''}</div>`;
-          const right=document.createElement('div');
-          const approveBtn=document.createElement('button'); approveBtn.textContent='Approve';
-          approveBtn.onclick = async ()=>{ try{ await updateDoc(doc(db,'users',docu.id), { approved:true }); } catch{ alert('Approve failed.'); } };
-          right.appendChild(approveBtn);
-          row.appendChild(left); row.appendChild(right); reqList.appendChild(row);
-        });
-      });
-    }
-    function stopPendingRequests(){ if(unsubReq){unsubReq();unsubReq=null;} adminPanel.style.display='none'; reqList.innerHTML=''; }
-
     // Local pin cache + rendering
     function clearMarkers(){ for(const id of Array.from(state.markers.keys())) removeMarker(id); state.locations=[]; renderList(); }
-    function upsertLocalPin(p){
-      const idx=state.locations.findIndex(x=>x.id===p.id);
-      if(idx===-1) state.locations.push(p); else state.locations[idx]=p;
-      upsertMarker(p);
-    }
+    function upsertLocalPin(p){ const idx=state.locations.findIndex(x=>x.id===p.id); if(idx===-1) state.locations.push(p); else state.locations[idx]=p; upsertMarker(p); }
 
     function markerPopupHtml(loc, mineOrAdmin){
       const img=loc.photo?`<img class="popup-img" src="${loc.photo}" alt="">`:''; 
@@ -507,16 +399,13 @@
       else { photoPreview.removeAttribute('src'); photoPreview.style.display='none'; removePhotoBtn.style.display='none'; photoInput.value=''; }
     }
     function openCreateModal(latlng){
-      // state.editingId=null; state.draftLatLng=latlng; setPhotoPreview(null);
       state.editingId = null;
       state.draftLatLng = latlng;
-      state.pendingPinId = (self.crypto?.randomUUID?.() 
-      ? self.crypto.randomUUID() 
-      : (Date.now().toString(36)+Math.random().toString(36).slice(2))); // fallback
+      state.pendingPinId = (self.crypto?.randomUUID?.() ? self.crypto.randomUUID() : (Date.now().toString(36)+Math.random().toString(36).slice(2)));
       setPhotoPreview(null);
       setSaving(false);
       modalTitle.textContent='New location';
-      modalTitle.textContent='New location'; titleInput.value=''; descInput.value=''; coordsInput.value=`${fmt(latlng.lat)}, ${fmt(latlng.lng)}`;
+      titleInput.value=''; descInput.value=''; coordsInput.value=`${fmt(latlng.lat)}, ${fmt(latlng.lng)}`;
       document.querySelector('input[name="pinType"][value="lostcat"]').checked=true;
       modalBackdrop.hidden=false; setTimeout(()=>titleInput.focus(),0);
     }
@@ -551,7 +440,7 @@
       });
     }
 
-    // Create / Update / Delete with slot enforcement
+    // Quota helpers
     async function pickFreeSlot(uid, type){
       const slotCol = collection(db, `users/${uid}/quota/${type}/slots`);
       const snap = await getDocs(slotCol);
@@ -560,16 +449,13 @@
       return null;
     }
 
-    async function createPin({title,description,type,lat,lng,photo}){
+    // Create / Update / Delete
+    async function createPin({id, title,description,type,lat,lng,photo}){
       const user=auth.currentUser; if(!user) return;
       const uid=user.uid; const email=user.email||'';
       const isAdmin=(email.toLowerCase()===ADMIN_EMAIL.toLowerCase());
-      // get username
-      const profileSnap = await getDoc(doc(db,'users',uid));
-      const profile = profileSnap.data() || {};
-      const ownerUsername = profile.username || null;
 
-      const pinId = doc(collection(db,'pins')).id;
+      const pinId = id || doc(collection(db,'pins')).id;
       let slot = null;
       if(!isAdmin){
         slot = await pickFreeSlot(uid, type);
@@ -578,7 +464,7 @@
       const batch = writeBatch(db);
       batch.set(doc(db,'pins',pinId), {
         title, description, type, lat, lng, photo: photo||null,
-        ownerUid: uid, ownerEmail: email, ownerUsername,
+        ownerUid: uid, ownerEmail: email, ownerUsername: null,
         createdAt: serverTimestamp(),
         slot: slot || null
       });
@@ -612,8 +498,10 @@
       await batch.commit();
     }
 
-    // Save button
+    // Save button (idempotent + UI lock)
     saveBtn.onclick = async ()=>{
+      if (state.saving) return;
+      setSaving(true);
       const title=titleInput.value.trim()||'(untitled)';
       const description=descInput.value.trim();
       if(!state.draftLatLng){ closeModal(); return; }
@@ -623,10 +511,13 @@
         if(state.editingId){
           await updatePin(state.editingId, { title, description, lat:state.draftLatLng.lat, lng:state.draftLatLng.lng, photo:state.draftPhoto, type: isAdmin?type:undefined });
         } else {
-          await createPin({ title, description, type, lat:state.draftLatLng.lat, lng:state.draftLatLng.lng, photo:state.draftPhoto });
+          await createPin({ id: state.pendingPinId, title, description, type, lat:state.draftLatLng.lat, lng:state.draftLatLng.lng, photo:state.draftPhoto });
         }
         closeModal();
-      }catch(e){ alert(e?.message || 'Save failed (quota? rules?).'); }
+      }catch(e){
+        alert(e?.message || 'Save failed (quota? rules?).');
+        setSaving(false);
+      }
     };
   </script>
 </body>

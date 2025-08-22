@@ -304,7 +304,7 @@
     resetBtn.onclick = async ()=>{
       gateError.textContent=''; gateInfo.textContent='';
       const email=emailInput.value.trim(); if(!email){ gateError.textContent='Enter your email first.'; return; }
-      try{ await sendPasswordResetEmail(auth,email); gateInfo.textContent='Reset link sent (check inbox).'; }
+      try{ await sendPasswordResetEmail(auth,email); gateInfo.textContent='Reset link sent (check inbox and spam folder).'; }
       catch{ gateError.textContent='Could not send reset email.'; }
     };
     logoutBtn.onclick = ()=> signOut(auth);

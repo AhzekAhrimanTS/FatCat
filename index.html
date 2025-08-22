@@ -269,8 +269,25 @@
     };
 
     // App state
-    const state = { adding:false, markers:new Map(), locations:[], draftLatLng:null, draftPhoto:null, editingId:null };
+    const state = { adding:false, markers:new Map(), locations:[], draftLatLng:null, draftPhoto:null, editingId:null, saving:false, pendingPinId:null };
     function setAddMode(on){ state.adding=!!on; toggleAddBtn.textContent=`Drop pin mode: ${state.adding?'on':'off'}`; pinHint.style.display = state.adding ? 'block' : 'none'; }
+    // Helper to toggle the modal's controls during save:
+    function setSaving(on) {
+      state.saving = !!on;
+      saveBtn.disabled = on;
+      cancelBtn.disabled = on;
+      photoInput.disabled = on;
+      document.querySelectorAll('input[name="pinType"]').forEach(r => r.disabled = on);
+      titleInput.readOnly = on;
+      descInput.readOnly = on;
+      if (on) {
+        saveBtn.dataset._old = saveBtn.textContent;
+        saveBtn.textContent = 'Saving…';
+      } else {
+        saveBtn.textContent = saveBtn.dataset._old || 'Save';
+      }
+    }
+
     toggleAddBtn.onclick = ()=> setAddMode(!state.adding);
     map.on('click',(e)=>{ if(state.adding) openCreateModal(e.latlng); });
 
@@ -495,7 +512,15 @@
       else { photoPreview.removeAttribute('src'); photoPreview.style.display='none'; removePhotoBtn.style.display='none'; photoInput.value=''; }
     }
     function openCreateModal(latlng){
-      state.editingId=null; state.draftLatLng=latlng; setPhotoPreview(null);
+      // state.editingId=null; state.draftLatLng=latlng; setPhotoPreview(null);
+      state.editingId = null;
+      state.draftLatLng = latlng;
+      state.pendingPinId = (self.crypto?.randomUUID?.() 
+      ? self.crypto.randomUUID() 
+      : (Date.now().toString(36)+Math.random().toString(36).slice(2))); // fallback
+      setPhotoPreview(null);
+      setSaving(false);
+      modalTitle.textContent='New location';
       modalTitle.textContent='New location'; titleInput.value=''; descInput.value=''; coordsInput.value=`${fmt(latlng.lat)}, ${fmt(latlng.lng)}`;
       document.querySelector('input[name="pinType"][value="lostcat"]').checked=true;
       modalBackdrop.hidden=false; setTimeout(()=>titleInput.focus(),0);
@@ -510,7 +535,7 @@
       document.querySelectorAll('input[name="pinType"]').forEach(r=>{ r.disabled = !isAdmin; }); // non-admin cannot change type
       modalBackdrop.hidden=false; setTimeout(()=>titleInput.focus(),0);
     }
-    function closeModal(){ modalBackdrop.hidden=true; state.editingId=null; state.draftLatLng=null; setPhotoPreview(null); document.querySelectorAll('input[name="pinType"]').forEach(r=>r.disabled=false); }
+    function closeModal(){ modalBackdrop.hidden=true; state.editingId=null; state.draftLatLng=null; state.pendingPinId=null; setSaving(false); setPhotoPreview(null); document.querySelectorAll('input[name="pinType"]').forEach(r=>r.disabled=false); }
     cancelBtn.onclick = closeModal;
     modalBackdrop.addEventListener('click',(e)=>{ if(e.target===modalBackdrop) closeModal(); });
 

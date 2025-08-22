@@ -2,17 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>LOST CATS</title>
+  <title>KAUST Pins</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Leaflet (no API key) -->
+  <!-- Leaflet -->
   <link rel="stylesheet"
         href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-        crossorigin="" />
+        crossorigin />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
           integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-          crossorigin=""></script>
+          crossorigin></script>
 
   <style>
     :root { --bg:#0f1115; --bg-elev:#161a22; --fg:#d7dce2; --muted:#9aa3ad;
@@ -90,7 +90,7 @@
   <div id="gate">
     <div class="card">
       <h2>KAUST Pins</h2>
-      <div class="muted">Sign in with Google to view and drop pins. <b>Only @gmail.com</b> accounts are allowed.</div>
+      <div class="muted">Sign in with Google to view and drop pins.</div>
       <div class="stack">
         <button id="googleBtn" class="primary">Continue with Google</button>
         <div id="gateInfo" class="ok"></div>
@@ -175,14 +175,15 @@
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js';
     import {
       getAuth, onAuthStateChanged, signOut,
-      GoogleAuthProvider, signInWithRedirect, getRedirectResult
+      GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
+      setPersistence, browserLocalPersistence
     } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
     import {
       getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc,
       onSnapshot, query, orderBy, writeBatch, serverTimestamp
     } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
 
-    // ==== Your Firebase config (from Console → Project settings → Web app → CDN) ====
+    // ==== Firebase config ====
     const firebaseConfig = {
       apiKey: "AIzaSyCVxRVywtfJIV6G55r1se3BoYVjtHxWDFM",
       authDomain: "fat-fat-cat.firebaseapp.com",
@@ -191,31 +192,25 @@
       messagingSenderId: "409243971382",
       appId: "1:409243971382:web:646a6858479a9740d04d97"
     };
-    // ================================================================================
 
+    // ====== App/Auth/DB ======
     const appFB = initializeApp(firebaseConfig);
     const auth = getAuth(appFB);
     const db = getFirestore(appFB);
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' }); // let user pick account
 
-    // Constants / helpers
+    // ====== Policy toggles ======
     const ADMIN_EMAIL = 'lenatif09@gmail.com';
-    const TYPE_LOSTCAT = 'lostcat', TYPE_DANGER = 'danger';
-    const SLOT_IDS = ['s1','s2','s3','s4','s5'];
-    const VIEW_KEY = 'pinboard.mapview.v3';
-    const fmt=(n)=>Number(n).toFixed(6);
-    const clampZoom=(z)=>Math.max(1,Math.min(19,z|0));
-    const typeName=(t)=>t===TYPE_DANGER?'Danger':'Lost Cat';
-    const typeClass=(t)=>t===TYPE_DANGER?'danger':'cat';
-    const escapeHtml=(s)=>String(s).replace(/[&<>"']/g,(m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
-    const isGmailLocal = (email) => /@(gmail|googlemail)\.com$/i.test(email || '');
+    // Allow BOTH Gmail and KAUST by default; to make Gmail-only, remove 'kaust.edu.sa'
+    const ALLOWED_DOMAINS = ['gmail.com','googlemail.com','kaust.edu.sa'];
+    const isAllowedEmail = (email) => {
+      const e = (email || '').toLowerCase();
+      return ALLOWED_DOMAINS.some(d => e.endsWith('@'+d));
+    };
 
-    // DOM
+    // ====== DOM ======
     const $ = (id)=>document.getElementById(id);
     const whoami=$('whoami'), logoutBtn=$('logoutBtn');
-    const gate=$('gate'), gateError=$('gateError'), gateInfo=$('gateInfo');
-    const googleBtn=$('googleBtn');
+    const gateError=$('gateError'), gateInfo=$('gateInfo'), googleBtn=$('googleBtn');
     const listEl=$('locationList'), toggleAddBtn=$('toggleAddBtn'), locateBtn=$('locateBtn');
     const searchInput=$('searchInput'), searchBtn=$('searchBtn'), pinHint=$('pinHint');
     const modalBackdrop=$('modalBackdrop'), modalTitle=$('modalTitle'),
@@ -223,13 +218,34 @@
           photoInput=$('photoInput'), photoPreview=$('photoPreview'), removePhotoBtn=$('removePhotoBtn'),
           cancelBtn=$('cancelBtn'), saveBtn=$('saveBtn');
 
-    // Map init (default KAUST)
+    // ====== Map (KAUST default) ======
+    const VIEW_KEY='pinboard.mapview.v3';
     const savedView = JSON.parse(localStorage.getItem(VIEW_KEY) || "null");
-    const map = L.map('map', { center: savedView ? [savedView.lat, savedView.lng] : [22.3088,39.1046], zoom: savedView ? clampZoom(savedView.zoom) : 15, worldCopyJump:true });
+    const map = L.map('map', { center: savedView ? [savedView.lat, savedView.lng] : [22.3088,39.1046], zoom: savedView ? Math.max(1,Math.min(19,savedView.zoom|0)) : 15, worldCopyJump:true });
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ maxZoom:19, attribution:'&copy; OpenStreetMap contributors' }).addTo(map);
-    map.on('moveend',()=>{ const c=map.getCenter(); const z=map.getZoom(); localStorage.setItem(VIEW_KEY, JSON.stringify({lat:c.lat,lng:c.lng,zoom:z})); });
+    map.on('moveend',()=>{ const c=map.getCenter(); localStorage.setItem(VIEW_KEY, JSON.stringify({lat:c.lat,lng:c.lng,zoom:map.getZoom()})); });
 
-    // Search & locate
+    // ====== Helpers ======
+    const TYPE_LOSTCAT='lostcat', TYPE_DANGER='danger';
+    const SLOT_IDS=['s1','s2','s3','s4','s5'];
+    const fmt=(n)=>Number(n).toFixed(6);
+    const typeName=(t)=>t===TYPE_DANGER?'Danger':'Lost Cat';
+    const typeClass=(t)=>t===TYPE_DANGER?'danger':'cat';
+    const escapeHtml=(s)=>String(s).replace(/[&<>"']/g,(m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+    function setAddMode(on){ state.adding=!!on; toggleAddBtn.textContent=`Drop pin mode: ${state.adding?'on':'off'}`; pinHint.style.display = state.adding ? 'block' : 'none'; }
+    function setSaving(on){
+      state.saving=!!on;
+      saveBtn.disabled=on; cancelBtn.disabled=on; photoInput.disabled=on;
+      document.querySelectorAll('input[name="pinType"]').forEach(r=>r.disabled=on);
+      titleInput.readOnly=on; descInput.readOnly=on;
+      if(on){ saveBtn.dataset._old=saveBtn.textContent; saveBtn.textContent='Saving…'; }
+      else { saveBtn.textContent=saveBtn.dataset._old||'Save'; }
+    }
+
+    // ====== State ======
+    const state={ adding:false, markers:new Map(), locations:[], draftLatLng:null, draftPhoto:null, editingId:null, saving:false, pendingPinId:null };
+
+    // ====== Search & Locate ======
     searchBtn.onclick = runSearch;
     searchInput.onkeydown = (e)=>{ if(e.key==='Enter') runSearch(); };
     async function runSearch(){
@@ -243,7 +259,7 @@
       }catch{ alert('Search error.'); }
       finally{ searchBtn.disabled=false; searchBtn.textContent='Search'; }
     }
-    locateBtn.onclick = ()=>{
+    locateBtn.onclick=()=>{
       if(!navigator.geolocation) return alert('Geolocation not supported.');
       locateBtn.disabled=true; locateBtn.textContent='Locating…';
       navigator.geolocation.getCurrentPosition((pos)=>{ map.flyTo([pos.coords.latitude,pos.coords.longitude],15,{duration:0.7}); locateBtn.disabled=false; locateBtn.textContent='Locate me'; },
@@ -251,50 +267,49 @@
         { enableHighAccuracy:true, timeout:10000, maximumAge:60000 });
     };
 
-    // App state + “Saving…” guard (prevents double submits)
-    const state = { adding:false, markers:new Map(), locations:[], draftLatLng:null, draftPhoto:null, editingId:null, saving:false, pendingPinId:null };
-    function setAddMode(on){ state.adding=!!on; toggleAddBtn.textContent=`Drop pin mode: ${state.adding?'on':'off'}`; pinHint.style.display = state.adding ? 'block' : 'none'; }
-    function setSaving(on) {
-      state.saving = !!on;
-      saveBtn.disabled = on; cancelBtn.disabled = on; photoInput.disabled = on;
-      document.querySelectorAll('input[name="pinType"]').forEach(r => r.disabled = on);
-      titleInput.readOnly = on; descInput.readOnly = on;
-      if (on) { saveBtn.dataset._old = saveBtn.textContent; saveBtn.textContent = 'Saving…'; }
-      else { saveBtn.textContent = saveBtn.dataset._old || 'Save'; }
-    }
+    // ====== Google Sign-in ======
+    const provider=new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt:'select_account' });
+    setPersistence(auth, browserLocalPersistence).catch(()=>{});
 
-    toggleAddBtn.onclick = ()=> setAddMode(!state.adding);
-    map.on('click',(e)=>{ if(state.adding) openCreateModal(e.latlng); });
-
-    // Google sign-in
-    googleBtn.onclick = () => {
+    const isMobile=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+    googleBtn.onclick=async ()=>{
       gateError.textContent=''; gateInfo.textContent='';
-      signInWithRedirect(auth, provider);
+      try{
+        if(isMobile) await signInWithRedirect(auth, provider);
+        else         await signInWithPopup(auth, provider);
+      }catch(e){
+        console.error('Google sign-in failed', e);
+        gateError.textContent = e.code || e.message || 'Google sign-in failed';
+      }
     };
-    getRedirectResult(auth).catch(err=>{
-      console.error('Google sign-in error', err); gateError.textContent = 'Google sign-in failed.';
-    });
-    logoutBtn.onclick = ()=> signOut(auth);
+    getRedirectResult(auth).catch(e=>console.warn('redirect result:', e?.code||e));
 
-    // Auth state
+    logoutBtn.onclick=()=>signOut(auth);
+
+    // ====== Auth state ======
     onAuthStateChanged(auth, async (user)=>{
+      console.log('[auth] ->', user?.email||null);
       if(!user){ document.body.classList.remove('auth'); whoami.textContent=''; stopPinsFeed(); return; }
-      // Enforce Gmail-only (also enforced in rules)
-      if(!isGmailLocal(user.email)){ alert('Only @gmail.com accounts are allowed.'); await signOut(auth); return; }
-      if (!isAllowedGoogle(user.email)) {
-        alert('Only @gmail.com or @kaust.edu.sa accounts are allowed.');
-        await signOut(auth);
+
+      if(!isAllowedEmail(user.email)){
+        // Don’t auto-sign-out => no loop. Let user switch.
+        document.body.classList.remove('auth'); whoami.textContent=''; stopPinsFeed();
+        gateError.innerHTML = `This account (<b>${user.email}</b>) isn’t allowed. ` +
+          `<a href="#" id="switchAcct">Use a different Google account</a>`;
+        document.getElementById('switchAcct')?.addEventListener('click', async (e)=>{
+          e.preventDefault(); await signOut(auth); googleBtn.click();
+        });
         return;
       }
+
       document.body.classList.add('auth');
       const isAdmin = (user.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase();
       whoami.textContent = `${user.email}${isAdmin?' • admin':''}`;
-      const isAllowedGoogle = (email) =>
-        /@(gmail|googlemail)\.com$/i.test(email || '') || /@kaust\.edu\.sa$/i.test(email || '');
 
-      // Ensure profile doc exists (auto-approve)
-      const uref = doc(db,'users',user.uid);
-      const udoc = await getDoc(uref);
+      // Ensure user doc exists
+      const uref=doc(db,'users',user.uid);
+      const udoc=await getDoc(uref);
       if(!udoc.exists()){
         await setDoc(uref,{ email:user.email, approved:true, createdAt:serverTimestamp() });
       }
@@ -302,40 +317,38 @@
       startPinsFeed();
     });
 
-    function stopPinsFeed(){ if(unsubPins){unsubPins();unsubPins=null;} clearMarkers(); }
+    // ====== Pins feed ======
     let unsubPins=null;
+    function stopPinsFeed(){ if(unsubPins){unsubPins();unsubPins=null;} clearMarkers(); }
     function startPinsFeed(){
       if(unsubPins) return;
-      const qPins = query(collection(db,'pins'), orderBy('createdAt','desc'));
-      unsubPins = onSnapshot(qPins,(snap)=>{
-        const seen = new Set();
-        snap.forEach(d=>{
-          const p={ id:d.id, ...d.data() };
-          seen.add(p.id);
-          upsertLocalPin(p);
-        });
-        for(const id of Array.from(state.markers.keys())) if(!seen.has(id)){ removeMarker(id); state.locations = state.locations.filter(x=>x.id!==id); }
+      const qPins=query(collection(db,'pins'), orderBy('createdAt','desc'));
+      unsubPins=onSnapshot(qPins,(snap)=>{
+        const seen=new Set();
+        snap.forEach(d=>{ const p={id:d.id, ...d.data()}; seen.add(p.id); upsertLocalPin(p); });
+        for(const id of Array.from(state.markers.keys())) if(!seen.has(id)){ removeMarker(id); state.locations=state.locations.filter(x=>x.id!==id); }
         renderList();
       });
     }
 
-    // Local pin cache + rendering
+    // ====== Local cache + render ======
     function clearMarkers(){ for(const id of Array.from(state.markers.keys())) removeMarker(id); state.locations=[]; renderList(); }
-    function upsertLocalPin(p){ const idx=state.locations.findIndex(x=>x.id===p.id); if(idx===-1) state.locations.push(p); else state.locations[idx]=p; upsertMarker(p); }
+    function upsertLocalPin(p){ const i=state.locations.findIndex(x=>x.id===p.id); if(i===-1) state.locations.push(p); else state.locations[i]=p; upsertMarker(p); }
+    const fmtLatLng = (loc)=>`${fmt(loc.lat)}, ${fmt(loc.lng)}`;
 
-    function markerPopupHtml(loc, mineOrAdmin){
-      const img=loc.photo?`<img class="popup-img" src="${loc.photo}" alt="">`:''; 
+    function markerPopupHtml(loc, canEdit){
+      const img=loc.photo?`<img class="popup-img" src="${loc.photo}" alt="" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:6px">`:'';
       const who = loc.ownerUsername || loc.ownerEmail || '';
-      const actions = mineOrAdmin ? `<div style="display:flex;gap:6px"><a href="#" data-action="edit" data-id="${loc.id}">Edit</a><a href="#" data-action="delete" data-id="${loc.id}" style="color:#ff9a9a">Delete</a></div>` : '';
+      const actions = canEdit ? `<div style="display:flex;gap:6px"><a href="#" data-action="edit" data-id="${loc.id}">Edit</a><a href="#" data-action="delete" data-id="${loc.id}" style="color:#ff9a9a">Delete</a></div>` : '';
       return `<div style="min-width:240px">${img}
         <div style="margin-bottom:6px">${escapeHtml(loc.title||'(untitled)')}</div>
-        <div style="color:var(--muted);font-size:12px;margin-bottom:6px">${typeName(loc.type)} · ${fmt(loc.lat)}, ${fmt(loc.lng)}${who?` · by ${escapeHtml(who)}`:''}</div>
+        <div style="color:#9aa3ad;font-size:12px;margin-bottom:6px">${typeName(loc.type)} · ${fmtLatLng(loc)}${who?` · by ${escapeHtml(who)}`:''}</div>
         ${loc.description?`<div style="white-space:pre-wrap;margin-bottom:8px">${escapeHtml(loc.description)}</div>`:''}
         ${actions}</div>`;
     }
     function tooltipHtml(loc){
       const s=(loc.description||'').slice(0,140);
-      return `<div class="tt"><div class="tt-title">${escapeHtml(loc.title||'(untitled)')}</div><div class="tt-meta">${typeName(loc.type)} · ${fmt(loc.lat)}, ${fmt(loc.lng)}</div>${s?`<div class="tt-desc">${escapeHtml(s)}</div>`:''}</div>`;
+      return `<div class="tt"><div class="tt-title">${escapeHtml(loc.title||'(untitled)')}</div><div class="tt-meta">${typeName(loc.type)} · ${fmtLatLng(loc)}</div>${s?`<div class="tt-desc">${escapeHtml(s)}</div>`:''}</div>`;
     }
     function makeIcon(loc){
       const glyph = loc.type===TYPE_DANGER?'⚠️':'🐱';
@@ -344,28 +357,26 @@
       }</div><div class="stem"></div></div>`;
       return L.divIcon({ className:'pin-icon', html, iconSize:[46,60], iconAnchor:[23,58], popupAnchor:[0,-56], tooltipAnchor:[0,-58] });
     }
-
     function addMarkerFor(loc){
-      const user=auth.currentUser;
-      const mineOrAdmin = user && ((user.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase() || loc.ownerUid===user.uid);
-      const marker=L.marker([loc.lat,loc.lng],{ draggable:mineOrAdmin, icon:makeIcon(loc) });
-      marker.bindPopup(markerPopupHtml(loc, mineOrAdmin));
-      marker.bindTooltip(tooltipHtml(loc),{direction:'top',offset:[0,-54],className:'pin-tooltip',opacity:0.96});
-      marker.on('dragend', async (e)=>{ if(!mineOrAdmin) return; const {lat,lng}=e.target.getLatLng(); try{ await updateDoc(doc(db,'pins',loc.id), { lat, lng }); } catch{ alert('Update failed.'); }});
-      marker.on('popupopen', ()=>{ const el=marker.getPopup().getElement(); el.querySelectorAll('a[data-action]').forEach(a=>{
+      const user=auth.currentUser; const canEdit=user && (((user.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase()) || loc.ownerUid===user.uid);
+      const m=L.marker([loc.lat,loc.lng],{ draggable:canEdit, icon:makeIcon(loc) });
+      m.bindPopup(markerPopupHtml(loc,canEdit));
+      m.bindTooltip(tooltipHtml(loc),{direction:'top',offset:[0,-54],className:'pin-tooltip',opacity:0.96});
+      m.on('dragend', async (e)=>{ if(!canEdit) return; const {lat,lng}=e.target.getLatLng(); try{ await updateDoc(doc(db,'pins',loc.id), { lat, lng }); } catch{ alert('Update failed.'); }});
+      m.on('popupopen', ()=>{ const el=m.getPopup().getElement(); el.querySelectorAll('a[data-action]').forEach(a=>{
         a.addEventListener('click', (evt)=>{ evt.preventDefault(); const id=a.getAttribute('data-id'); const act=a.getAttribute('data-action'); if(act==='edit') openEditModal(id); if(act==='delete') confirmDelete(id); });
       });});
-      marker.addTo(map); state.markers.set(loc.id,marker);
+      m.addTo(map); state.markers.set(loc.id,m);
     }
     function upsertMarker(loc){
-      let m=state.markers.get(loc.id);
-      const user=auth.currentUser; const mineOrAdmin = user && ((user.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase() || loc.ownerUid===user.uid);
-      if(!m){ addMarkerFor(loc); }
+      const m=state.markers.get(loc.id);
+      const user=auth.currentUser; const canEdit=user && (((user.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase()) || loc.ownerUid===user.uid);
+      if(!m) addMarkerFor(loc);
       else{
         m.setLatLng([loc.lat,loc.lng]); m.setIcon(makeIcon(loc));
-        m.setPopupContent(markerPopupHtml(loc, mineOrAdmin));
+        m.setPopupContent(markerPopupHtml(loc,canEdit));
         const tt=m.getTooltip(); if(tt) tt.setContent(tooltipHtml(loc));
-        mineOrAdmin ? m.dragging.enable() : m.dragging.disable();
+        canEdit ? m.dragging.enable() : m.dragging.disable();
       }
     }
     function removeMarker(id){ const m=state.markers.get(id); if(m){ map.removeLayer(m); state.markers.delete(id);} }
@@ -381,11 +392,10 @@
       for(const loc of state.locations){
         const li=document.createElement('li'); li.className='loc'; li.dataset.id=loc.id;
         const title=document.createElement('div'); title.className='title';
-        const mine=(loc.ownerUid===user?.uid);
-        const who = loc.ownerUsername || loc.ownerEmail || '';
+        const mine=(loc.ownerUid===user?.uid); const who = loc.ownerUsername || loc.ownerEmail || '';
         const ownerTag = (!isAdmin && !mine && who) ? `<span class="who" style="margin-left:8px">by ${escapeHtml(who)}</span>` : '';
         title.innerHTML = `${escapeHtml(loc.title||'(untitled)')} <span class="badge ${typeClass(loc.type)}">${typeName(loc.type)}</span> ${ownerTag}`;
-        const meta=document.createElement('div'); meta.className='meta'; meta.textContent=`${fmt(loc.lat)}, ${fmt(loc.lng)}`;
+        const meta=document.createElement('div'); meta.className='meta'; meta.textContent=fmtLatLng(loc);
         const actions=document.createElement('div'); actions.className='actions';
         const flyBtn=document.createElement('button'); flyBtn.textContent='View'; flyBtn.onclick=()=>{ map.flyTo([loc.lat,loc.lng],Math.max(map.getZoom(),15),{duration:0.7}); const m=state.markers.get(loc.id); if(m) m.openPopup(); };
         actions.append(flyBtn);
@@ -398,7 +408,10 @@
       }
     }
 
-    // Modal + image
+    // ====== Modal + image ======
+    toggleAddBtn.onclick=()=>setAddMode(!state.adding);
+    map.on('click',(e)=>{ if(state.adding) openCreateModal(e.latlng); });
+
     function setPhotoPreview(dataUrl){
       state.draftPhoto = dataUrl || null;
       if(state.draftPhoto){ photoPreview.src=state.draftPhoto; photoPreview.style.display='block'; removePhotoBtn.style.display='inline-block'; }
@@ -426,15 +439,15 @@
       modalBackdrop.hidden=false; setTimeout(()=>titleInput.focus(),0);
     }
     function closeModal(){ modalBackdrop.hidden=true; state.editingId=null; state.draftLatLng=null; state.pendingPinId=null; setSaving(false); setPhotoPreview(null); document.querySelectorAll('input[name="pinType"]').forEach(r=>r.disabled=false); }
-    cancelBtn.onclick = closeModal;
+    cancelBtn.onclick=closeModal;
     modalBackdrop.addEventListener('click',(e)=>{ if(e.target===modalBackdrop) closeModal(); });
 
-    photoInput.onchange = async (e)=>{
+    photoInput.onchange=async (e)=>{
       const f=e.target.files?.[0]; if(!f) return;
       try{ const dataUrl=await processImage(f,256,'image/jpeg',0.85); setPhotoPreview(dataUrl); }
       catch{ alert('Could not read the image.'); }
     };
-    removePhotoBtn.onclick = ()=> setPhotoPreview(null);
+    removePhotoBtn.onclick=()=>setPhotoPreview(null);
     function processImage(file,size=256,mime='image/jpeg',q=0.85){
       return new Promise((resolve,reject)=>{
         const fr=new FileReader();
@@ -446,16 +459,15 @@
       });
     }
 
-    // Quota helpers
+    // ====== Quota helpers ======
     async function pickFreeSlot(uid, type){
-      const slotCol = collection(db, `users/${uid}/quota/${type}/slots`);
-      const snap = await getDocs(slotCol);
-      const used = new Set(); snap.forEach(d=>used.add(d.id));
+      const snap = await getDocs(collection(db, `users/${uid}/quota/${type}/slots`));
+      const used=new Set(); snap.forEach(d=>used.add(d.id));
       for(const s of SLOT_IDS){ if(!used.has(s)) return s; }
       return null;
     }
 
-    // Create / Update / Delete
+    // ====== CRUD ======
     async function createPin({id, title,description,type,lat,lng,photo}){
       const user=auth.currentUser; if(!user) return;
       const uid=user.uid; const email=user.email||'';
@@ -481,43 +493,39 @@
     }
 
     async function updatePin(id, {title,description,lat,lng,photo,type}){
-      const ref=doc(db,'pins',id);
-      const patch = { title, description, lat, lng, photo: photo||null };
-      if(((auth.currentUser?.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase()) && type){
-        patch.type = type; // admin may change type
-      }
-      await updateDoc(ref, patch);
+      const patch={ title, description, lat, lng, photo: photo||null };
+      if(((auth.currentUser?.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase()) && type) patch.type=type; // admin may change type
+      await updateDoc(doc(db,'pins',id), patch);
     }
 
     function confirmDelete(id){ if(confirm('Delete this pin?')) deletePin(id); }
     async function deletePin(id){
-      const ref=doc(db,'pins',id);
-      const snap=await getDoc(ref); if(!snap.exists()) return;
+      const snap=await getDoc(doc(db,'pins',id)); if(!snap.exists()) return;
       const p=snap.data();
-      const isAdmin = ((auth.currentUser?.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase());
+      const isAdmin=((auth.currentUser?.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase());
       if(!(isAdmin || p.ownerUid===auth.currentUser?.uid)) return alert('You can delete only your own pins.');
       const batch=writeBatch(db);
-      batch.delete(ref);
+      batch.delete(doc(db,'pins',id));
       if(p.ownerUid && p.type && p.slot){
         batch.delete(doc(db, `users/${p.ownerUid}/quota/${p.type}/slots/${p.slot}`));
       }
       await batch.commit();
     }
 
-    // Save button (idempotent + UI lock)
-    saveBtn.onclick = async ()=>{
-      if (state.saving) return;
+    // ====== Save (idempotent + UI lock) ======
+    saveBtn.onclick=async ()=>{
+      if(state.saving) return;
       setSaving(true);
       const title=titleInput.value.trim()||'(untitled)';
       const description=descInput.value.trim();
       if(!state.draftLatLng){ closeModal(); return; }
-      let type=(document.querySelector('input[name="pinType"]:checked')?.value==='danger') ? TYPE_DANGER : TYPE_LOSTCAT;
+      let type=(document.querySelector('input[name="pinType"]:checked')?.value==='danger')?TYPE_DANGER:TYPE_LOSTCAT;
       const isAdmin=((auth.currentUser?.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase());
       try{
         if(state.editingId){
-          await updatePin(state.editingId, { title, description, lat:state.draftLatLng.lat, lng:state.draftLatLng.lng, photo:state.draftPhoto, type: isAdmin?type:undefined });
-        } else {
-          await createPin({ id: state.pendingPinId, title, description, type, lat:state.draftLatLng.lat, lng:state.draftLatLng.lng, photo:state.draftPhoto });
+          await updatePin(state.editingId,{ title, description, lat:state.draftLatLng.lat, lng:state.draftLatLng.lng, photo:state.draftPhoto, type:isAdmin?type:undefined });
+        }else{
+          await createPin({ id:state.pendingPinId, title, description, type, lat:state.draftLatLng.lat, lng:state.draftLatLng.lng, photo:state.draftPhoto });
         }
         closeModal();
       }catch(e){

@@ -214,6 +214,7 @@
     const appFB = initializeApp(firebaseConfig);
     const auth = getAuth(appFB);
     const db = getFirestore(appFB);
+    const unameInput = document.getElementById('uname');
 
     // ==== Constants / helpers ====
     const ADMIN_EMAIL = 'lenatif09@gmail.com';
@@ -241,23 +242,54 @@
     const escapeHtml=(s)=>String(s).replace(/[&<>"']/g,(m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 
     // ==== Auth UI ====
-    emailSignup.onclick = async ()=>{
-      gateError.textContent=''; gateInfo.textContent='';
-      const email=emailInput.value.trim(), pass=passInput.value;
-      if(!email || (pass||'').length<6){ gateError.textContent='Enter email and a 6+ char password.'; return; }
-      try{
-        await createUserWithEmailAndPassword(auth,email,pass);
-        // Create a user profile doc on first sign-in if missing
-        const u=auth.currentUser;
-        const uref=doc(db,'users',u.uid);
-        const snap=await getDoc(uref);
-        if(!snap.exists()){
-          await setDoc(uref,{ email:u.email, approved:false, createdAt:serverTimestamp() });
-        }
-        gateInfo.textContent='Request submitted. You’ll get access after approval.';
+    emailSignup.onclick = async () => {
+      gateError.textContent = ''; gateInfo.textContent = '';
+      const email = emailInput.value.trim();
+      const pass  = passInput.value;
+      const uname = (unameInput.value || '').trim();
+      const unameLC = uname.toLowerCase();
+    
+      // Basic checks
+      if (!email || (pass || '').length < 6) {
+        gateError.textContent = 'Enter email and a 6+ char password.';
+        return;
+      }
+      if (!/^[a-z0-9._-]{3,20}$/.test(unameLC)) {
+        gateError.textContent = 'Username must be 3–20 chars: a–z, 0–9, dot, underscore, or hyphen.';
+        return;
+      }
+    
+      try {
+        // 1) Create Auth user
+        const cred = await createUserWithEmailAndPassword(auth, email, pass);
+        const u = cred.user;
+    
+        // 2) Atomically create users/{uid} and usernames/{unameLC}
+        const batch = writeBatch(db);
+        const userRef = doc(db, 'users', u.uid);
+        const regRef  = doc(db, 'usernames', unameLC);
+    
+        batch.set(userRef, {
+          email: u.email,
+          approved: false,
+          username: uname,         // original case
+          username_lc: unameLC,    // for lookups/uniqueness
+          createdAt: serverTimestamp()
+        });
+    
+        // registry doc maps username -> uid
+        batch.set(regRef, { uid: u.uid, createdAt: serverTimestamp() });
+    
+        await batch.commit();
+    
+        gateInfo.textContent = 'Request submitted. You’ll get access after approval.';
         await signOut(auth);
-      }catch{ gateError.textContent='Sign-up failed (account may exist).'; }
+      } catch (e) {
+        // If username already taken, rules will reject the batch => shows here.
+        gateError.textContent = 'Sign-up failed (username taken or rules not published).';
+      }
     };
+
     emailSignin.onclick = async ()=>{
       gateError.textContent=''; gateInfo.textContent='';
       const email=emailInput.value.trim(), pass=passInput.value;
@@ -435,6 +467,10 @@
         listEl.appendChild(li); return;
       }
       const user=auth.currentUser; const isAdmin=(user?.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase();
+      const displayOwner = loc.ownerUsername || loc.ownerEmail || '';
+      const ownerTag = (!isAdmin && !mine && displayOwner)
+        ? `<span class="who" style="margin-left:8px">by ${escapeHtml(displayOwner)}</span>` : '';
+
       for(const loc of state.locations){
         const li=document.createElement('li'); li.className='loc'; li.dataset.id=loc.id;
         const title=document.createElement('div'); title.className='title';
@@ -475,10 +511,14 @@
         slot = await pickFreeSlot(uid, type);
         if(!slot){ alert(`Limit reached: 5 ${typeName(type)} pins.`); return; }
       }
+      // fetch your user profile to get username once
+      const profileSnap = await getDoc(doc(db, 'users', uid));
+      const profile = profileSnap.data() || {};
+      const ownerUsername = profile.username || null;
 
       const batch = writeBatch(db);
       const pinRef = doc(db,'pins',pinId);
-      const data = { title, description, type, lat, lng, photo: photo||null, ownerUid:uid, ownerEmail:email, createdAt:serverTimestamp(), slot: slot || null };
+      const data = { title, description, type, lat, lng, photo: photo||null, ownerUid:uid, ownerEmail:email, ownerUsername, createdAt:serverTimestamp(), slot: slot || null };
       batch.set(pinRef, data);
 
       if(!isAdmin){

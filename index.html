@@ -97,7 +97,7 @@
       <div class="muted">Sign up with email. You’ll see pins only after approval.</div>
       <div class="stack">
         <input id="email" class="input" type="email" placeholder="you@example.com" />
-        <input id="uname" class="input" type="text" placeholder="username (3–20 letters/numbers . _ -)" />
+<!--         <input id="uname" class="input" type="text" placeholder="username (3–20 letters/numbers . _ -)" /> -->
         <input id="pass"  class="input" type="password" placeholder="Password (min 6)" />
         <div class="row" style="display:flex;gap:8px;justify-content:space-between">
           <button id="emailSignin">Sign in</button>
@@ -313,39 +313,34 @@
     // };
     emailSignup.onclick = async () => {
       gateError.textContent = ''; gateInfo.textContent = '';
+    
       const email = emailInput.value.trim();
       const pass  = passInput.value;
-      const uname = (unameInput.value || '').trim();
-      const unameLC = uname.toLowerCase();
     
-      if (!email || (pass||'').length < 6) { gateError.textContent = 'Enter email and a 6+ char password.'; return; }
-      if (!/^[a-z0-9._-]{3,20}$/.test(unameLC)) { gateError.textContent = 'Username must be 3–20 chars: a–z, 0–9, dot, underscore, hyphen.'; return; }
+      if (!email || (pass || '').length < 6) {
+        gateError.textContent = 'Enter email and a 6+ char password.';
+        return;
+      }
     
       try {
         const cred = await createUserWithEmailAndPassword(auth, email, pass);
         const u = cred.user;
     
-        const batch = writeBatch(db);
-        const userRef = doc(db, 'users', u.uid);
-        const regRef  = doc(db, 'usernames', unameLC);
-    
-        batch.set(userRef, {
+        // Create user profile (no username fields)
+        await setDoc(doc(db, 'users', u.uid), {
           email: u.email,
-          approved: true,              // <-- auto-approve on create
-          username: uname,
-          username_lc: unameLC,
+          approved: true,                 // auto-approve; set to false if you want manual review
           createdAt: serverTimestamp()
         });
-        batch.set(regRef, { uid: u.uid, createdAt: serverTimestamp() });
     
-        await batch.commit();
-    
-        // No signOut here — keep them signed in and let onAuthStateChanged load the map
         gateInfo.textContent = 'Account created. Loading…';
+        // (Do NOT sign out; onAuthStateChanged will load the app)
       } catch (e) {
-        gateError.textContent = 'Sign-up failed (username taken or rules not published).';
+        console.error(e);
+        gateError.textContent = 'Sign-up failed.';
       }
     };
+
 
     emailSignin.onclick = async ()=>{
       gateError.textContent=''; gateInfo.textContent='';

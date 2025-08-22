@@ -200,14 +200,16 @@
     } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
 
     // Paste your Firebase config here (from Console → Project settings → Your apps → Web app → CDN)
+  // Your web app's Firebase configuration
     const firebaseConfig = {
-      apiKey: "PASTE_API_KEY",
-      authDomain: "your-project.firebaseapp.com",
-      projectId: "your-project",
-      appId: "YOUR_APP_ID",
-      storageBucket: "your-project.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID"
+      apiKey: "AIzaSyCVxRVywtfJIV6G55r1se3BoYVjtHxWDFM",
+      authDomain: "fat-fat-cat.firebaseapp.com",
+      projectId: "fat-fat-cat",
+      storageBucket: "fat-fat-cat.firebasestorage.app",
+      messagingSenderId: "409243971382",
+      appId: "1:409243971382:web:646a6858479a9740d04d97"
     };
+  
 
     const appFB = initializeApp(firebaseConfig);
     const auth = getAuth(appFB);

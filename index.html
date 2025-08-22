@@ -281,10 +281,16 @@
       if(!user){ document.body.classList.remove('auth'); whoami.textContent=''; stopPinsFeed(); return; }
       // Enforce Gmail-only (also enforced in rules)
       if(!isGmailLocal(user.email)){ alert('Only @gmail.com accounts are allowed.'); await signOut(auth); return; }
-
+      if (!isAllowedGoogle(user.email)) {
+        alert('Only @gmail.com or @kaust.edu.sa accounts are allowed.');
+        await signOut(auth);
+        return;
+      }
       document.body.classList.add('auth');
       const isAdmin = (user.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase();
       whoami.textContent = `${user.email}${isAdmin?' • admin':''}`;
+      const isAllowedGoogle = (email) =>
+        /@(gmail|googlemail)\.com$/i.test(email || '') || /@kaust\.edu\.sa$/i.test(email || '');
 
       // Ensure profile doc exists (auto-approve)
       const uref = doc(db,'users',user.uid);

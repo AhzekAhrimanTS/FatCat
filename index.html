@@ -5,7 +5,7 @@
   <title>KAUST Pins — Lost Cats & Danger</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Leaflet -->
+  <!-- Leaflet (no API key) -->
   <link rel="stylesheet"
         href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
@@ -43,9 +43,9 @@
     #map{height:100%;width:100%}
     .pin-hint{position:absolute;top:12px;right:12px;z-index:500;background:rgba(10,14,24,.9);border:1px solid var(--border);padding:8px 12px;border-radius:8px;color:var(--muted);pointer-events:none}
 
-    /* Gate (auth + approval) */
+    /* Gate */
     #gate{position:fixed;inset:0;background:linear-gradient(180deg,#0d1017,#0f1115);display:grid;place-items:center;z-index:2000}
-    #gate .card{width:min(480px,92%);background:var(--bg-elev);border:1px solid var(--border);border-radius:12px;padding:18px}
+    #gate .card{width:min(520px,92%);background:var(--bg-elev);border:1px solid var(--border);border-radius:12px;padding:18px}
     #gate h2{margin:0 0 6px 0}
     #gate .muted{color:var(--muted);font-size:14px;margin-bottom:12px}
     .input{width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:#111521;color:var(--fg)}
@@ -90,15 +90,15 @@
   </style>
 </head>
 <body>
-  <!-- Sign-in / Sign-up gate (email/password; approval required) -->
+  <!-- Gate -->
   <div id="gate">
     <div class="card">
       <h2>KAUST Pins</h2>
       <div class="muted">Sign up with email. You’ll see pins only after approval.</div>
       <div class="stack">
-        <input id="uname" class="input" type="text" placeholder="username (3–20 letters/numbers)" />
         <input id="email" class="input" type="email" placeholder="you@example.com" />
-        <input id="pass" class="input" type="password" placeholder="Password (min 6)" />
+        <input id="uname" class="input" type="text" placeholder="username (3–20 letters/numbers . _ -)" />
+        <input id="pass"  class="input" type="password" placeholder="Password (min 6)" />
         <div class="row" style="display:flex;gap:8px;justify-content:space-between">
           <button id="emailSignin">Sign in</button>
           <button id="emailSignup" class="primary">Request access</button>
@@ -120,7 +120,7 @@
         </div>
       </div>
 
-      <!-- Admin panel (only visible to admin) -->
+      <!-- Admin panel -->
       <div id="adminPanel" style="display:none;border-bottom:1px solid var(--border);padding:12px">
         <div style="margin-bottom:8px;color:var(--muted)">Registration requests</div>
         <div id="reqList" style="display:grid;gap:8px"></div>
@@ -188,108 +188,110 @@
 
   <!-- Firebase + App -->
   <script type="module">
-    // ==== Firebase SDKs ====
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+    // Firebase SDKs (CDN)
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js';
     import {
       getAuth, onAuthStateChanged, signOut,
       createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail
-    } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+    } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
     import {
       getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc,
       onSnapshot, query, orderBy, where, writeBatch, serverTimestamp
-    } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+    } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
 
-    // ==== YOUR FIREBASE CONFIG ====
-    // Your web app's Firebase configuration
+    // Paste your Firebase config here (from Console → Project settings → Your apps → Web app → CDN)
     const firebaseConfig = {
-      apiKey: "AIzaSyCVxRVywtfJIV6G55r1se3BoYVjtHxWDFM",
-      authDomain: "fat-fat-cat.firebaseapp.com",
-      projectId: "fat-fat-cat",
-      storageBucket: "fat-fat-cat.firebasestorage.app",
-      messagingSenderId: "409243971382",
-      appId: "1:409243971382:web:646a6858479a9740d04d97"
+      apiKey: "PASTE_API_KEY",
+      authDomain: "your-project.firebaseapp.com",
+      projectId: "your-project",
+      appId: "YOUR_APP_ID",
+      storageBucket: "your-project.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID"
     };
-    // ===============================
 
     const appFB = initializeApp(firebaseConfig);
     const auth = getAuth(appFB);
     const db = getFirestore(appFB);
-    const unameInput = document.getElementById('uname');
 
-    // ==== Constants / helpers ====
+    // Constants / helpers
     const ADMIN_EMAIL = 'lenatif09@gmail.com';
     const TYPE_LOSTCAT = 'lostcat', TYPE_DANGER = 'danger';
     const SLOT_IDS = ['s1','s2','s3','s4','s5'];
     const VIEW_KEY = 'pinboard.mapview.v3';
-
-    const $ = (id)=>document.getElementById(id);
-    const whoami=$('whoami'), logoutBtn=$('logoutBtn');
-    const gate=$('gate'), gateError=$('gateError'), gateInfo=$('gateInfo');
-    const emailInput=$('email'), passInput=$('pass'), emailSignin=$('emailSignin'), emailSignup=$('emailSignup'), resetBtn=$('resetBtn');
-
-    const listEl=$('locationList'), toggleAddBtn=$('toggleAddBtn'), locateBtn=$('locateBtn');
-    const searchInput=$('searchInput'), searchBtn=$('searchBtn'), pinHint=$('pinHint'), adminPanel=$('adminPanel'), reqList=$('reqList');
-
-    const modalBackdrop=$('modalBackdrop'), modalTitle=$('modalTitle'),
-          titleInput=$('titleInput'), descInput=$('descInput'), coordsInput=$('coordsInput'),
-          photoInput=$('photoInput'), photoPreview=$('photoPreview'), removePhotoBtn=$('removePhotoBtn'),
-          cancelBtn=$('cancelBtn'), saveBtn=$('saveBtn');
-
     const fmt=(n)=>Number(n).toFixed(6);
     const clampZoom=(z)=>Math.max(1,Math.min(19,z|0));
     const typeName=(t)=>t===TYPE_DANGER?'Danger':'Lost Cat';
     const typeClass=(t)=>t===TYPE_DANGER?'danger':'cat';
     const escapeHtml=(s)=>String(s).replace(/[&<>"']/g,(m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 
-    // ==== Auth UI ====
-    emailSignup.onclick = async () => {
-      gateError.textContent = ''; gateInfo.textContent = '';
-      const email = emailInput.value.trim();
-      const pass  = passInput.value;
-      const uname = (unameInput.value || '').trim();
-      const unameLC = uname.toLowerCase();
-    
-      // Basic checks
-      if (!email || (pass || '').length < 6) {
-        gateError.textContent = 'Enter email and a 6+ char password.';
-        return;
-      }
-      if (!/^[a-z0-9._-]{3,20}$/.test(unameLC)) {
-        gateError.textContent = 'Username must be 3–20 chars: a–z, 0–9, dot, underscore, or hyphen.';
-        return;
-      }
-    
-      try {
-        // 1) Create Auth user
-        const cred = await createUserWithEmailAndPassword(auth, email, pass);
-        const u = cred.user;
-    
-        // 2) Atomically create users/{uid} and usernames/{unameLC}
-        const batch = writeBatch(db);
-        const userRef = doc(db, 'users', u.uid);
-        const regRef  = doc(db, 'usernames', unameLC);
-    
-        batch.set(userRef, {
-          email: u.email,
-          approved: false,
-          username: uname,         // original case
-          username_lc: unameLC,    // for lookups/uniqueness
-          createdAt: serverTimestamp()
-        });
-    
-        // registry doc maps username -> uid
-        batch.set(regRef, { uid: u.uid, createdAt: serverTimestamp() });
-    
-        await batch.commit();
-    
-        gateInfo.textContent = 'Request submitted. You’ll get access after approval.';
-        await signOut(auth);
-      } catch (e) {
-        // If username already taken, rules will reject the batch => shows here.
-        gateError.textContent = 'Sign-up failed (username taken or rules not published).';
-      }
+    // DOM
+    const $ = (id)=>document.getElementById(id);
+    const whoami=$('whoami'), logoutBtn=$('logoutBtn');
+    const gate=$('gate'), gateError=$('gateError'), gateInfo=$('gateInfo');
+    const emailInput=$('email'), passInput=$('pass'), unameInput=$('uname');
+    const emailSignin=$('emailSignin'), emailSignup=$('emailSignup'), resetBtn=$('resetBtn');
+    const adminPanel=$('adminPanel'), reqList=$('reqList');
+    const listEl=$('locationList'), toggleAddBtn=$('toggleAddBtn'), locateBtn=$('locateBtn');
+    const searchInput=$('searchInput'), searchBtn=$('searchBtn'), pinHint=$('pinHint');
+    const modalBackdrop=$('modalBackdrop'), modalTitle=$('modalTitle'),
+          titleInput=$('titleInput'), descInput=$('descInput'), coordsInput=$('coordsInput'),
+          photoInput=$('photoInput'), photoPreview=$('photoPreview'), removePhotoBtn=$('removePhotoBtn'),
+          cancelBtn=$('cancelBtn'), saveBtn=$('saveBtn');
+
+    // Map init (default KAUST)
+    const savedView = JSON.parse(localStorage.getItem(VIEW_KEY) || "null");
+    const map = L.map('map', { center: savedView ? [savedView.lat, savedView.lng] : [22.3088,39.1046], zoom: savedView ? clampZoom(savedView.zoom) : 15, worldCopyJump:true });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ maxZoom:19, attribution:'&copy; OpenStreetMap contributors' }).addTo(map);
+    map.on('moveend',()=>{ const c=map.getCenter(); const z=map.getZoom(); localStorage.setItem(VIEW_KEY, JSON.stringify({lat:c.lat,lng:c.lng,zoom:z})); });
+
+    // Search & locate
+    searchBtn.onclick = runSearch;
+    searchInput.onkeydown = (e)=>{ if(e.key==='Enter') runSearch(); };
+    async function runSearch(){
+      const q=searchInput.value.trim(); if(!q) return;
+      searchBtn.disabled=true; searchBtn.textContent='Searching…';
+      try{
+        const res=await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}`,{headers:{'Accept':'application/json'}});
+        const data=await res.json();
+        if(Array.isArray(data)&&data.length){ const r=data[0]; map.flyTo([parseFloat(r.lat),parseFloat(r.lon)],14,{duration:0.7}); }
+        else alert('No results found.');
+      }catch{ alert('Search error.'); }
+      finally{ searchBtn.disabled=false; searchBtn.textContent='Search'; }
+    }
+    locateBtn.onclick = ()=>{
+      if(!navigator.geolocation) return alert('Geolocation not supported.');
+      locateBtn.disabled=true; locateBtn.textContent='Locating…';
+      navigator.geolocation.getCurrentPosition((pos)=>{ map.flyTo([pos.coords.latitude,pos.coords.longitude],15,{duration:0.7}); locateBtn.disabled=false; locateBtn.textContent='Locate me'; },
+        ()=>{ alert('Could not get your location.'); locateBtn.disabled=false; locateBtn.textContent='Locate me'; },
+        { enableHighAccuracy:true, timeout:10000, maximumAge:60000 });
     };
 
+    // App state
+    const state = { adding:false, markers:new Map(), locations:[], draftLatLng:null, draftPhoto:null, editingId:null };
+    function setAddMode(on){ state.adding=!!on; toggleAddBtn.textContent=`Drop pin mode: ${state.adding?'on':'off'}`; pinHint.style.display = state.adding ? 'block' : 'none'; }
+    toggleAddBtn.onclick = ()=> setAddMode(!state.adding);
+    map.on('click',(e)=>{ if(state.adding) openCreateModal(e.latlng); });
+
+    // Auth
+    emailSignup.onclick = async () => {
+      gateError.textContent=''; gateInfo.textContent='';
+      const email=emailInput.value.trim(), pass=passInput.value, uname=(unameInput.value||'').trim();
+      const unameLC = uname.toLowerCase();
+      if(!email || (pass||'').length<6){ gateError.textContent='Enter email and a 6+ char password.'; return; }
+      if(!/^[a-z0-9._-]{3,20}$/.test(unameLC)){ gateError.textContent='Username must be 3–20 chars: a–z, 0–9, dot, underscore, hyphen.'; return; }
+      try{
+        const cred = await createUserWithEmailAndPassword(auth,email,pass);
+        const u = cred.user;
+        const batch = writeBatch(db);
+        const userRef = doc(db,'users',u.uid);
+        const regRef  = doc(db,'usernames',unameLC);
+        batch.set(userRef,{ email:u.email, approved:false, username:uname, username_lc:unameLC, createdAt:serverTimestamp() });
+        batch.set(regRef,{ uid:u.uid, createdAt:serverTimestamp() });
+        await batch.commit();
+        gateInfo.textContent='Request submitted. You’ll get access after approval.';
+        await signOut(auth);
+      }catch{ gateError.textContent='Sign-up failed (username taken or rules not published).'; }
+    };
     emailSignin.onclick = async ()=>{
       gateError.textContent=''; gateInfo.textContent='';
       const email=emailInput.value.trim(), pass=passInput.value;
@@ -299,8 +301,7 @@
     };
     resetBtn.onclick = async ()=>{
       gateError.textContent=''; gateInfo.textContent='';
-      const email=emailInput.value.trim();
-      if(!email){ gateError.textContent='Enter your email first.'; return; }
+      const email=emailInput.value.trim(); if(!email){ gateError.textContent='Enter your email first.'; return; }
       try{ await sendPasswordResetEmail(auth,email); gateInfo.textContent='Reset link sent (check inbox).'; }
       catch{ gateError.textContent='Could not send reset email.'; }
     };
@@ -313,23 +314,22 @@
       const isAdmin = (user.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase();
       whoami.textContent = `${user.email}${isAdmin?' • admin':''}`;
 
-      // ensure profile doc exists
+      // Ensure profile doc exists (if user signed up elsewhere)
       const uref = doc(db,'users',user.uid);
       const udoc = await getDoc(uref);
       if(!udoc.exists()){
         await setDoc(uref,{ email:user.email, approved:isAdmin?true:false, createdAt:serverTimestamp() });
       }
 
-      // show admin requests if admin
       if(isAdmin){ startPendingRequests(); } else { stopPendingRequests(); }
 
-      // gate by approval
+      // Gate by approval (admin treated as approved)
       const approved = isAdmin ? true : ((await getDoc(uref)).data()?.approved===true);
       if(approved){ startPinsFeed(); } else { stopPinsFeed(); alert('Your account is pending approval.'); signOut(auth); }
     });
 
     function stopFeeds(){ stopPinsFeed(); stopPendingRequests(); }
-    function stopPinsFeed(){ if(unsubPins){unsubPins(); unsubPins=null;} clearMarkers(); }
+    function stopPinsFeed(){ if(unsubPins){unsubPins();unsubPins=null;} clearMarkers(); }
     function startPinsFeed(){
       if(unsubPins) return;
       const qPins = query(collection(db,'pins'), orderBy('createdAt','desc'));
@@ -340,7 +340,6 @@
           seen.add(p.id);
           upsertLocalPin(p);
         });
-        // remove stale
         for(const id of Array.from(state.markers.keys())) if(!seen.has(id)){ removeMarker(id); state.locations = state.locations.filter(x=>x.id!==id); }
         renderList();
       });
@@ -356,7 +355,7 @@
         snap.forEach(docu=>{
           const u=docu.data();
           const row=document.createElement('div'); row.style.display='grid'; row.style.gridTemplateColumns='1fr auto'; row.style.gap='8px';
-          const left=document.createElement('div'); left.innerHTML=`<div>${escapeHtml(u.email||'')}</div><div class="who">uid: ${docu.id}</div>`;
+          const left=document.createElement('div'); left.innerHTML=`<div>${escapeHtml(u.email||'')}</div><div class="who">uid: ${docu.id} ${u.username?('• '+escapeHtml(u.username)) : ''}</div>`;
           const right=document.createElement('div');
           const approveBtn=document.createElement('button'); approveBtn.textContent='Approve';
           approveBtn.onclick = async ()=>{ try{ await updateDoc(doc(db,'users',docu.id), { approved:true }); } catch{ alert('Approve failed.'); } };
@@ -367,40 +366,7 @@
     }
     function stopPendingRequests(){ if(unsubReq){unsubReq();unsubReq=null;} adminPanel.style.display='none'; reqList.innerHTML=''; }
 
-    // ==== Map init (KAUST default) ====
-    const view = JSON.parse(localStorage.getItem(VIEW_KEY) || "null");
-    const map = L.map('map', { center: view ? [view.lat, view.lng] : [22.3088,39.1046], zoom: view ? clampZoom(view.zoom) : 15, worldCopyJump:true });
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ maxZoom:19, attribution:'&copy; OpenStreetMap contributors' }).addTo(map);
-    map.on('moveend',()=>{ const c=map.getCenter(); const z=map.getZoom(); localStorage.setItem(VIEW_KEY, JSON.stringify({lat:c.lat,lng:c.lng,zoom:z})); });
-
-    // ==== Local state & UI ====
-    const state = { adding:false, markers:new Map(), locations:[], draftLatLng:null, draftPhoto:null, editingId:null };
-    function setAddMode(on){ state.adding=!!on; $('toggleAddBtn').textContent=`Drop pin mode: ${state.adding?'on':'off'}`; pinHint.style.display = state.adding ? 'block' : 'none'; }
-    toggleAddBtn.onclick = ()=> setAddMode(!state.adding);
-    map.on('click',(e)=>{ if(state.adding) openCreateModal(e.latlng); });
-
-    locateBtn.onclick = ()=>{
-      if(!navigator.geolocation) return alert('Geolocation not supported.');
-      locateBtn.disabled=true; locateBtn.textContent='Locating…';
-      navigator.geolocation.getCurrentPosition((pos)=>{ map.flyTo([pos.coords.latitude,pos.coords.longitude],15,{duration:0.7}); locateBtn.disabled=false; locateBtn.textContent='Locate me'; },
-        ()=>{ alert('Could not get your location.'); locateBtn.disabled=false; locateBtn.textContent='Locate me'; },
-        { enableHighAccuracy:true, timeout:10000, maximumAge:60000 });
-    };
-
-    searchBtn.onclick = runSearch;
-    searchInput.onkeydown = (e)=>{ if(e.key==='Enter') runSearch(); };
-    async function runSearch(){
-      const q=searchInput.value.trim(); if(!q) return;
-      searchBtn.disabled=true; searchBtn.textContent='Searching…';
-      try{
-        const res=await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}`,{headers:{'Accept':'application/json'}});
-        const data=await res.json();
-        if(Array.isArray(data)&&data.length){ const r=data[0]; map.flyTo([parseFloat(r.lat),parseFloat(r.lon)],14,{duration:0.7}); }
-        else alert('No results found.');
-      }catch{ alert('Search error.'); }
-      finally{ searchBtn.disabled=false; searchBtn.textContent='Search'; }
-    }
-
+    // Local pin cache + rendering
     function clearMarkers(){ for(const id of Array.from(state.markers.keys())) removeMarker(id); state.locations=[]; renderList(); }
     function upsertLocalPin(p){
       const idx=state.locations.findIndex(x=>x.id===p.id);
@@ -410,10 +376,11 @@
 
     function markerPopupHtml(loc, mineOrAdmin){
       const img=loc.photo?`<img class="popup-img" src="${loc.photo}" alt="">`:''; 
+      const who = loc.ownerUsername || loc.ownerEmail || '';
       const actions = mineOrAdmin ? `<div style="display:flex;gap:6px"><a href="#" data-action="edit" data-id="${loc.id}">Edit</a><a href="#" data-action="delete" data-id="${loc.id}" style="color:#ff9a9a">Delete</a></div>` : '';
       return `<div style="min-width:240px">${img}
         <div style="margin-bottom:6px">${escapeHtml(loc.title||'(untitled)')}</div>
-        <div style="color:var(--muted);font-size:12px;margin-bottom:6px">${typeName(loc.type)} · ${fmt(loc.lat)}, ${fmt(loc.lng)}</div>
+        <div style="color:var(--muted);font-size:12px;margin-bottom:6px">${typeName(loc.type)} · ${fmt(loc.lat)}, ${fmt(loc.lng)}${who?` · by ${escapeHtml(who)}`:''}</div>
         ${loc.description?`<div style="white-space:pre-wrap;margin-bottom:8px">${escapeHtml(loc.description)}</div>`:''}
         ${actions}</div>`;
     }
@@ -429,35 +396,30 @@
       return L.divIcon({ className:'pin-icon', html, iconSize:[46,60], iconAnchor:[23,58], popupAnchor:[0,-56], tooltipAnchor:[0,-58] });
     }
 
-    function upsertMarker(loc){
-      const user = auth.currentUser;
+    function addMarkerFor(loc){
+      const user=auth.currentUser;
       const mineOrAdmin = user && ((user.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase() || loc.ownerUid===user.uid);
+      const marker=L.marker([loc.lat,loc.lng],{ draggable:mineOrAdmin, icon:makeIcon(loc) });
+      marker.bindPopup(markerPopupHtml(loc, mineOrAdmin));
+      marker.bindTooltip(tooltipHtml(loc),{direction:'top',offset:[0,-54],className:'pin-tooltip',opacity:0.96});
+      marker.on('dragend', async (e)=>{ if(!mineOrAdmin) return; const {lat,lng}=e.target.getLatLng(); try{ await updateDoc(doc(db,'pins',loc.id), { lat, lng }); } catch{ alert('Update failed.'); }});
+      marker.on('popupopen', ()=>{ const el=marker.getPopup().getElement(); el.querySelectorAll('a[data-action]').forEach(a=>{
+        a.addEventListener('click', (evt)=>{ evt.preventDefault(); const id=a.getAttribute('data-id'); const act=a.getAttribute('data-action'); if(act==='edit') openEditModal(id); if(act==='delete') confirmDelete(id); });
+      });});
+      marker.addTo(map); state.markers.set(loc.id,marker);
+    }
+    function upsertMarker(loc){
       let m=state.markers.get(loc.id);
-      if(!m){
-        m=L.marker([loc.lat,loc.lng],{ draggable: mineOrAdmin, icon: makeIcon(loc) });
-        m.bindPopup(markerPopupHtml(loc, mineOrAdmin));
-        m.bindTooltip(tooltipHtml(loc), { direction:'top', offset:[0,-54], className:'pin-tooltip', opacity:0.96 });
-        m.on('dragend', async (e)=>{ if(!mineOrAdmin) return; const {lat,lng}=e.target.getLatLng(); try{ await updateDoc(doc(db,'pins',loc.id), { lat, lng }); } catch{ alert('Update failed.'); } });
-        m.on('popupopen', ()=>{
-          const el=m.getPopup().getElement();
-          el.querySelectorAll('a[data-action]').forEach(a=>{
-            a.addEventListener('click', async (evt)=>{
-              evt.preventDefault();
-              const id=a.getAttribute('data-id'); const act=a.getAttribute('data-action');
-              if(act==='edit') openEditModal(id);
-              if(act==='delete') confirmDelete(id);
-            });
-          });
-        });
-        m.addTo(map); state.markers.set(loc.id,m);
-      }else{
+      const user=auth.currentUser; const mineOrAdmin = user && ((user.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase() || loc.ownerUid===user.uid);
+      if(!m){ addMarkerFor(loc); }
+      else{
         m.setLatLng([loc.lat,loc.lng]); m.setIcon(makeIcon(loc));
         m.setPopupContent(markerPopupHtml(loc, mineOrAdmin));
         const tt=m.getTooltip(); if(tt) tt.setContent(tooltipHtml(loc));
         mineOrAdmin ? m.dragging.enable() : m.dragging.disable();
       }
     }
-    function removeMarker(id){ const m=state.markers.get(id); if(m){ map.removeLayer(m); state.markers.delete(id); } }
+    function removeMarker(id){ const m=state.markers.get(id); if(m){ map.removeLayer(m); state.markers.delete(id);} }
 
     function renderList(){
       listEl.innerHTML='';
@@ -467,20 +429,18 @@
         listEl.appendChild(li); return;
       }
       const user=auth.currentUser; const isAdmin=(user?.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase();
-      const displayOwner = loc.ownerUsername || loc.ownerEmail || '';
-      const ownerTag = (!isAdmin && !mine && displayOwner)
-        ? `<span class="who" style="margin-left:8px">by ${escapeHtml(displayOwner)}</span>` : '';
-
       for(const loc of state.locations){
         const li=document.createElement('li'); li.className='loc'; li.dataset.id=loc.id;
         const title=document.createElement('div'); title.className='title';
-        const ownerTag = (!isAdmin && loc.ownerUid!==user?.uid) ? `<span class="who" style="margin-left:8px">by ${escapeHtml(loc.ownerEmail||'')}</span>` : '';
+        const mine=(loc.ownerUid===user?.uid);
+        const who = loc.ownerUsername || loc.ownerEmail || '';
+        const ownerTag = (!isAdmin && !mine && who) ? `<span class="who" style="margin-left:8px">by ${escapeHtml(who)}</span>` : '';
         title.innerHTML = `${escapeHtml(loc.title||'(untitled)')} <span class="badge ${typeClass(loc.type)}">${typeName(loc.type)}</span> ${ownerTag}`;
         const meta=document.createElement('div'); meta.className='meta'; meta.textContent=`${fmt(loc.lat)}, ${fmt(loc.lng)}`;
         const actions=document.createElement('div'); actions.className='actions';
         const flyBtn=document.createElement('button'); flyBtn.textContent='View'; flyBtn.onclick=()=>{ map.flyTo([loc.lat,loc.lng],Math.max(map.getZoom(),15),{duration:0.7}); const m=state.markers.get(loc.id); if(m) m.openPopup(); };
         actions.append(flyBtn);
-        if(isAdmin || loc.ownerUid===user?.uid){
+        if(isAdmin || mine){
           const editBtn=document.createElement('button'); editBtn.textContent='Edit'; editBtn.onclick=()=>openEditModal(loc.id);
           const delBtn=document.createElement('button'); delBtn.textContent='Delete'; delBtn.className='danger'; delBtn.onclick=()=>confirmDelete(loc.id);
           actions.append(editBtn,delBtn);
@@ -489,75 +449,7 @@
       }
     }
 
-    function confirmDelete(id){ if(confirm('Delete this pin?')) deletePin(id); }
-
-    // ==== Create / Update / Delete with slot enforcement ====
-    async function pickFreeSlot(uid, type){
-      const slotCol = collection(db, `users/${uid}/quota/${type}/slots`);
-      const snap = await getDocs(slotCol);
-      const used = new Set(); snap.forEach(d=>used.add(d.id));
-      for(const s of SLOT_IDS){ if(!used.has(s)) return s; }
-      return null;
-    }
-
-    async function createPin({title,description,type,lat,lng,photo}){
-      const user=auth.currentUser; if(!user) return;
-      const uid=user.uid; const email=user.email||'';
-      const isAdmin=(email.toLowerCase()===ADMIN_EMAIL.toLowerCase());
-      const pinId = doc(collection(db,'pins')).id; // pre-generate id to reference from slot
-      let slot = null;
-
-      if(!isAdmin){
-        slot = await pickFreeSlot(uid, type);
-        if(!slot){ alert(`Limit reached: 5 ${typeName(type)} pins.`); return; }
-      }
-      // fetch your user profile to get username once
-      const profileSnap = await getDoc(doc(db, 'users', uid));
-      const profile = profileSnap.data() || {};
-      const ownerUsername = profile.username || null;
-
-      const batch = writeBatch(db);
-      const pinRef = doc(db,'pins',pinId);
-      const data = { title, description, type, lat, lng, photo: photo||null, ownerUid:uid, ownerEmail:email, ownerUsername, createdAt:serverTimestamp(), slot: slot || null };
-      batch.set(pinRef, data);
-
-      if(!isAdmin){
-        const slotRef = doc(db, `users/${uid}/quota/${type}/slots/${slot}`);
-        batch.set(slotRef, { pinId });
-      }
-      await batch.commit();
-    }
-
-    async function updatePin(id, {title,description,lat,lng,photo,type}){
-      const ref=doc(db,'pins',id);
-      const patch = { title, description, lat, lng, photo: photo||null };
-      // Non-admin cannot change type/slot/owner; admin may:
-      if(((auth.currentUser?.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase()) && type){
-        patch.type = type; // admin only — rules allow it
-      }
-      await updateDoc(ref, patch);
-    }
-
-    async function deletePin(id){
-      const ref=doc(db,'pins',id);
-      const snap=await getDoc(ref); if(!snap.exists()) return;
-      const p=snap.data();
-      const isAdmin = ((auth.currentUser?.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase());
-      if(isAdmin || p.ownerUid===auth.currentUser?.uid){
-        const batch=writeBatch(db);
-        batch.delete(ref);
-        // free slot for owner (even if admin is deleting, keep slots clean)
-        if(p.ownerUid && p.type && p.slot){
-          const slotRef = doc(db, `users/${p.ownerUid}/quota/${p.type}/slots/${p.slot}`);
-          batch.delete(slotRef);
-        }
-        await batch.commit();
-      } else {
-        alert('You can delete only your own pins.');
-      }
-    }
-
-    // ==== Modal + image ====
+    // Modal + image
     function setPhotoPreview(dataUrl){
       state.draftPhoto = dataUrl || null;
       if(state.draftPhoto){ photoPreview.src=state.draftPhoto; photoPreview.style.display='block'; removePhotoBtn.style.display='inline-block'; }
@@ -576,8 +468,7 @@
       state.editingId=id; state.draftLatLng={lat:loc.lat,lng:loc.lng}; setPhotoPreview(loc.photo||null);
       modalTitle.textContent='Edit location'; titleInput.value=loc.title||''; descInput.value=loc.description||''; coordsInput.value=`${fmt(loc.lat)}, ${fmt(loc.lng)}`;
       document.querySelector(`input[name="pinType"][value="${loc.type==='danger'?'danger':'lostcat'}"]`).checked=true;
-      // Non-admin: lock radio buttons (cannot change type/slot)
-      document.querySelectorAll('input[name="pinType"]').forEach(r=>{ r.disabled = !isAdmin; });
+      document.querySelectorAll('input[name="pinType"]').forEach(r=>{ r.disabled = !isAdmin; }); // non-admin cannot change type
       modalBackdrop.hidden=false; setTimeout(()=>titleInput.focus(),0);
     }
     function closeModal(){ modalBackdrop.hidden=true; state.editingId=null; state.draftLatLng=null; setPhotoPreview(null); document.querySelectorAll('input[name="pinType"]').forEach(r=>r.disabled=false); }
@@ -601,6 +492,68 @@
       });
     }
 
+    // Create / Update / Delete with slot enforcement
+    async function pickFreeSlot(uid, type){
+      const slotCol = collection(db, `users/${uid}/quota/${type}/slots`);
+      const snap = await getDocs(slotCol);
+      const used = new Set(); snap.forEach(d=>used.add(d.id));
+      for(const s of SLOT_IDS){ if(!used.has(s)) return s; }
+      return null;
+    }
+
+    async function createPin({title,description,type,lat,lng,photo}){
+      const user=auth.currentUser; if(!user) return;
+      const uid=user.uid; const email=user.email||'';
+      const isAdmin=(email.toLowerCase()===ADMIN_EMAIL.toLowerCase());
+      // get username
+      const profileSnap = await getDoc(doc(db,'users',uid));
+      const profile = profileSnap.data() || {};
+      const ownerUsername = profile.username || null;
+
+      const pinId = doc(collection(db,'pins')).id;
+      let slot = null;
+      if(!isAdmin){
+        slot = await pickFreeSlot(uid, type);
+        if(!slot){ alert(`Limit reached: 5 ${typeName(type)} pins.`); return; }
+      }
+      const batch = writeBatch(db);
+      batch.set(doc(db,'pins',pinId), {
+        title, description, type, lat, lng, photo: photo||null,
+        ownerUid: uid, ownerEmail: email, ownerUsername,
+        createdAt: serverTimestamp(),
+        slot: slot || null
+      });
+      if(!isAdmin){
+        batch.set(doc(db, `users/${uid}/quota/${type}/slots/${slot}`), { pinId });
+      }
+      await batch.commit();
+    }
+
+    async function updatePin(id, {title,description,lat,lng,photo,type}){
+      const ref=doc(db,'pins',id);
+      const patch = { title, description, lat, lng, photo: photo||null };
+      if(((auth.currentUser?.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase()) && type){
+        patch.type = type; // admin may change type
+      }
+      await updateDoc(ref, patch);
+    }
+
+    function confirmDelete(id){ if(confirm('Delete this pin?')) deletePin(id); }
+    async function deletePin(id){
+      const ref=doc(db,'pins',id);
+      const snap=await getDoc(ref); if(!snap.exists()) return;
+      const p=snap.data();
+      const isAdmin = ((auth.currentUser?.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase());
+      if(!(isAdmin || p.ownerUid===auth.currentUser?.uid)) return alert('You can delete only your own pins.');
+      const batch=writeBatch(db);
+      batch.delete(ref);
+      if(p.ownerUid && p.type && p.slot){
+        batch.delete(doc(db, `users/${p.ownerUid}/quota/${p.type}/slots/${p.slot}`));
+      }
+      await batch.commit();
+    }
+
+    // Save button
     saveBtn.onclick = async ()=>{
       const title=titleInput.value.trim()||'(untitled)';
       const description=descInput.value.trim();
@@ -616,27 +569,6 @@
         closeModal();
       }catch(e){ alert(e?.message || 'Save failed (quota? rules?).'); }
     };
-
-    // ==== Sidebar wiring ====
-    function renderEmpty(){ listEl.innerHTML='<li class="loc"><div class="title" style="grid-column:1/-1;color:var(--muted)">No locations yet. Toggle “Drop pin mode”, then click the map.</div></li>'; }
-    
-    // ==== Map helpers ====
-    function addMarkerFor(loc){
-      const user=auth.currentUser;
-      const mineOrAdmin = user && ((user.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase() || loc.ownerUid===user.uid);
-      const marker=L.marker([loc.lat,loc.lng],{ draggable:mineOrAdmin, icon:makeIcon(loc) });
-      marker.bindPopup(markerPopupHtml(loc, mineOrAdmin));
-      marker.bindTooltip(tooltipHtml(loc),{direction:'top',offset:[0,-54],className:'pin-tooltip',opacity:0.96});
-      marker.on('dragend', async (e)=>{ if(!mineOrAdmin) return; const {lat,lng}=e.target.getLatLng(); try{ await updateDoc(doc(db,'pins',loc.id), { lat, lng }); } catch{ alert('Update failed.'); }});
-      marker.on('popupopen', ()=>{ const el=marker.getPopup().getElement(); el.querySelectorAll('a[data-action]').forEach(a=>{
-        a.addEventListener('click', (evt)=>{ evt.preventDefault(); const id=a.getAttribute('data-id'); const act=a.getAttribute('data-action'); if(act==='edit') openEditModal(id); if(act==='delete') confirmDelete(id); });
-      });});
-      marker.addTo(map); state.markers.set(loc.id,marker);
-    }
-    
-
-
-    setAddMode(false);
   </script>
 </body>
 </html>

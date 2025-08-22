@@ -275,25 +275,61 @@
     map.on('click',(e)=>{ if(state.adding) openCreateModal(e.latlng); });
 
     // Auth
+    // emailSignup.onclick = async () => {
+    //   gateError.textContent=''; gateInfo.textContent='';
+    //   const email=emailInput.value.trim(), pass=passInput.value, uname=(unameInput.value||'').trim();
+    //   const unameLC = uname.toLowerCase();
+    //   if(!email || (pass||'').length<6){ gateError.textContent='Enter email and a 6+ char password.'; return; }
+    //   if(!/^[a-z0-9._-]{3,20}$/.test(unameLC)){ gateError.textContent='Username must be 3–20 chars: a–z, 0–9, dot, underscore, hyphen.'; return; }
+    //   try{
+    //     const cred = await createUserWithEmailAndPassword(auth,email,pass);
+    //     const u = cred.user;
+    //     const batch = writeBatch(db);
+    //     const userRef = doc(db,'users',u.uid);
+    //     const regRef  = doc(db,'usernames',unameLC);
+    //     batch.set(userRef,{ email:u.email, approved:false, username:uname, username_lc:unameLC, createdAt:serverTimestamp() });
+    //     batch.set(regRef,{ uid:u.uid, createdAt:serverTimestamp() });
+    //     await batch.commit();
+    //     gateInfo.textContent='Request submitted. You’ll get access after approval.';
+    //     await signOut(auth);
+    //   }catch{ gateError.textContent='Sign-up failed (username taken or rules not published).'; }
+    // };
     emailSignup.onclick = async () => {
-      gateError.textContent=''; gateInfo.textContent='';
-      const email=emailInput.value.trim(), pass=passInput.value, uname=(unameInput.value||'').trim();
+      gateError.textContent = ''; gateInfo.textContent = '';
+      const email = emailInput.value.trim();
+      const pass  = passInput.value;
+      const uname = (unameInput.value || '').trim();
       const unameLC = uname.toLowerCase();
-      if(!email || (pass||'').length<6){ gateError.textContent='Enter email and a 6+ char password.'; return; }
-      if(!/^[a-z0-9._-]{3,20}$/.test(unameLC)){ gateError.textContent='Username must be 3–20 chars: a–z, 0–9, dot, underscore, hyphen.'; return; }
-      try{
-        const cred = await createUserWithEmailAndPassword(auth,email,pass);
+    
+      if (!email || (pass||'').length < 6) { gateError.textContent = 'Enter email and a 6+ char password.'; return; }
+      if (!/^[a-z0-9._-]{3,20}$/.test(unameLC)) { gateError.textContent = 'Username must be 3–20 chars: a–z, 0–9, dot, underscore, hyphen.'; return; }
+    
+      try {
+        const cred = await createUserWithEmailAndPassword(auth, email, pass);
         const u = cred.user;
+    
         const batch = writeBatch(db);
-        const userRef = doc(db,'users',u.uid);
-        const regRef  = doc(db,'usernames',unameLC);
-        batch.set(userRef,{ email:u.email, approved:false, username:uname, username_lc:unameLC, createdAt:serverTimestamp() });
-        batch.set(regRef,{ uid:u.uid, createdAt:serverTimestamp() });
+        const userRef = doc(db, 'users', u.uid);
+        const regRef  = doc(db, 'usernames', unameLC);
+    
+        batch.set(userRef, {
+          email: u.email,
+          approved: true,              // <-- auto-approve on create
+          username: uname,
+          username_lc: unameLC,
+          createdAt: serverTimestamp()
+        });
+        batch.set(regRef, { uid: u.uid, createdAt: serverTimestamp() });
+    
         await batch.commit();
-        gateInfo.textContent='Request submitted. You’ll get access after approval.';
-        await signOut(auth);
-      }catch{ gateError.textContent='Sign-up failed (username taken or rules not published).'; }
+    
+        // No signOut here — keep them signed in and let onAuthStateChanged load the map
+        gateInfo.textContent = 'Account created. Loading…';
+      } catch (e) {
+        gateError.textContent = 'Sign-up failed (username taken or rules not published).';
+      }
     };
+
     emailSignin.onclick = async ()=>{
       gateError.textContent=''; gateInfo.textContent='';
       const email=emailInput.value.trim(), pass=passInput.value;
@@ -326,8 +362,9 @@
       if(isAdmin){ startPendingRequests(); } else { stopPendingRequests(); }
 
       // Gate by approval (admin treated as approved)
-      const approved = isAdmin ? true : ((await getDoc(uref)).data()?.approved===true);
-      if(approved){ startPinsFeed(); } else { stopPinsFeed(); alert('Your account is pending approval.'); signOut(auth); }
+      // const approved = isAdmin ? true : ((await getDoc(uref)).data()?.approved===true);
+      // if(approved){ startPinsFeed(); } else { stopPinsFeed(); alert('Your account is pending approval.'); signOut(auth); }
+      startPinsFeed();
     });
 
     function stopFeeds(){ stopPinsFeed(); stopPendingRequests(); }

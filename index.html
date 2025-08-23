@@ -9,7 +9,7 @@
   <link rel="stylesheet"
         href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-        crossorigin />
+        crossorigin>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
           integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
           crossorigin></script>
@@ -21,16 +21,25 @@
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;}
     #app{display:grid;grid-template-columns:360px 1fr;grid-template-rows:100vh}
     #sidebar{background:var(--bg-elev);border-right:1px solid var(--border);display:flex;flex-direction:column;min-width:320px}
+
+    /* Brand header: title with email under it + signout at right */
     .brand{padding:14px 16px;color:var(--muted);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-    .brand .who{font-size:12px;color:var(--muted)}
+    .brand .title{font-weight:600;color:#e2e8f0}
+    .brand .who{display:block;font-size:12px;color:var(--muted);margin-top:4px}
+    .brand .left{display:flex;flex-direction:column}
+
     .controls{padding:12px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr auto;gap:8px}
     .controls input[type="text"]{background:#111521;border:1px solid var(--border);color:var(--fg);padding:10px;border-radius:8px}
     .controls .row{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
     button,label.btn{background:#171d2b;border:1px solid var(--border);color:var(--fg);padding:9px 12px;border-radius:8px;cursor:pointer;font-size:14px}
     button:hover,label.btn:hover{border-color:#2d3652}
-    button.primary{background:#1a2744;border-color:#243154}
+    button.primary{background:#1a2744;border-color:#243154;box-shadow:0 0 0 1px rgba(122,162,247,.15) inset}
     button.danger{border-color:#4a2626;background:#2b1414;color:#ffb3b3}
     button[disabled]{opacity:.6;cursor:not-allowed}
+    .mode-btn .dot{display:inline-block;width:10px;height:10px;border-radius:999px;margin-right:8px;vertical-align:-1px}
+    .mode-btn.cat  .dot{background:var(--cat)}
+    .mode-btn.dang .dot{background:var(--danger)}
+
     #locationList{list-style:none;padding:0;margin:0;overflow:auto;flex:1}
     .loc{border-bottom:1px solid var(--border);padding:10px 12px;display:grid;grid-template-columns:1fr auto;gap:4px 8px;align-items:center}
     .loc .title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -44,12 +53,14 @@
 
     /* Gate */
     #gate{position:fixed;inset:0;background:linear-gradient(180deg,#0d1017,#0f1115);display:grid;place-items:center;z-index:2000}
-    #gate .card{width:min(520px,92%);background:var(--bg-elev);border:1px solid var(--border);border-radius:12px;padding:18px}
+    #gate .card{width:min(520px,92%);background:var(--bg-elev);border:1px solid var(--border);border-radius:12px;padding:18px;display:flex;flex-direction:column}
     #gate h2{margin:0 0 6px 0}
     #gate .muted{color:var(--muted);font-size:14px;margin-bottom:12px}
     .stack{display:grid;gap:8px}
     .error{color:#ff9a9a;font-size:13px;min-height:18px}
     .ok{color:#b2f5d6}
+    .gate-foot{margin-top:12px;border-top:1px dashed var(--border);padding-top:10px;color:var(--muted);font-size:12px}
+
     body.auth #gate{display:none}
     body:not(.auth) #app{filter:blur(4px);pointer-events:none;user-select:none}
 
@@ -62,7 +73,7 @@
     .modal .f label{font-size:13px;color:var(--muted);margin-bottom:6px;display:block}
     .modal input[type="text"], .modal textarea{width:100%;background:#111521;border:1px solid var(--border);color:#fff;padding:10px;border-radius:8px;outline:none;resize:vertical}
     .modal textarea{min-height:80px;grid-column:1/-1}
-    .type-group{display:flex;gap:12px;align-items:center}
+    .type-group{display:none} /* hidden by default; shown for admin on edit */
     .type-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:#101522}
     .type-pill .dot{width:10px;height:10px;border-radius:999px}
     .dot.cat{background:var(--cat)} .dot.danger{background:var(--danger)}
@@ -96,24 +107,32 @@
         <div id="gateInfo" class="ok"></div>
         <div id="gateError" class="error"></div>
       </div>
+
+      <div id="gateFooter" class="gate-foot">
+        <!-- ⬇️ Replace this line with your custom login-page footer text ⬇️ -->
+        <small style="opacity:.85">Find your missing cats.</small>
+      </div>
     </div>
   </div>
 
   <div id="app">
     <aside id="sidebar">
       <div class="brand">
-        <span>KAUST Pins</span>
-        <div>
-          <span id="whoami" class="who"></span>
-          <button id="logoutBtn" style="margin-left:8px">Sign out</button>
+        <div class="left">
+          <div class="title">KAUST Pins</div>
+          <div id="whoami" class="who"></div>
         </div>
+        <button id="logoutBtn">Sign out</button>
       </div>
 
       <div class="controls">
         <input id="searchInput" type="text" placeholder="Search a place (e.g., KAUST, Jeddah)" />
         <button id="searchBtn" title="Find place">Search</button>
+
+        <!-- Two drop-pin type selectors -->
         <div class="row">
-          <button id="toggleAddBtn" class="primary" title="Toggle pin mode">Drop pin mode: off</button>
+          <button id="modeCatBtn" class="mode-btn cat"><span class="dot"></span>Lost Cat</button>
+          <button id="modeDangerBtn" class="mode-btn dang"><span class="dot"></span>Danger</button>
           <button id="locateBtn" title="Center on my location">Locate me</button>
         </div>
       </div>
@@ -140,13 +159,17 @@
           <label for="coordsInput">Coordinates</label>
           <input id="coordsInput" type="text" readonly />
         </div>
+
+        <!-- Pin type (hidden by default; admin sees it on edit) -->
         <div>
           <label>Pin type</label>
-          <div class="type-group">
+          <div class="type-group" id="typeGroup">
             <label class="type-pill"><input type="radio" name="pinType" value="lostcat" checked /> <span class="dot cat"></span> Lost Cat</label>
             <label class="type-pill"><input type="radio" name="pinType" value="danger" /> <span class="dot danger"></span> Danger</label>
           </div>
+          <div id="typePreview" class="mini-note"></div>
         </div>
+
         <div>
           <label>Photo (optional)</label>
           <div class="row" style="gap:6px">
@@ -156,6 +179,7 @@
           </div>
         </div>
         <img id="photoPreview" class="photo-prev" alt="Preview" />
+
         <div style="grid-column:1/-1">
           <label for="descInput">Description</label>
           <textarea id="descInput" placeholder="Notes, directions, etc."></textarea>
@@ -211,12 +235,13 @@
     const $ = (id)=>document.getElementById(id);
     const whoami=$('whoami'), logoutBtn=$('logoutBtn');
     const gateError=$('gateError'), gateInfo=$('gateInfo'), googleBtn=$('googleBtn');
-    const listEl=$('locationList'), toggleAddBtn=$('toggleAddBtn'), locateBtn=$('locateBtn');
+    const listEl=$('locationList'), locateBtn=$('locateBtn');
+    const modeCatBtn=$('modeCatBtn'), modeDangerBtn=$('modeDangerBtn');
     const searchInput=$('searchInput'), searchBtn=$('searchBtn'), pinHint=$('pinHint');
     const modalBackdrop=$('modalBackdrop'), modalTitle=$('modalTitle'),
           titleInput=$('titleInput'), descInput=$('descInput'), coordsInput=$('coordsInput'),
           photoInput=$('photoInput'), photoPreview=$('photoPreview'), removePhotoBtn=$('removePhotoBtn'),
-          cancelBtn=$('cancelBtn'), saveBtn=$('saveBtn');
+          cancelBtn=$('cancelBtn'), saveBtn=$('saveBtn'), typeGroup=$('typeGroup'), typePreview=$('typePreview');
 
     // ====== Map (KAUST default) ======
     const VIEW_KEY='pinboard.mapview.v3';
@@ -232,18 +257,9 @@
     const typeName=(t)=>t===TYPE_DANGER?'Danger':'Lost Cat';
     const typeClass=(t)=>t===TYPE_DANGER?'danger':'cat';
     const escapeHtml=(s)=>String(s).replace(/[&<>"']/g,(m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
-    function setAddMode(on){ state.adding=!!on; toggleAddBtn.textContent=`Drop pin mode: ${state.adding?'on':'off'}`; pinHint.style.display = state.adding ? 'block' : 'none'; }
-    function setSaving(on){
-      state.saving=!!on;
-      saveBtn.disabled=on; cancelBtn.disabled=on; photoInput.disabled=on;
-      document.querySelectorAll('input[name="pinType"]').forEach(r=>r.disabled=on);
-      titleInput.readOnly=on; descInput.readOnly=on;
-      if(on){ saveBtn.dataset._old=saveBtn.textContent; saveBtn.textContent='Saving…'; }
-      else { saveBtn.textContent=saveBtn.dataset._old||'Save'; }
-    }
 
     // ====== State ======
-    const state={ adding:false, markers:new Map(), locations:[], draftLatLng:null, draftPhoto:null, editingId:null, saving:false, pendingPinId:null };
+    const state={ activeType:null, markers:new Map(), locations:[], draftLatLng:null, draftPhoto:null, editingId:null, saving:false, pendingPinId:null };
 
     // ====== Search & Locate ======
     searchBtn.onclick = runSearch;
@@ -289,11 +305,9 @@
 
     // ====== Auth state ======
     onAuthStateChanged(auth, async (user)=>{
-      console.log('[auth] ->', user?.email||null);
       if(!user){ document.body.classList.remove('auth'); whoami.textContent=''; stopPinsFeed(); return; }
 
       if(!isAllowedEmail(user.email)){
-        // Don’t auto-sign-out => no loop. Let user switch.
         document.body.classList.remove('auth'); whoami.textContent=''; stopPinsFeed();
         gateError.innerHTML = `This account (<b>${user.email}</b>) isn’t allowed. ` +
           `<a href="#" id="switchAcct">Use a different Google account</a>`;
@@ -305,9 +319,9 @@
 
       document.body.classList.add('auth');
       const isAdmin = (user.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase();
-      whoami.textContent = `${user.email}${isAdmin?' • admin':''}`;
+      whoami.textContent = user.email + (isAdmin ? ' • admin' : '');
 
-      // Ensure user doc exists
+      // Ensure profile doc exists
       const uref=doc(db,'users',user.uid);
       const udoc=await getDoc(uref);
       if(!udoc.exists()){
@@ -316,6 +330,24 @@
 
       startPinsFeed();
     });
+
+    // ====== Mode buttons (Lost Cat / Danger) ======
+    function updateModeUI(){
+      modeCatBtn.classList.toggle('primary', state.activeType==='lostcat');
+      modeDangerBtn.classList.toggle('primary', state.activeType==='danger');
+      if(state.activeType){
+        pinHint.textContent = `Click on the map to place a ${state.activeType==='danger'?'Danger':'Lost Cat'} pin`;
+        pinHint.style.display='block';
+      } else {
+        pinHint.style.display='none';
+      }
+    }
+    function setMode(type){
+      state.activeType = (state.activeType === type) ? null : type;
+      updateModeUI();
+    }
+    modeCatBtn.onclick = ()=> setMode('lostcat');
+    modeDangerBtn.onclick = ()=> setMode('danger');
 
     // ====== Pins feed ======
     let unsubPins=null;
@@ -385,7 +417,7 @@
       listEl.innerHTML='';
       if(!state.locations.length){
         const li=document.createElement('li'); li.className='loc';
-        li.innerHTML='<div class="title" style="grid-column:1/-1;color:var(--muted)">No locations yet. Toggle “Drop pin mode”, then click the map.</div>';
+        li.innerHTML='<div class="title" style="grid-column:1/-1;color:var(--muted)">No locations yet. Click a mode (Lost Cat or Danger), then click the map.</div>';
         listEl.appendChild(li); return;
       }
       const user=auth.currentUser; const isAdmin=(user?.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase();
@@ -409,8 +441,7 @@
     }
 
     // ====== Modal + image ======
-    toggleAddBtn.onclick=()=>setAddMode(!state.adding);
-    map.on('click',(e)=>{ if(state.adding) openCreateModal(e.latlng); });
+    map.on('click',(e)=>{ if(state.activeType) openCreateModal(e.latlng); });
 
     function setPhotoPreview(dataUrl){
       state.draftPhoto = dataUrl || null;
@@ -425,7 +456,13 @@
       setSaving(false);
       modalTitle.textContent='New location';
       titleInput.value=''; descInput.value=''; coordsInput.value=`${fmt(latlng.lat)}, ${fmt(latlng.lng)}`;
-      document.querySelector('input[name="pinType"][value="lostcat"]').checked=true;
+
+      // Type comes from active mode; show preview, keep radios hidden
+      const t = state.activeType || 'lostcat';
+      document.querySelector(`input[name="pinType"][value="${t}"]`).checked = true;
+      typeGroup.style.display = 'none';
+      typePreview.textContent = 'Pin type: ' + typeName(t);
+
       modalBackdrop.hidden=false; setTimeout(()=>titleInput.focus(),0);
     }
     function openEditModal(id){
@@ -435,10 +472,13 @@
       state.editingId=id; state.draftLatLng={lat:loc.lat,lng:loc.lng}; setPhotoPreview(loc.photo||null);
       modalTitle.textContent='Edit location'; titleInput.value=loc.title||''; descInput.value=loc.description||''; coordsInput.value=`${fmt(loc.lat)}, ${fmt(loc.lng)}`;
       document.querySelector(`input[name="pinType"][value="${loc.type==='danger'?'danger':'lostcat'}"]`).checked=true;
-      document.querySelectorAll('input[name="pinType"]').forEach(r=>{ r.disabled = !isAdmin; }); // non-admin cannot change type
+
+      if(isAdmin){ typeGroup.style.display='flex'; typePreview.textContent=''; }
+      else { typeGroup.style.display='none'; typePreview.textContent='Pin type: ' + typeName(loc.type); }
+
       modalBackdrop.hidden=false; setTimeout(()=>titleInput.focus(),0);
     }
-    function closeModal(){ modalBackdrop.hidden=true; state.editingId=null; state.draftLatLng=null; state.pendingPinId=null; setSaving(false); setPhotoPreview(null); document.querySelectorAll('input[name="pinType"]').forEach(r=>r.disabled=false); }
+    function closeModal(){ modalBackdrop.hidden=true; state.editingId=null; state.draftLatLng=null; state.pendingPinId=null; setSaving(false); setPhotoPreview(null); typeGroup.style.display='none'; typePreview.textContent=''; }
     cancelBtn.onclick=closeModal;
     modalBackdrop.addEventListener('click',(e)=>{ if(e.target===modalBackdrop) closeModal(); });
 
@@ -513,19 +553,28 @@
     }
 
     // ====== Save (idempotent + UI lock) ======
+    function setSaving(on){
+      state.saving=!!on;
+      saveBtn.disabled=on; cancelBtn.disabled=on; photoInput.disabled=on;
+      titleInput.readOnly=on; descInput.readOnly=on;
+      if(on){ saveBtn.dataset._old=saveBtn.textContent; saveBtn.textContent='Saving…'; }
+      else { saveBtn.textContent=saveBtn.dataset._old||'Save'; }
+    }
     saveBtn.onclick=async ()=>{
       if(state.saving) return;
       setSaving(true);
       const title=titleInput.value.trim()||'(untitled)';
       const description=descInput.value.trim();
       if(!state.draftLatLng){ closeModal(); return; }
-      let type=(document.querySelector('input[name="pinType"]:checked')?.value==='danger')?TYPE_DANGER:TYPE_LOSTCAT;
-      const isAdmin=((auth.currentUser?.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase());
+
       try{
         if(state.editingId){
-          await updatePin(state.editingId,{ title, description, lat:state.draftLatLng.lat, lng:state.draftLatLng.lng, photo:state.draftPhoto, type:isAdmin?type:undefined });
-        }else{
-          await createPin({ id:state.pendingPinId, title, description, type, lat:state.draftLatLng.lat, lng:state.draftLatLng.lng, photo:state.draftPhoto });
+          const radio = document.querySelector('input[name="pinType"]:checked')?.value;
+          const isAdmin=((auth.currentUser?.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase());
+          await updatePin(state.editingId,{ title, description, lat:state.draftLatLng.lat, lng:state.draftLatLng.lng, photo:state.draftPhoto, type:isAdmin ? (radio==='danger'?'danger':'lostcat') : undefined });
+        } else {
+          if(!state.activeType){ alert('Select a pin type: Lost Cat or Danger (left panel).'); setSaving(false); return; }
+          await createPin({ id: state.pendingPinId, title, description, type: state.activeType, lat:state.draftLatLng.lat, lng:state.draftLatLng.lng, photo:state.draftPhoto });
         }
         closeModal();
       }catch(e){

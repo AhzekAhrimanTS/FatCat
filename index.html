@@ -16,22 +16,26 @@
 
   <style>
     :root { --bg:#0f1115; --bg-elev:#161a22; --fg:#d7dce2; --muted:#9aa3ad;
-      --accent:#7aa2f7; --danger:#ef5350; --cat:#f1a33c; --border:#232839; }
+      --accent:#7aa2f7; --danger:#ef5350; --cat:#f1a33c; --border:#232839; --ok:#3ac97a; }
     html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;}
-    #app{display:grid;grid-template-columns:360px 1fr;grid-template-rows:100vh}
-    #sidebar{background:var(--bg-elev);border-right:1px solid var(--border);display:flex;flex-direction:column;min-width:320px}
+    #app{display:grid;grid-template-columns:380px 1fr;grid-template-rows:100vh}
+    #sidebar{background:var(--bg-elev);border-right:1px solid var(--border);display:flex;flex-direction:column;min-width:340px}
 
-    /* Brand header: title with email under it + signout at right */
-    .brand{padding:14px 16px;color:var(--muted);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+    /* Brand header */
+    .brand{padding:14px 16px;color:var(--muted);border-bottom:1px solid var(--border);
+      display:flex;justify-content:space-between;align-items:center}
     .brand .title{font-weight:600;color:#e2e8f0}
     .brand .who{display:block;font-size:12px;color:var(--muted);margin-top:4px}
     .brand .left{display:flex;flex-direction:column}
 
-    .controls{padding:12px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr auto;gap:8px}
-    .controls input[type="text"]{background:#111521;border:1px solid var(--border);color:var(--fg);padding:10px;border-radius:8px}
+    .controls{padding:12px;border-bottom:1px solid var(--border);
+      display:grid;grid-template-columns:1fr auto;gap:8px}
+    .controls input[type="text"]{background:#111521;border:1px solid var(--border);
+      color:var(--fg);padding:10px;border-radius:8px}
     .controls .row{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    button,label.btn{background:#171d2b;border:1px solid var(--border);color:var(--fg);padding:9px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+    button,label.btn{background:#171d2b;border:1px solid var(--border);color:var(--fg);
+      padding:9px 12px;border-radius:8px;cursor:pointer;font-size:14px}
     button:hover,label.btn:hover{border-color:#2d3652}
     button.primary{background:#1a2744;border-color:#243154;box-shadow:0 0 0 1px rgba(122,162,247,.15) inset}
     button.danger{border-color:#4a2626;background:#2b1414;color:#ffb3b3}
@@ -41,15 +45,35 @@
     .mode-btn.dang .dot{background:var(--danger)}
 
     #locationList{list-style:none;padding:0;margin:0;overflow:auto;flex:1}
-    .loc{border-bottom:1px solid var(--border);padding:10px 12px;display:grid;grid-template-columns:1fr auto;gap:4px 8px;align-items:center}
+    .loc{border-bottom:1px solid var(--border);padding:10px 12px;display:grid;
+      grid-template-columns:1fr auto;gap:4px 8px;align-items:center}
     .loc .title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .loc .meta{color:var(--muted);font-size:12px}
     .loc .actions{display:flex;gap:6px}
     .badge{font-size:11px;padding:2px 8px;border-radius:999px;margin-left:8px}
     .badge.cat{background:rgba(241,163,60,.15);color:#ffd49a;border:1px solid rgba(241,163,60,.35)}
     .badge.danger{background:rgba(239,83,80,.15);color:#ffb3b3;border:1px solid rgba(239,83,80,.35)}
+
+    /* Moderation panel */
+    .mod-panel{border-top:1px solid var(--border);padding:12px}
+    .mod-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+    .mod-header h3{margin:0;font-size:14px;color:#cbd5e1}
+    #userList{list-style:none;margin:0;padding:0;max-height:28vh;overflow:auto;border:1px solid var(--border);border-radius:8px}
+    .user-row{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;padding:8px 10px;border-bottom:1px dashed #1f2433}
+    .user-row:last-child{border-bottom:0}
+    .u-meta{font-size:12px;color:var(--muted)}
+    .u-tags{display:flex;gap:6px;align-items:center}
+    .tag{font-size:10px;padding:2px 6px;border-radius:999px;border:1px solid var(--border);color:#aeb8c6}
+    .tag.mod{border-color:#37517e;color:#bdd6ff;background:rgba(122,162,247,.1)}
+    .tag.admin{border-color:#3d7a5b;color:#bdf2d8;background:rgba(58,201,122,.08)}
+    .tag.banned{border-color:#5c2b2b;color:#ffb3b3;background:rgba(239,83,80,.10)}
+    .status{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+    .dot{width:8px;height:8px;border-radius:999px;background:#4b5563}
+    .dot.online{background:var(--ok)}
+
     #map{height:100%;width:100%}
-    .pin-hint{position:absolute;top:12px;right:12px;z-index:500;background:rgba(10,14,24,.9);border:1px solid var(--border);padding:8px 12px;border-radius:8px;color:var(--muted);pointer-events:none}
+    .pin-hint{position:absolute;top:12px;right:12px;z-index:500;background:rgba(10,14,24,.9);
+      border:1px solid var(--border);padding:8px 12px;border-radius:8px;color:var(--muted);pointer-events:none}
 
     /* Gate */
     #gate{position:fixed;inset:0;background:linear-gradient(180deg,#0d1017,#0f1115);display:grid;place-items:center;z-index:2000}
@@ -64,7 +88,7 @@
     body.auth #gate{display:none}
     body:not(.auth) #app{filter:blur(4px);pointer-events:none;user-select:none}
 
-    /* Modal */
+    /* Modal (same as before) */
     .modal-backdrop[hidden]{display:none}
     .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:grid;place-items:center;z-index:1000;padding:16px}
     .modal{width:min(620px,100%);background:var(--bg-elev);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
@@ -73,7 +97,7 @@
     .modal .f label{font-size:13px;color:var(--muted);margin-bottom:6px;display:block}
     .modal input[type="text"], .modal textarea{width:100%;background:#111521;border:1px solid var(--border);color:#fff;padding:10px;border-radius:8px;outline:none;resize:vertical}
     .modal textarea{min-height:80px;grid-column:1/-1}
-    .type-group{display:none} /* hidden by default; shown for admin on edit */
+    .type-group{display:none}
     .type-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:#101522}
     .type-pill .dot{width:10px;height:10px;border-radius:999px}
     .dot.cat{background:var(--cat)} .dot.danger{background:var(--danger)}
@@ -83,16 +107,19 @@
     /* Marker */
     .pin-icon{background:transparent!important;border:0!important}
     .pin{position:relative;width:46px;height:60px;pointer-events:auto}
-    .pin .bubble{width:46px;height:46px;border-radius:50%;overflow:hidden;background:#0f1422;display:flex;align-items:center;justify-content:center;border:2px solid #4a5a88;box-shadow:0 8px 18px rgba(0,0,0,.45)}
+    .pin .bubble{width:46px;height:46px;border-radius:50%;overflow:hidden;background:#0f1422;
+      display:flex;align-items:center;justify-content:center;border:2px solid #4a5a88;box-shadow:0 8px 18px rgba(0,0,0,.45)}
     .pin .bubble img.thumb{width:100%;height:100%;object-fit:cover;display:block}
     .pin .bubble .glyph{font-size:22px;line-height:1}
-    .pin .stem{position:absolute;left:50%;bottom:4px;transform:translateX(-50%);width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-top:14px solid #4a5a88;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
+    .pin .stem{position:absolute;left:50%;bottom:4px;transform:translateX(-50%);
+      width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-top:14px solid #4a5a88;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
     .pin.cat .bubble{border-color:var(--cat)} .pin.cat .stem{border-top-color:var(--cat)}
     .pin.danger .bubble{border-color:var(--danger)} .pin.danger .stem{border-top-color:var(--danger)}
-    .leaflet-tooltip.pin-tooltip{background:rgba(12,16,26,.96);color:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 10px 25px rgba(0,0,0,.35)}
+    .leaflet-tooltip.pin-tooltip{background:rgba(12,16,26,.96);color:#fff;border:1px solid var(--border);
+      border-radius:10px;box-shadow:0 10px 25px rgba(0,0,0,.35)}
     .tt-title{margin-bottom:4px}.tt-meta{color:var(--muted);font-size:12px;margin-bottom:4px}.tt-desc{font-size:13px;max-width:260px;white-space:normal}
 
-    @media(max-width:960px){#app{grid-template-columns:1fr;grid-template-rows:45vh 55vh}#sidebar{order:2}#map{order:1}}
+    @media(max-width:1040px){#app{grid-template-columns:1fr;grid-template-rows:45vh 55vh}#sidebar{order:2}#map{order:1}}
     .leaflet-container{background:#0c0f15}
   </style>
 </head>
@@ -101,15 +128,14 @@
   <div id="gate">
     <div class="card">
       <h2>KAUST Pins</h2>
-      <div class="muted">Sign in with Google to view and drop pins.</div>
+      <div class="muted">Sign in with Google (KAUST accounts only).</div>
       <div class="stack">
         <button id="googleBtn" class="primary">Continue with Google</button>
         <div id="gateInfo" class="ok"></div>
         <div id="gateError" class="error"></div>
       </div>
-
       <div id="gateFooter" class="gate-foot">
-        <!-- ⬇️ Replace this line with your custom login-page footer text ⬇️ -->
+        <!-- Customize this small footer text under the login card -->
         <small style="opacity:.85">Find your missing cats.</small>
       </div>
     </div>
@@ -128,8 +154,6 @@
       <div class="controls">
         <input id="searchInput" type="text" placeholder="Search a place (e.g., KAUST, Jeddah)" />
         <button id="searchBtn" title="Find place">Search</button>
-
-        <!-- Two drop-pin type selectors -->
         <div class="row">
           <button id="modeCatBtn" class="mode-btn cat"><span class="dot"></span>Lost Cat</button>
           <button id="modeDangerBtn" class="mode-btn dang"><span class="dot"></span>Danger</button>
@@ -138,6 +162,15 @@
       </div>
 
       <ul id="locationList"></ul>
+
+      <!-- Moderation panel (admin/mods only) -->
+      <div id="modPanel" class="mod-panel" style="display:none">
+        <div class="mod-header">
+          <h3>Users</h3>
+          <small class="u-meta">Online &amp; last activity</small>
+        </div>
+        <ul id="userList"></ul>
+      </div>
     </aside>
 
     <main style="position:relative">
@@ -159,8 +192,6 @@
           <label for="coordsInput">Coordinates</label>
           <input id="coordsInput" type="text" readonly />
         </div>
-
-        <!-- Pin type (hidden by default; admin sees it on edit) -->
         <div>
           <label>Pin type</label>
           <div class="type-group" id="typeGroup">
@@ -169,7 +200,6 @@
           </div>
           <div id="typePreview" class="mini-note"></div>
         </div>
-
         <div>
           <label>Photo (optional)</label>
           <div class="row" style="gap:6px">
@@ -179,7 +209,6 @@
           </div>
         </div>
         <img id="photoPreview" class="photo-prev" alt="Preview" />
-
         <div style="grid-column:1/-1">
           <label for="descInput">Description</label>
           <textarea id="descInput" placeholder="Notes, directions, etc."></textarea>
@@ -223,12 +252,10 @@
     const db = getFirestore(appFB);
 
     // ====== Policy toggles ======
-    const ADMIN_EMAIL = 'lenatif09@gmail.com';
-    // Allow BOTH Gmail and KAUST by default; to make Gmail-only, remove 'kaust.edu.sa'
-    const ALLOWED_DOMAINS = ['gmail.com','googlemail.com','kaust.edu.sa'];
+    const OWNER_EMAIL = 'lenatif09@gmail.com';
     const isAllowedEmail = (email) => {
       const e = (email || '').toLowerCase();
-      return ALLOWED_DOMAINS.some(d => e.endsWith('@'+d));
+      return e === OWNER_EMAIL.toLowerCase() || /@kaust\.edu\.sa$/i.test(e);
     };
 
     // ====== DOM ======
@@ -242,12 +269,15 @@
           titleInput=$('titleInput'), descInput=$('descInput'), coordsInput=$('coordsInput'),
           photoInput=$('photoInput'), photoPreview=$('photoPreview'), removePhotoBtn=$('removePhotoBtn'),
           cancelBtn=$('cancelBtn'), saveBtn=$('saveBtn'), typeGroup=$('typeGroup'), typePreview=$('typePreview');
+    const modPanel = $('modPanel'), userList = $('userList');
 
     // ====== Map (KAUST default) ======
     const VIEW_KEY='pinboard.mapview.v3';
     const savedView = JSON.parse(localStorage.getItem(VIEW_KEY) || "null");
-    const map = L.map('map', { center: savedView ? [savedView.lat, savedView.lng] : [22.3088,39.1046], zoom: savedView ? Math.max(1,Math.min(19,savedView.zoom|0)) : 15, worldCopyJump:true });
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ maxZoom:19, attribution:'&copy; OpenStreetMap contributors' }).addTo(map);
+    const map = L.map('map', { center: savedView ? [savedView.lat, savedView.lng] : [22.3088,39.1046],
+      zoom: savedView ? Math.max(1,Math.min(19,savedView.zoom|0)) : 15, worldCopyJump:true });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      { maxZoom:19, attribution:'&copy; OpenStreetMap contributors' }).addTo(map);
     map.on('moveend',()=>{ const c=map.getCenter(); localStorage.setItem(VIEW_KEY, JSON.stringify({lat:c.lat,lng:c.lng,zoom:map.getZoom()})); });
 
     // ====== Helpers ======
@@ -257,9 +287,36 @@
     const typeName=(t)=>t===TYPE_DANGER?'Danger':'Lost Cat';
     const typeClass=(t)=>t===TYPE_DANGER?'danger':'cat';
     const escapeHtml=(s)=>String(s).replace(/[&<>"']/g,(m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+    const fmtLatLng = (loc)=>`${fmt(loc.lat)}, ${fmt(loc.lng)}`;
+
+    // Relative time helper
+    function timeAgo(ts) {
+      if (!ts) return 'never';
+      const t = typeof ts.toMillis === 'function' ? ts.toMillis() : (typeof ts === 'number' ? ts : Date.parse(ts));
+      const s = Math.max(0, Math.floor((Date.now()-t)/1000));
+      if (s < 60) return s+'s ago';
+      const m = Math.floor(s/60); if(m < 60) return m+'m ago';
+      const h = Math.floor(m/60); if(h < 24) return h+'h ago';
+      const d = Math.floor(h/24); return d+'d ago';
+    }
 
     // ====== State ======
-    const state={ activeType:null, markers:new Map(), locations:[], draftLatLng:null, draftPhoto:null, editingId:null, saving:false, pendingPinId:null };
+    const state={
+      activeType:null,
+      markers:new Map(),
+      locations:[],
+      draftLatLng:null,
+      draftPhoto:null,
+      editingId:null,
+      saving:false,
+      pendingPinId:null,
+      // roles/presence
+      isAdmin:false,
+      isMod:false,
+      isBanned:false,
+      users:[],
+      hbTimer:null
+    };
 
     // ====== Search & Locate ======
     searchBtn.onclick = runSearch;
@@ -300,65 +357,148 @@
       }
     };
     getRedirectResult(auth).catch(e=>console.warn('redirect result:', e?.code||e));
-
     logoutBtn.onclick=()=>signOut(auth);
 
     // ====== Auth state ======
+    let unsubPins=null, unsubUsers=null;
     onAuthStateChanged(auth, async (user)=>{
-      if(!user){ document.body.classList.remove('auth'); whoami.textContent=''; stopPinsFeed(); return; }
+      // stop heartbeats & listeners
+      if(state.hbTimer){ clearInterval(state.hbTimer); state.hbTimer=null; }
+      if(unsubPins){unsubPins();unsubPins=null;}
+      if(unsubUsers){unsubUsers();unsubUsers=null;}
+      state.users=[]; renderUsers();
+
+      if(!user){ document.body.classList.remove('auth'); whoami.textContent=''; clearMarkers(); return; }
 
       if(!isAllowedEmail(user.email)){
-        document.body.classList.remove('auth'); whoami.textContent=''; stopPinsFeed();
-        gateError.innerHTML = `This account (<b>${user.email}</b>) isn’t allowed. ` +
-          `<a href="#" id="switchAcct">Use a different Google account</a>`;
-        document.getElementById('switchAcct')?.addEventListener('click', async (e)=>{
-          e.preventDefault(); await signOut(auth); googleBtn.click();
-        });
+        document.body.classList.remove('auth'); whoami.textContent=''; clearMarkers();
+        gateError.innerHTML = `This account (<b>${user.email}</b>) isn’t allowed.`;
+        await signOut(auth);
         return;
       }
 
       document.body.classList.add('auth');
-      const isAdmin = (user.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase();
-      whoami.textContent = user.email + (isAdmin ? ' • admin' : '');
 
-      // Ensure profile doc exists
+      // Ensure user doc
       const uref=doc(db,'users',user.uid);
-      const udoc=await getDoc(uref);
+      let udoc=await getDoc(uref);
       if(!udoc.exists()){
-        await setDoc(uref,{ email:user.email, approved:true, createdAt:serverTimestamp() });
+        await setDoc(uref,{ email:user.email, createdAt:serverTimestamp(), role:null, banned:false, lastActiveAt:serverTimestamp() });
+        udoc=await getDoc(uref);
+      }else{
+        // immediate activity bump
+        try{ await updateDoc(uref,{ lastActiveAt: serverTimestamp() }); }catch{}
       }
 
+      // roles / ban
+      const role=(udoc.data()?.role||'').toString().toLowerCase();
+      state.isAdmin = (user.email||'').toLowerCase()===OWNER_EMAIL.toLowerCase();
+      state.isMod   = state.isAdmin || role==='mod' || role==='moderator';
+      state.isBanned = !!udoc.data()?.banned;
+
+      const tags=[];
+      if(state.isAdmin) tags.push('admin');
+      else if(state.isMod) tags.push('mod');
+      if(state.isBanned) tags.push('banned');
+      whoami.textContent = user.email + (tags.length?' • '+tags.join(' • '):'');
+
+      // Start presence heartbeat (every 60s; also when tab gains focus)
+      state.hbTimer = setInterval(async ()=>{
+        try{ await updateDoc(uref,{ lastActiveAt: serverTimestamp() }); }catch{}
+      }, 60000);
+      window.addEventListener('visibilitychange', async ()=>{
+        if(document.visibilityState==='visible'){
+          try{ await updateDoc(uref,{ lastActiveAt: serverTimestamp() }); }catch{}
+        }
+      });
+
+      // Start feeds
       startPinsFeed();
+      if(state.isAdmin || state.isMod){ startUsersFeed(); modPanel.style.display='block'; }
+      else { modPanel.style.display='none'; }
     });
 
-    // ====== Mode buttons (Lost Cat / Danger) ======
-    function updateModeUI(){
-      modeCatBtn.classList.toggle('primary', state.activeType==='lostcat');
-      modeDangerBtn.classList.toggle('primary', state.activeType==='danger');
-      if(state.activeType){
-        pinHint.textContent = `Click on the map to place a ${state.activeType==='danger'?'Danger':'Lost Cat'} pin`;
-        pinHint.style.display='block';
-      } else {
-        pinHint.style.display='none';
+    // ====== Users feed (admin/mod only) ======
+    function startUsersFeed(){
+      if(unsubUsers) return;
+      const qUsers = query(collection(db,'users'), orderBy('createdAt','desc'));
+      unsubUsers = onSnapshot(qUsers,(snap)=>{
+        state.users = [];
+        snap.forEach(d=> state.users.push({ id:d.id, ...d.data() }));
+        renderUsers();
+      });
+    }
+    function renderUsers(){
+      userList.innerHTML = '';
+      if(!state.users.length){
+        const li=document.createElement('li'); li.className='user-row';
+        li.innerHTML = '<div class="u-meta">No users yet.</div>';
+        userList.appendChild(li); return;
+      }
+      const me = auth.currentUser;
+      const now = Date.now();
+      for(const u of state.users){
+        const isOwner = (u.email||'').toLowerCase()===OWNER_EMAIL.toLowerCase();
+        const isMod   = ['mod','moderator'].includes((u.role||'').toString().toLowerCase());
+        const online = u.lastActiveAt && (now - (u.lastActiveAt.toMillis ? u.lastActiveAt.toMillis() : Date.parse(u.lastActiveAt))) < 120000;
+
+        const li=document.createElement('li'); li.className='user-row';
+        const left=document.createElement('div');
+        const right=document.createElement('div'); right.className='u-tags';
+
+        left.innerHTML = `
+          <div>${escapeHtml(u.email||'(unknown)')}</div>
+          <div class="status"><span class="dot ${online?'online':''}"></span>${online?'Online':'Last active '+timeAgo(u.lastActiveAt)}</div>
+        `;
+
+        // Tags
+        if(isOwner) { const t=document.createElement('span'); t.className='tag admin'; t.textContent='owner'; right.appendChild(t); }
+        else if(isMod){ const t=document.createElement('span'); t.className='tag mod'; t.textContent='mod'; right.appendChild(t); }
+        if(u.banned){ const t=document.createElement('span'); t.className='tag banned'; t.textContent='banned'; right.appendChild(t); }
+
+        // Ban/Unban button rules:
+        // - Nobody can ban OWNER
+        // - Mods cannot ban mods (or themselves)
+        // - Admin can ban anyone EXCEPT owner
+        // - Mod can ban regular users only
+        const canBan = (() => {
+          if(!me) return false;
+          const iAmOwner = state.isAdmin;
+          const iAmMod   = state.isMod && !state.isAdmin;
+          const targetIsSelf = u.id === me.uid;
+          if(isOwner || targetIsSelf) return false;              // cannot ban owner or self
+          if(iAmOwner) return true;                              // owner can ban/unban anyone except owner
+          if(iAmMod) return !isMod;                              // mods can ban only regular users
+          return false;
+        })();
+
+        if(state.isAdmin || state.isMod){
+          const btn=document.createElement('button');
+          btn.className = 'danger';
+          btn.textContent = u.banned ? 'Unban' : 'Ban';
+          btn.disabled = !canBan;
+          btn.onclick = async ()=>{
+            try{
+              await updateDoc(doc(db,'users',u.id), { banned: !u.banned });
+            }catch(e){
+              alert(e?.message || 'Permission denied (rules).');
+            }
+          };
+          right.appendChild(btn);
+        }
+
+        li.append(left,right); userList.appendChild(li);
       }
     }
-    function setMode(type){
-      state.activeType = (state.activeType === type) ? null : type;
-      updateModeUI();
-    }
-    modeCatBtn.onclick = ()=> setMode('lostcat');
-    modeDangerBtn.onclick = ()=> setMode('danger');
 
     // ====== Pins feed ======
-    let unsubPins=null;
-    function stopPinsFeed(){ if(unsubPins){unsubPins();unsubPins=null;} clearMarkers(); }
     function startPinsFeed(){
       if(unsubPins) return;
       const qPins=query(collection(db,'pins'), orderBy('createdAt','desc'));
       unsubPins=onSnapshot(qPins,(snap)=>{
         const seen=new Set();
         snap.forEach(d=>{ const p={id:d.id, ...d.data()}; seen.add(p.id); upsertLocalPin(p); });
-        for(const id of Array.from(state.markers.keys())) if(!seen.has(id)){ removeMarker(id); state.locations=state.locations.filter(x=>x.id!==id); }
+        for(const id of Array.from(state.markers.keys())) if(!seen.has(id)){ removeMarker(id); state.locations = state.locations.filter(x=>x.id!==id); }
         renderList();
       });
     }
@@ -366,17 +506,22 @@
     // ====== Local cache + render ======
     function clearMarkers(){ for(const id of Array.from(state.markers.keys())) removeMarker(id); state.locations=[]; renderList(); }
     function upsertLocalPin(p){ const i=state.locations.findIndex(x=>x.id===p.id); if(i===-1) state.locations.push(p); else state.locations[i]=p; upsertMarker(p); }
-    const fmtLatLng = (loc)=>`${fmt(loc.lat)}, ${fmt(loc.lng)}`;
 
     function markerPopupHtml(loc, canEdit){
       const img=loc.photo?`<img class="popup-img" src="${loc.photo}" alt="" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:6px">`:'';
       const who = loc.ownerUsername || loc.ownerEmail || '';
-      const actions = canEdit ? `<div style="display:flex;gap:6px"><a href="#" data-action="edit" data-id="${loc.id}">Edit</a><a href="#" data-action="delete" data-id="${loc.id}" style="color:#ff9a9a">Delete</a></div>` : '';
+      const actions = [];
+      if (canEdit) {
+        actions.push(`<a href="#" data-action="edit" data-id="${loc.id}">Edit</a>`);
+        actions.push(`<a href="#" data-action="delete" data-id="${loc.id}" style="color:#ff9a9a">Delete</a>`);
+      }
+      const actionsHtml = actions.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap">${actions.join(' ')}</div>` : '';
+
       return `<div style="min-width:240px">${img}
         <div style="margin-bottom:6px">${escapeHtml(loc.title||'(untitled)')}</div>
         <div style="color:#9aa3ad;font-size:12px;margin-bottom:6px">${typeName(loc.type)} · ${fmtLatLng(loc)}${who?` · by ${escapeHtml(who)}`:''}</div>
         ${loc.description?`<div style="white-space:pre-wrap;margin-bottom:8px">${escapeHtml(loc.description)}</div>`:''}
-        ${actions}</div>`;
+        ${actionsHtml}</div>`;
     }
     function tooltipHtml(loc){
       const s=(loc.description||'').slice(0,140);
@@ -389,12 +534,17 @@
       }</div><div class="stem"></div></div>`;
       return L.divIcon({ className:'pin-icon', html, iconSize:[46,60], iconAnchor:[23,58], popupAnchor:[0,-56], tooltipAnchor:[0,-58] });
     }
+    function canEditLoc(loc){
+      const u=auth.currentUser;
+      if(!u) return false;
+      if(state.isAdmin || state.isMod) return true;
+      return (loc.ownerUid===u.uid) && !state.isBanned;
+    }
     function addMarkerFor(loc){
-      const user=auth.currentUser; const canEdit=user && (((user.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase()) || loc.ownerUid===user.uid);
-      const m=L.marker([loc.lat,loc.lng],{ draggable:canEdit, icon:makeIcon(loc) });
-      m.bindPopup(markerPopupHtml(loc,canEdit));
+      const m=L.marker([loc.lat,loc.lng],{ draggable:canEditLoc(loc), icon:makeIcon(loc) });
+      m.bindPopup(markerPopupHtml(loc, canEditLoc(loc)));
       m.bindTooltip(tooltipHtml(loc),{direction:'top',offset:[0,-54],className:'pin-tooltip',opacity:0.96});
-      m.on('dragend', async (e)=>{ if(!canEdit) return; const {lat,lng}=e.target.getLatLng(); try{ await updateDoc(doc(db,'pins',loc.id), { lat, lng }); } catch{ alert('Update failed.'); }});
+      m.on('dragend', async (e)=>{ if(!canEditLoc(loc)) return; const {lat,lng}=e.target.getLatLng(); try{ await updateDoc(doc(db,'pins',loc.id), { lat, lng }); } catch{ alert('Update failed.'); }});
       m.on('popupopen', ()=>{ const el=m.getPopup().getElement(); el.querySelectorAll('a[data-action]').forEach(a=>{
         a.addEventListener('click', (evt)=>{ evt.preventDefault(); const id=a.getAttribute('data-id'); const act=a.getAttribute('data-action'); if(act==='edit') openEditModal(id); if(act==='delete') confirmDelete(id); });
       });});
@@ -402,13 +552,12 @@
     }
     function upsertMarker(loc){
       const m=state.markers.get(loc.id);
-      const user=auth.currentUser; const canEdit=user && (((user.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase()) || loc.ownerUid===user.uid);
       if(!m) addMarkerFor(loc);
       else{
         m.setLatLng([loc.lat,loc.lng]); m.setIcon(makeIcon(loc));
-        m.setPopupContent(markerPopupHtml(loc,canEdit));
+        m.setPopupContent(markerPopupHtml(loc, canEditLoc(loc)));
         const tt=m.getTooltip(); if(tt) tt.setContent(tooltipHtml(loc));
-        canEdit ? m.dragging.enable() : m.dragging.disable();
+        canEditLoc(loc) ? m.dragging.enable() : m.dragging.disable();
       }
     }
     function removeMarker(id){ const m=state.markers.get(id); if(m){ map.removeLayer(m); state.markers.delete(id);} }
@@ -420,18 +569,20 @@
         li.innerHTML='<div class="title" style="grid-column:1/-1;color:var(--muted)">No locations yet. Click a mode (Lost Cat or Danger), then click the map.</div>';
         listEl.appendChild(li); return;
       }
-      const user=auth.currentUser; const isAdmin=(user?.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase();
+      const u=auth.currentUser;
       for(const loc of state.locations){
         const li=document.createElement('li'); li.className='loc'; li.dataset.id=loc.id;
         const title=document.createElement('div'); title.className='title';
-        const mine=(loc.ownerUid===user?.uid); const who = loc.ownerUsername || loc.ownerEmail || '';
-        const ownerTag = (!isAdmin && !mine && who) ? `<span class="who" style="margin-left:8px">by ${escapeHtml(who)}</span>` : '';
+        const mine=(loc.ownerUid===u?.uid); const who = loc.ownerUsername || loc.ownerEmail || '';
+        const ownerTag = (!mine && who) ? `<span class="who" style="margin-left:8px">by ${escapeHtml(who)}</span>` : '';
         title.innerHTML = `${escapeHtml(loc.title||'(untitled)')} <span class="badge ${typeClass(loc.type)}">${typeName(loc.type)}</span> ${ownerTag}`;
         const meta=document.createElement('div'); meta.className='meta'; meta.textContent=fmtLatLng(loc);
         const actions=document.createElement('div'); actions.className='actions';
-        const flyBtn=document.createElement('button'); flyBtn.textContent='View'; flyBtn.onclick=()=>{ map.flyTo([loc.lat,loc.lng],Math.max(map.getZoom(),15),{duration:0.7}); const m=state.markers.get(loc.id); if(m) m.openPopup(); };
+        const flyBtn=document.createElement('button'); flyBtn.textContent='View';
+        flyBtn.onclick=()=>{ map.flyTo([loc.lat,loc.lng],Math.max(map.getZoom(),15),{duration:0.7}); const m=state.markers.get(loc.id); if(m) m.openPopup(); };
         actions.append(flyBtn);
-        if(isAdmin || mine){
+
+        if(canEditLoc(loc)){
           const editBtn=document.createElement('button'); editBtn.textContent='Edit'; editBtn.onclick=()=>openEditModal(loc.id);
           const delBtn=document.createElement('button'); delBtn.textContent='Delete'; delBtn.className='danger'; delBtn.onclick=()=>confirmDelete(loc.id);
           actions.append(editBtn,delBtn);
@@ -441,7 +592,7 @@
     }
 
     // ====== Modal + image ======
-    map.on('click',(e)=>{ if(state.activeType) openCreateModal(e.latlng); });
+    map.on('click',(e)=>{ if(state.activeType){ if(state.isBanned){ alert('You are banned and cannot create pins.'); return; } openCreateModal(e.latlng); } });
 
     function setPhotoPreview(dataUrl){
       state.draftPhoto = dataUrl || null;
@@ -456,26 +607,19 @@
       setSaving(false);
       modalTitle.textContent='New location';
       titleInput.value=''; descInput.value=''; coordsInput.value=`${fmt(latlng.lat)}, ${fmt(latlng.lng)}`;
-
-      // Type comes from active mode; show preview, keep radios hidden
       const t = state.activeType || 'lostcat';
       document.querySelector(`input[name="pinType"][value="${t}"]`).checked = true;
-      typeGroup.style.display = 'none';
-      typePreview.textContent = 'Pin type: ' + typeName(t);
-
+      typeGroup.style.display = 'none'; typePreview.textContent = 'Pin type: ' + typeName(t);
       modalBackdrop.hidden=false; setTimeout(()=>titleInput.focus(),0);
     }
     function openEditModal(id){
       const loc = state.locations.find(x=>x.id===id); if(!loc) return;
-      const isAdmin=((auth.currentUser?.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase());
-      if(!(isAdmin || loc.ownerUid===auth.currentUser?.uid)) return alert('You can edit only your own pins.');
+      if(!canEditLoc(loc)) return alert('You can edit only your own pins (or be mod/admin).');
       state.editingId=id; state.draftLatLng={lat:loc.lat,lng:loc.lng}; setPhotoPreview(loc.photo||null);
       modalTitle.textContent='Edit location'; titleInput.value=loc.title||''; descInput.value=loc.description||''; coordsInput.value=`${fmt(loc.lat)}, ${fmt(loc.lng)}`;
       document.querySelector(`input[name="pinType"][value="${loc.type==='danger'?'danger':'lostcat'}"]`).checked=true;
-
-      if(isAdmin){ typeGroup.style.display='flex'; typePreview.textContent=''; }
+      if(state.isAdmin){ typeGroup.style.display='flex'; typePreview.textContent=''; }
       else { typeGroup.style.display='none'; typePreview.textContent='Pin type: ' + typeName(loc.type); }
-
       modalBackdrop.hidden=false; setTimeout(()=>titleInput.focus(),0);
     }
     function closeModal(){ modalBackdrop.hidden=true; state.editingId=null; state.draftLatLng=null; state.pendingPinId=null; setSaving(false); setPhotoPreview(null); typeGroup.style.display='none'; typePreview.textContent=''; }
@@ -499,6 +643,21 @@
       });
     }
 
+    // ====== Mode buttons ======
+    function updateModeUI(){
+      modeCatBtn.classList.toggle('primary', state.activeType==='lostcat');
+      modeDangerBtn.classList.toggle('primary', state.activeType==='danger');
+      if(state.activeType){ pinHint.textContent = `Click on the map to place a ${state.activeType==='danger'?'Danger':'Lost Cat'} pin`; pinHint.style.display='block'; }
+      else { pinHint.style.display='none'; }
+    }
+    function setMode(type){
+      if (state.isBanned) { alert('You are banned and cannot create pins.'); return; }
+      state.activeType = (state.activeType === type) ? null : type;
+      updateModeUI();
+    }
+    modeCatBtn.onclick = ()=> setMode('lostcat');
+    modeDangerBtn.onclick = ()=> setMode('danger');
+
     // ====== Quota helpers ======
     async function pickFreeSlot(uid, type){
       const snap = await getDocs(collection(db, `users/${uid}/quota/${type}/slots`));
@@ -510,12 +669,13 @@
     // ====== CRUD ======
     async function createPin({id, title,description,type,lat,lng,photo}){
       const user=auth.currentUser; if(!user) return;
+      if(state.isBanned){ alert('You are banned and cannot create pins.'); return; }
       const uid=user.uid; const email=user.email||'';
-      const isAdmin=(email.toLowerCase()===ADMIN_EMAIL.toLowerCase());
+      const isOwner=(email.toLowerCase()===OWNER_EMAIL.toLowerCase());
 
       const pinId = id || doc(collection(db,'pins')).id;
       let slot = null;
-      if(!isAdmin){
+      if(!isOwner && !state.isMod){
         slot = await pickFreeSlot(uid, type);
         if(!slot){ alert(`Limit reached: 5 ${typeName(type)} pins.`); return; }
       }
@@ -526,15 +686,16 @@
         createdAt: serverTimestamp(),
         slot: slot || null
       });
-      if(!isAdmin){
+      if(!isOwner && !state.isMod){
         batch.set(doc(db, `users/${uid}/quota/${type}/slots/${slot}`), { pinId });
       }
       await batch.commit();
     }
 
     async function updatePin(id, {title,description,lat,lng,photo,type}){
+      if(state.isBanned){ alert('You are banned and cannot update pins.'); return; }
       const patch={ title, description, lat, lng, photo: photo||null };
-      if(((auth.currentUser?.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase()) && type) patch.type=type; // admin may change type
+      if(state.isAdmin && type) patch.type=type; // admin may change type
       await updateDoc(doc(db,'pins',id), patch);
     }
 
@@ -542,8 +703,9 @@
     async function deletePin(id){
       const snap=await getDoc(doc(db,'pins',id)); if(!snap.exists()) return;
       const p=snap.data();
-      const isAdmin=((auth.currentUser?.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase());
-      if(!(isAdmin || p.ownerUid===auth.currentUser?.uid)) return alert('You can delete only your own pins.');
+      const me=auth.currentUser;
+      const can = (state.isAdmin || state.isMod || p.ownerUid===me?.uid) && !state.isBanned;
+      if(!can) return alert('Not allowed.');
       const batch=writeBatch(db);
       batch.delete(doc(db,'pins',id));
       if(p.ownerUid && p.type && p.slot){
@@ -552,7 +714,7 @@
       await batch.commit();
     }
 
-    // ====== Save (idempotent + UI lock) ======
+    // ====== Save (guard) ======
     function setSaving(on){
       state.saving=!!on;
       saveBtn.disabled=on; cancelBtn.disabled=on; photoInput.disabled=on;
@@ -562,6 +724,7 @@
     }
     saveBtn.onclick=async ()=>{
       if(state.saving) return;
+      if(state.isBanned){ alert('You are banned and cannot save pins.'); return; }
       setSaving(true);
       const title=titleInput.value.trim()||'(untitled)';
       const description=descInput.value.trim();
@@ -570,15 +733,14 @@
       try{
         if(state.editingId){
           const radio = document.querySelector('input[name="pinType"]:checked')?.value;
-          const isAdmin=((auth.currentUser?.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase());
-          await updatePin(state.editingId,{ title, description, lat:state.draftLatLng.lat, lng:state.draftLatLng.lng, photo:state.draftPhoto, type:isAdmin ? (radio==='danger'?'danger':'lostcat') : undefined });
+          await updatePin(state.editingId,{ title, description, lat:state.draftLatLng.lat, lng:state.draftLatLng.lng, photo:state.draftPhoto, type:(state.isAdmin ? (radio==='danger'?'danger':'lostcat') : undefined) });
         } else {
           if(!state.activeType){ alert('Select a pin type: Lost Cat or Danger (left panel).'); setSaving(false); return; }
           await createPin({ id: state.pendingPinId, title, description, type: state.activeType, lat:state.draftLatLng.lat, lng:state.draftLatLng.lng, photo:state.draftPhoto });
         }
         closeModal();
       }catch(e){
-        alert(e?.message || 'Save failed (quota? rules?).');
+        alert(e?.message || 'Save failed (rules/quota).');
         setSaving(false);
       }
     };

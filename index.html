@@ -135,7 +135,6 @@
         <div id="gateError" class="error"></div>
       </div>
       <div id="gateFooter" class="gate-foot">
-        <!-- Customize this small footer text under the login card -->
         <small style="opacity:.85">Find your missing cats.</small>
       </div>
     </div>
@@ -251,7 +250,7 @@
     const auth = getAuth(appFB);
     const db = getFirestore(appFB);
 
-    // ====== Policy toggles ======
+    // ====== Owner & domain gate ======
     const OWNER_EMAIL = 'lenatif09@gmail.com';
     const isAllowedEmail = (email) => {
       const e = (email || '').toLowerCase();
@@ -261,7 +260,7 @@
     // ====== DOM ======
     const $ = (id)=>document.getElementById(id);
     const whoami=$('whoami'), logoutBtn=$('logoutBtn');
-    const gateError=$('gateError'), gateInfo=$('gateInfo'), googleBtn=$('googleBtn');
+    const gateError=$('gateError'), googleBtn=$('googleBtn');
     const listEl=$('locationList'), locateBtn=$('locateBtn');
     const modeCatBtn=$('modeCatBtn'), modeDangerBtn=$('modeDangerBtn');
     const searchInput=$('searchInput'), searchBtn=$('searchBtn'), pinHint=$('pinHint');
@@ -271,7 +270,7 @@
           cancelBtn=$('cancelBtn'), saveBtn=$('saveBtn'), typeGroup=$('typeGroup'), typePreview=$('typePreview');
     const modPanel = $('modPanel'), userList = $('userList');
 
-    // ====== Map (KAUST default) ======
+    // ====== Map ======
     const VIEW_KEY='pinboard.mapview.v3';
     const savedView = JSON.parse(localStorage.getItem(VIEW_KEY) || "null");
     const map = L.map('map', { center: savedView ? [savedView.lat, savedView.lng] : [22.3088,39.1046],
@@ -288,8 +287,6 @@
     const typeClass=(t)=>t===TYPE_DANGER?'danger':'cat';
     const escapeHtml=(s)=>String(s).replace(/[&<>"']/g,(m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
     const fmtLatLng = (loc)=>`${fmt(loc.lat)}, ${fmt(loc.lng)}`;
-
-    // Relative time helper
     function timeAgo(ts) {
       if (!ts) return 'never';
       const t = typeof ts.toMillis === 'function' ? ts.toMillis() : (typeof ts === 'number' ? ts : Date.parse(ts));
@@ -310,7 +307,6 @@
       editingId:null,
       saving:false,
       pendingPinId:null,
-      // roles/presence
       isAdmin:false,
       isMod:false,
       isBanned:false,
@@ -344,25 +340,22 @@
     const provider=new GoogleAuthProvider();
     provider.setCustomParameters({ prompt:'select_account' });
     setPersistence(auth, browserLocalPersistence).catch(()=>{});
-
     const isMobile=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
     googleBtn.onclick=async ()=>{
-      gateError.textContent=''; gateInfo.textContent='';
+      gateError.textContent='';
       try{
         if(isMobile) await signInWithRedirect(auth, provider);
         else         await signInWithPopup(auth, provider);
       }catch(e){
-        console.error('Google sign-in failed', e);
         gateError.textContent = e.code || e.message || 'Google sign-in failed';
       }
     };
-    getRedirectResult(auth).catch(e=>console.warn('redirect result:', e?.code||e));
+    getRedirectResult(auth).catch(()=>{});
     logoutBtn.onclick=()=>signOut(auth);
 
     // ====== Auth state ======
     let unsubPins=null, unsubUsers=null;
     onAuthStateChanged(auth, async (user)=>{
-      // stop heartbeats & listeners
       if(state.hbTimer){ clearInterval(state.hbTimer); state.hbTimer=null; }
       if(unsubPins){unsubPins();unsubPins=null;}
       if(unsubUsers){unsubUsers();unsubUsers=null;}
@@ -385,8 +378,7 @@
       if(!udoc.exists()){
         await setDoc(uref,{ email:user.email, createdAt:serverTimestamp(), role:null, banned:false, lastActiveAt:serverTimestamp() });
         udoc=await getDoc(uref);
-      }else{
-        // immediate activity bump
+      } else {
         try{ await updateDoc(uref,{ lastActiveAt: serverTimestamp() }); }catch{}
       }
 
@@ -402,7 +394,7 @@
       if(state.isBanned) tags.push('banned');
       whoami.textContent = user.email + (tags.length?' • '+tags.join(' • '):'');
 
-      // Start presence heartbeat (every 60s; also when tab gains focus)
+      // Start presence heartbeat
       state.hbTimer = setInterval(async ()=>{
         try{ await updateDoc(uref,{ lastActiveAt: serverTimestamp() }); }catch{}
       }, 60000);
@@ -451,24 +443,18 @@
           <div class="status"><span class="dot ${online?'online':''}"></span>${online?'Online':'Last active '+timeAgo(u.lastActiveAt)}</div>
         `;
 
-        // Tags
         if(isOwner) { const t=document.createElement('span'); t.className='tag admin'; t.textContent='owner'; right.appendChild(t); }
         else if(isMod){ const t=document.createElement('span'); t.className='tag mod'; t.textContent='mod'; right.appendChild(t); }
         if(u.banned){ const t=document.createElement('span'); t.className='tag banned'; t.textContent='banned'; right.appendChild(t); }
 
-        // Ban/Unban button rules:
-        // - Nobody can ban OWNER
-        // - Mods cannot ban mods (or themselves)
-        // - Admin can ban anyone EXCEPT owner
-        // - Mod can ban regular users only
         const canBan = (() => {
           if(!me) return false;
           const iAmOwner = state.isAdmin;
           const iAmMod   = state.isMod && !state.isAdmin;
           const targetIsSelf = u.id === me.uid;
-          if(isOwner || targetIsSelf) return false;              // cannot ban owner or self
-          if(iAmOwner) return true;                              // owner can ban/unban anyone except owner
-          if(iAmMod) return !isMod;                              // mods can ban only regular users
+          if(isOwner || targetIsSelf) return false;
+          if(iAmOwner) return true;
+          if(iAmMod) return !isMod;
           return false;
         })();
 
@@ -478,11 +464,8 @@
           btn.textContent = u.banned ? 'Unban' : 'Ban';
           btn.disabled = !canBan;
           btn.onclick = async ()=>{
-            try{
-              await updateDoc(doc(db,'users',u.id), { banned: !u.banned });
-            }catch(e){
-              alert(e?.message || 'Permission denied (rules).');
-            }
+            try{ await updateDoc(doc(db,'users',u.id), { banned: !u.banned }); }
+            catch(e){ alert(e?.message || 'Permission denied (rules).'); }
           };
           right.appendChild(btn);
         }
@@ -592,7 +575,7 @@
     }
 
     // ====== Modal + image ======
-    map.on('click',(e)=>{ if(state.activeType){ if(state.isBanned){ alert('You are banned and cannot create pins.'); return; } openCreateModal(e.latlng); } });
+    map.on('click',(e)=>{ if(state.activeType){ if(state.isBanned && !state.isAdmin && !state.isMod){ alert('You are banned and cannot create pins.'); return; } openCreateModal(e.latlng); } });
 
     function setPhotoPreview(dataUrl){
       state.draftPhoto = dataUrl || null;
@@ -651,7 +634,7 @@
       else { pinHint.style.display='none'; }
     }
     function setMode(type){
-      if (state.isBanned) { alert('You are banned and cannot create pins.'); return; }
+      if (state.isBanned && !state.isAdmin && !state.isMod) { alert('You are banned and cannot create pins.'); return; }
       state.activeType = (state.activeType === type) ? null : type;
       updateModeUI();
     }
@@ -669,33 +652,34 @@
     // ====== CRUD ======
     async function createPin({id, title,description,type,lat,lng,photo}){
       const user=auth.currentUser; if(!user) return;
-      if(state.isBanned){ alert('You are banned and cannot create pins.'); return; }
-      const uid=user.uid; const email=user.email||'';
-      const isOwner=(email.toLowerCase()===OWNER_EMAIL.toLowerCase());
+      const uid=user.uid; const email=(user.email||'').toLowerCase();
+      const privileged = (email === OWNER_EMAIL.toLowerCase()) || state.isMod; // admin OR moderator
 
       const pinId = id || doc(collection(db,'pins')).id;
       let slot = null;
-      if(!isOwner && !state.isMod){
+
+      const batch = writeBatch(db);
+      if(!privileged){
         slot = await pickFreeSlot(uid, type);
         if(!slot){ alert(`Limit reached: 5 ${typeName(type)} pins.`); return; }
       }
-      const batch = writeBatch(db);
+
       batch.set(doc(db,'pins',pinId), {
         title, description, type, lat, lng, photo: photo||null,
-        ownerUid: uid, ownerEmail: email, ownerUsername: null,
+        ownerUid: uid, ownerEmail: user.email || '', ownerUsername: null,
         createdAt: serverTimestamp(),
         slot: slot || null
       });
-      if(!isOwner && !state.isMod){
+
+      if(!privileged){
         batch.set(doc(db, `users/${uid}/quota/${type}/slots/${slot}`), { pinId });
       }
       await batch.commit();
     }
 
     async function updatePin(id, {title,description,lat,lng,photo,type}){
-      if(state.isBanned){ alert('You are banned and cannot update pins.'); return; }
       const patch={ title, description, lat, lng, photo: photo||null };
-      if(state.isAdmin && type) patch.type=type; // admin may change type
+      if(state.isAdmin && type) patch.type=type; // owner may change type
       await updateDoc(doc(db,'pins',id), patch);
     }
 
@@ -704,7 +688,7 @@
       const snap=await getDoc(doc(db,'pins',id)); if(!snap.exists()) return;
       const p=snap.data();
       const me=auth.currentUser;
-      const can = (state.isAdmin || state.isMod || p.ownerUid===me?.uid) && !state.isBanned;
+      const can = (state.isAdmin || state.isMod || p.ownerUid===me?.uid) && !(state.isBanned && !state.isAdmin && !state.isMod);
       if(!can) return alert('Not allowed.');
       const batch=writeBatch(db);
       batch.delete(doc(db,'pins',id));
@@ -724,7 +708,7 @@
     }
     saveBtn.onclick=async ()=>{
       if(state.saving) return;
-      if(state.isBanned){ alert('You are banned and cannot save pins.'); return; }
+      if(state.isBanned && !state.isAdmin && !state.isMod){ alert('You are banned and cannot save pins.'); return; }
       setSaving(true);
       const title=titleInput.value.trim()||'(untitled)';
       const description=descInput.value.trim();

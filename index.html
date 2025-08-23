@@ -20,23 +20,18 @@
     html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;}
     #app{display:grid;grid-template-columns:360px 1fr;grid-template-rows:100vh}
-    #sidebar{background:var(--bg-elev);border-right:1px solid var(--border);
-      display:flex;flex-direction:column;min-width:320px}
+    #sidebar{background:var(--bg-elev);border-right:1px solid var(--border);display:flex;flex-direction:column;min-width:320px}
 
-    /* Brand header (title with email under it + sign out at right) */
-    .brand{padding:14px 16px;color:var(--muted);border-bottom:1px solid var(--border);
-      display:flex;justify-content:space-between;align-items:center}
+    /* Brand header: title with email under it + signout at right */
+    .brand{padding:14px 16px;color:var(--muted);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
     .brand .title{font-weight:600;color:#e2e8f0}
     .brand .who{display:block;font-size:12px;color:var(--muted);margin-top:4px}
     .brand .left{display:flex;flex-direction:column}
 
-    .controls{padding:12px;border-bottom:1px solid var(--border);
-      display:grid;grid-template-columns:1fr auto;gap:8px}
-    .controls input[type="text"]{background:#111521;border:1px solid var(--border);
-      color:var(--fg);padding:10px;border-radius:8px}
+    .controls{padding:12px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr auto;gap:8px}
+    .controls input[type="text"]{background:#111521;border:1px solid var(--border);color:var(--fg);padding:10px;border-radius:8px}
     .controls .row{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    button,label.btn{background:#171d2b;border:1px solid var(--border);color:var(--fg);
-      padding:9px 12px;border-radius:8px;cursor:pointer;font-size:14px}
+    button,label.btn{background:#171d2b;border:1px solid var(--border);color:var(--fg);padding:9px 12px;border-radius:8px;cursor:pointer;font-size:14px}
     button:hover,label.btn:hover{border-color:#2d3652}
     button.primary{background:#1a2744;border-color:#243154;box-shadow:0 0 0 1px rgba(122,162,247,.15) inset}
     button.danger{border-color:#4a2626;background:#2b1414;color:#ffb3b3}
@@ -46,25 +41,19 @@
     .mode-btn.dang .dot{background:var(--danger)}
 
     #locationList{list-style:none;padding:0;margin:0;overflow:auto;flex:1}
-    .loc{border-bottom:1px solid var(--border);padding:10px 12px;display:grid;
-      grid-template-columns:1fr auto;gap:4px 8px;align-items:center}
+    .loc{border-bottom:1px solid var(--border);padding:10px 12px;display:grid;grid-template-columns:1fr auto;gap:4px 8px;align-items:center}
     .loc .title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .loc .meta{color:var(--muted);font-size:12px}
     .loc .actions{display:flex;gap:6px}
     .badge{font-size:11px;padding:2px 8px;border-radius:999px;margin-left:8px}
     .badge.cat{background:rgba(241,163,60,.15);color:#ffd49a;border:1px solid rgba(241,163,60,.35)}
     .badge.danger{background:rgba(239,83,80,.15);color:#ffb3b3;border:1px solid rgba(239,83,80,.35)}
-    .badge.pending{background:rgba(122,162,247,.15);color:#cfe1ff;border:1px solid rgba(122,162,247,.35)}
-    .badge.rejected{background:rgba(239,83,80,.15);color:#ffb3b3;border:1px solid rgba(239,83,80,.35)}
     #map{height:100%;width:100%}
-    .pin-hint{position:absolute;top:12px;right:12px;z-index:500;background:rgba(10,14,24,.9);
-      border:1px solid var(--border);padding:8px 12px;border-radius:8px;color:var(--muted);pointer-events:none}
+    .pin-hint{position:absolute;top:12px;right:12px;z-index:500;background:rgba(10,14,24,.9);border:1px solid var(--border);padding:8px 12px;border-radius:8px;color:var(--muted);pointer-events:none}
 
     /* Gate */
-    #gate{position:fixed;inset:0;background:linear-gradient(180deg,#0d1017,#0f1115);
-      display:grid;place-items:center;z-index:2000}
-    #gate .card{width:min(520px,92%);background:var(--bg-elev);border:1px solid var(--border);
-      border-radius:12px;padding:18px;display:flex;flex-direction:column}
+    #gate{position:fixed;inset:0;background:linear-gradient(180deg,#0d1017,#0f1115);display:grid;place-items:center;z-index:2000}
+    #gate .card{width:min(520px,92%);background:var(--bg-elev);border:1px solid var(--border);border-radius:12px;padding:18px;display:flex;flex-direction:column}
     #gate h2{margin:0 0 6px 0}
     #gate .muted{color:var(--muted);font-size:14px;margin-bottom:12px}
     .stack{display:grid;gap:8px}
@@ -72,19 +61,19 @@
     .ok{color:#b2f5d6}
     .gate-foot{margin-top:12px;border-top:1px dashed var(--border);padding-top:10px;color:var(--muted);font-size:12px}
 
-    /* Terms modal (blocking after login until accepted) */
+    body.auth #gate{display:none}
+    body:not(.auth) #app{filter:blur(4px);pointer-events:none;user-select:none}
+
+    /* Modal */
     .modal-backdrop[hidden]{display:none}
-    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:grid;place-items:center;z-index:3000;padding:16px}
-    .modal{width:min(740px,100%);background:var(--bg-elev);border:1px solid var(--border);
-      border-radius:12px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:grid;place-items:center;z-index:1000;padding:16px}
+    .modal{width:min(620px,100%);background:var(--bg-elev);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
     .modal h3{margin:0 0 10px 0}
-    .modal .body{max-height:45vh;overflow:auto;border:1px solid var(--border);border-radius:10px;padding:12px;background:#101522}
     .modal .f{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
     .modal .f label{font-size:13px;color:var(--muted);margin-bottom:6px;display:block}
-    .modal input[type="text"], .modal textarea{width:100%;background:#111521;border:1px solid var(--border);
-      color:#fff;padding:10px;border-radius:8px;outline:none;resize:vertical}
+    .modal input[type="text"], .modal textarea{width:100%;background:#111521;border:1px solid var(--border);color:#fff;padding:10px;border-radius:8px;outline:none;resize:vertical}
     .modal textarea{min-height:80px;grid-column:1/-1}
-    .type-group{display:none} /* admin only on edit */
+    .type-group{display:none} /* hidden by default; shown for admin on edit */
     .type-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:#101522}
     .type-pill .dot{width:10px;height:10px;border-radius:999px}
     .dot.cat{background:var(--cat)} .dot.danger{background:var(--danger)}
@@ -94,18 +83,13 @@
     /* Marker */
     .pin-icon{background:transparent!important;border:0!important}
     .pin{position:relative;width:46px;height:60px;pointer-events:auto}
-    .pin .bubble{width:46px;height:46px;border-radius:50%;overflow:hidden;background:#0f1422;
-      display:flex;align-items:center;justify-content:center;border:2px solid #4a5a88;box-shadow:0 8px 18px rgba(0,0,0,.45)}
+    .pin .bubble{width:46px;height:46px;border-radius:50%;overflow:hidden;background:#0f1422;display:flex;align-items:center;justify-content:center;border:2px solid #4a5a88;box-shadow:0 8px 18px rgba(0,0,0,.45)}
     .pin .bubble img.thumb{width:100%;height:100%;object-fit:cover;display:block}
     .pin .bubble .glyph{font-size:22px;line-height:1}
-    .pin .stem{position:absolute;left:50%;bottom:4px;transform:translateX(-50%);
-      width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-top:14px solid #4a5a88;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
+    .pin .stem{position:absolute;left:50%;bottom:4px;transform:translateX(-50%);width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-top:14px solid #4a5a88;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
     .pin.cat .bubble{border-color:var(--cat)} .pin.cat .stem{border-top-color:var(--cat)}
     .pin.danger .bubble{border-color:var(--danger)} .pin.danger .stem{border-top-color:var(--danger)}
-    .pin.pending .bubble{filter:grayscale(.4) brightness(.9)}
-    .pin.rejected .bubble{filter:grayscale(1) brightness(.7)}
-    .leaflet-tooltip.pin-tooltip{background:rgba(12,16,26,.96);color:#fff;border:1px solid var(--border);
-      border-radius:10px;box-shadow:0 10px 25px rgba(0,0,0,.35)}
+    .leaflet-tooltip.pin-tooltip{background:rgba(12,16,26,.96);color:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 10px 25px rgba(0,0,0,.35)}
     .tt-title{margin-bottom:4px}.tt-meta{color:var(--muted);font-size:12px;margin-bottom:4px}.tt-desc{font-size:13px;max-width:260px;white-space:normal}
 
     @media(max-width:960px){#app{grid-template-columns:1fr;grid-template-rows:45vh 55vh}#sidebar{order:2}#map{order:1}}
@@ -123,28 +107,10 @@
         <div id="gateInfo" class="ok"></div>
         <div id="gateError" class="error"></div>
       </div>
-      <div id="gateFooter" class="gate-foot">
-        <!-- Replace with your custom login-page footer text -->
-        <small style="opacity:.85">Find your missing cats.</small>
-      </div>
-    </div>
-  </div>
 
-  <!-- Terms & Conditions (blocking until accepted) -->
-  <div id="termsBackdrop" class="modal-backdrop" hidden>
-    <div class="modal">
-      <h3>Terms &amp; Privacy</h3>
-      <div class="body" id="termsBody">
-        <p><b>Community rules.</b> This site is for locating lost animals and marking hazards only. <b>No fundraising or payment links</b> (IBAN, wallets, etc.), <b>no adult/sexual content</b>, no defamation or personal data (faces/plates/addresses/phone numbers). Content may be removed without notice.</p>
-        <p><b>Privacy.</b> We store your email and the pins you create (title, description, coordinates, optional thumbnail). Location sharing is optional. You may delete your pins. Content may be stored outside your country per Firebase/Google Cloud operations.</p>
-        <p><b>Disclaimer.</b> Pins are user‑generated; accuracy isn’t guaranteed. Use at your own risk.</p>
-      </div>
-      <div class="row" style="margin-top:10px;align-items:center;gap:12px">
-        <label><input type="checkbox" id="termsChk"> I have read and agree to the Terms &amp; Privacy</label>
-      </div>
-      <div class="row" style="margin-top:8px;display:flex;gap:8px">
-        <button id="termsCancel">Sign out</button>
-        <button id="termsAgree" class="primary" disabled>Agree &amp; Continue</button>
+      <div id="gateFooter" class="gate-foot">
+        <!-- ⬇️ Replace this line with your custom login-page footer text ⬇️ -->
+        <small style="opacity:.85">Find your missing cats.</small>
       </div>
     </div>
   </div>
@@ -162,6 +128,8 @@
       <div class="controls">
         <input id="searchInput" type="text" placeholder="Search a place (e.g., KAUST, Jeddah)" />
         <button id="searchBtn" title="Find place">Search</button>
+
+        <!-- Two drop-pin type selectors -->
         <div class="row">
           <button id="modeCatBtn" class="mode-btn cat"><span class="dot"></span>Lost Cat</button>
           <button id="modeDangerBtn" class="mode-btn dang"><span class="dot"></span>Danger</button>
@@ -192,7 +160,7 @@
           <input id="coordsInput" type="text" readonly />
         </div>
 
-        <!-- Pin type (admin can change on edit) -->
+        <!-- Pin type (hidden by default; admin sees it on edit) -->
         <div>
           <label>Pin type</label>
           <div class="type-group" id="typeGroup">
@@ -216,7 +184,7 @@
           <label for="descInput">Description</label>
           <textarea id="descInput" placeholder="Notes, directions, etc."></textarea>
         </div>
-        <div class="mini-note">No donation/payment links. No adult content. Photos are auto‑cropped to square and compressed.</div>
+        <div class="mini-note">Photos are auto-cropped to square and compressed.</div>
       </div>
       <div class="row">
         <button id="cancelBtn">Cancel</button>
@@ -236,11 +204,8 @@
     } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
     import {
       getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc,
-      onSnapshot, query, orderBy, where, writeBatch, serverTimestamp
+      onSnapshot, query, orderBy, writeBatch, serverTimestamp
     } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
-    import {
-      getStorage, ref as sref, uploadBytes, getDownloadURL, deleteObject
-    } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-storage.js';
 
     // ==== Firebase config ====
     const firebaseConfig = {
@@ -252,11 +217,10 @@
       appId: "1:409243971382:web:646a6858479a9740d04d97"
     };
 
-    // ====== App/Auth/DB/Storage ======
+    // ====== App/Auth/DB ======
     const appFB = initializeApp(firebaseConfig);
     const auth = getAuth(appFB);
     const db = getFirestore(appFB);
-    const storage = getStorage(appFB);
 
     // ====== Policy toggles ======
     const ADMIN_EMAIL = 'lenatif09@gmail.com';
@@ -278,15 +242,12 @@
           titleInput=$('titleInput'), descInput=$('descInput'), coordsInput=$('coordsInput'),
           photoInput=$('photoInput'), photoPreview=$('photoPreview'), removePhotoBtn=$('removePhotoBtn'),
           cancelBtn=$('cancelBtn'), saveBtn=$('saveBtn'), typeGroup=$('typeGroup'), typePreview=$('typePreview');
-    const termsBackdrop=$('termsBackdrop'), termsChk=$('termsChk'), termsAgree=$('termsAgree'), termsCancel=$('termsCancel');
 
     // ====== Map (KAUST default) ======
     const VIEW_KEY='pinboard.mapview.v3';
     const savedView = JSON.parse(localStorage.getItem(VIEW_KEY) || "null");
-    const map = L.map('map', { center: savedView ? [savedView.lat, savedView.lng] : [22.3088,39.1046],
-      zoom: savedView ? Math.max(1,Math.min(19,savedView.zoom|0)) : 15, worldCopyJump:true });
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      { maxZoom:19, attribution:'&copy; OpenStreetMap contributors' }).addTo(map);
+    const map = L.map('map', { center: savedView ? [savedView.lat, savedView.lng] : [22.3088,39.1046], zoom: savedView ? Math.max(1,Math.min(19,savedView.zoom|0)) : 15, worldCopyJump:true });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ maxZoom:19, attribution:'&copy; OpenStreetMap contributors' }).addTo(map);
     map.on('moveend',()=>{ const c=map.getCenter(); localStorage.setItem(VIEW_KEY, JSON.stringify({lat:c.lat,lng:c.lng,zoom:map.getZoom()})); });
 
     // ====== Helpers ======
@@ -295,29 +256,10 @@
     const fmt=(n)=>Number(n).toFixed(6);
     const typeName=(t)=>t===TYPE_DANGER?'Danger':'Lost Cat';
     const typeClass=(t)=>t===TYPE_DANGER?'danger':'cat';
-    const statusClass=(s)=> s==='pending' ? 'pending' : s==='rejected' ? 'rejected' : '';
     const escapeHtml=(s)=>String(s).replace(/[&<>"']/g,(m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 
-    // Light client-side text policy to deter obvious violations
-    const BAD_PATTERNS = [
-      /iban/i, /\bdonate\b/i, /\bdonation\b/i, /fundrais/i, /gofundme/i, /\bpaypal\b/i, /cashapp/i, /western\s*union/i,
-      /\bprice\b/i, /\border\b/i, /pet\s*sitt/i, /boarding/i, /kennel/i, /\bsex\b/i, /\bnude\b/i, /\bxxx\b/i
-    ];
-    const violatesTextPolicy = (text) => BAD_PATTERNS.some(rx => rx.test(text||''));
-
     // ====== State ======
-    const state={
-      activeType:null,
-      termsAccepted:false,
-      markers:new Map(),
-      locationsMap:new Map(),  // id -> pin
-      draftLatLng:null,
-      draftPhotoDataUrl:null,  // new selection (data URL)
-      existingPhotoUrl:null,   // existing URL if editing
-      photoChanged:false,
-      photoRemoved:false,
-      editingId:null, saving:false, pendingPinId:null
-    };
+    const state={ activeType:null, markers:new Map(), locations:[], draftLatLng:null, draftPhoto:null, editingId:null, saving:false, pendingPinId:null };
 
     // ====== Search & Locate ======
     searchBtn.onclick = runSearch;
@@ -349,30 +291,29 @@
     const isMobile=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
     googleBtn.onclick=async ()=>{
       gateError.textContent=''; gateInfo.textContent='';
-      try{ if(isMobile) await signInWithRedirect(auth, provider); else await signInWithPopup(auth, provider); }
-      catch(e){ console.error('Google sign-in failed', e); gateError.textContent = e.code || e.message || 'Google sign-in failed'; }
+      try{
+        if(isMobile) await signInWithRedirect(auth, provider);
+        else         await signInWithPopup(auth, provider);
+      }catch(e){
+        console.error('Google sign-in failed', e);
+        gateError.textContent = e.code || e.message || 'Google sign-in failed';
+      }
     };
     getRedirectResult(auth).catch(e=>console.warn('redirect result:', e?.code||e));
-    logoutBtn.onclick=()=>signOut(auth);
 
-    // ====== Terms modal handlers ======
-    function showTerms(){ termsBackdrop.hidden=false; termsChk.checked=false; termsAgree.disabled=true; state.termsAccepted=false; }
-    function hideTerms(){ termsBackdrop.hidden=true; state.termsAccepted=true; }
-    termsChk.onchange=()=>{ termsAgree.disabled = !termsChk.checked; };
-    termsCancel.onclick=()=>signOut(auth);
-    termsAgree.onclick=async ()=>{
-      const u=auth.currentUser; if(!u) return;
-      try{ await updateDoc(doc(db,'users',u.uid), { termsV1AcceptedAt: serverTimestamp() }); hideTerms(); }
-      catch{ alert('Could not save acceptance. Try again.'); }
-    };
+    logoutBtn.onclick=()=>signOut(auth);
 
     // ====== Auth state ======
     onAuthStateChanged(auth, async (user)=>{
       if(!user){ document.body.classList.remove('auth'); whoami.textContent=''; stopPinsFeed(); return; }
+
       if(!isAllowedEmail(user.email)){
         document.body.classList.remove('auth'); whoami.textContent=''; stopPinsFeed();
-        gateError.innerHTML = `This account (<b>${user.email}</b>) isn’t allowed. <a href="#" id="switchAcct">Use a different account</a>`;
-        document.getElementById('switchAcct')?.addEventListener('click', async (e)=>{ e.preventDefault(); await signOut(auth); googleBtn.click(); });
+        gateError.innerHTML = `This account (<b>${user.email}</b>) isn’t allowed. ` +
+          `<a href="#" id="switchAcct">Use a different Google account</a>`;
+        document.getElementById('switchAcct')?.addEventListener('click', async (e)=>{
+          e.preventDefault(); await signOut(auth); googleBtn.click();
+        });
         return;
       }
 
@@ -380,15 +321,12 @@
       const isAdmin = (user.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase();
       whoami.textContent = user.email + (isAdmin ? ' • admin' : '');
 
-      // Ensure/Read user doc
+      // Ensure profile doc exists
       const uref=doc(db,'users',user.uid);
       const udoc=await getDoc(uref);
       if(!udoc.exists()){
-        await setDoc(uref,{ email:user.email, approved:true, createdAt:serverTimestamp(), termsV1AcceptedAt:null });
+        await setDoc(uref,{ email:user.email, approved:true, createdAt:serverTimestamp() });
       }
-      const accepted = (udoc.exists() && udoc.data().termsV1AcceptedAt) || false;
-      state.termsAccepted = !!accepted;
-      if(!state.termsAccepted) showTerms();
 
       startPinsFeed();
     });
@@ -405,7 +343,6 @@
       }
     }
     function setMode(type){
-      if(!state.termsAccepted){ showTerms(); return; }
       state.activeType = (state.activeType === type) ? null : type;
       updateModeUI();
     }
@@ -413,81 +350,42 @@
     modeDangerBtn.onclick = ()=> setMode('danger');
 
     // ====== Pins feed ======
-    let unsubs=[]; let streams={approved:new Set(), minePending:new Set(), mineRejected:new Set()};
-    function stopPinsFeed(){
-      unsubs.forEach(fn=>{ try{fn();}catch{} }); unsubs=[];
-      streams={approved:new Set(), minePending:new Set(), mineRejected:new Set()};
-      clearMarkers();
-    }
-    function recomputeVisible(){
-      const union=new Set([...streams.approved, ...streams.minePending, ...streams.mineRejected]);
-      for(const id of Array.from(state.locationsMap.keys())){
-        if(!union.has(id)){ state.locationsMap.delete(id); removeMarker(id); }
-      }
-      renderList();
-    }
+    let unsubPins=null;
+    function stopPinsFeed(){ if(unsubPins){unsubPins();unsubPins=null;} clearMarkers(); }
     function startPinsFeed(){
-      stopPinsFeed();
-      const u=auth.currentUser; if(!u) return;
-      const isAdmin = (u.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase();
-
-      if(isAdmin){
-        const qAll=query(collection(db,'pins'), orderBy('createdAt','desc'));
-        const unsub=onSnapshot(qAll,(snap)=>{
-          const ids=new Set();
-          snap.forEach(d=>{ const p={id:d.id, ...d.data()}; ids.add(p.id); upsertLocalPin(p); });
-          streams.approved=ids; streams.minePending=new Set(); streams.mineRejected=new Set();
-          recomputeVisible();
-        });
-        unsubs.push(unsub);
-      }else{
-        const qApproved=query(collection(db,'pins'), where('status','==','approved'), orderBy('createdAt','desc'));
-        const unsubA=onSnapshot(qApproved,(snap)=>{
-          const ids=new Set();
-          snap.forEach(d=>{ const p={id:d.id, ...d.data()}; ids.add(p.id); upsertLocalPin(p); });
-          streams.approved=ids; recomputeVisible();
-        });
-        const qPend=query(collection(db,'pins'), where('ownerUid','==', u.uid), where('status','==','pending'), orderBy('createdAt','desc'));
-        const unsubP=onSnapshot(qPend,(snap)=>{
-          const ids=new Set();
-          snap.forEach(d=>{ const p={id:d.id, ...d.data()}; ids.add(p.id); upsertLocalPin(p); });
-          streams.minePending=ids; recomputeVisible();
-        });
-        const qRej=query(collection(db,'pins'), where('ownerUid','==', u.uid), where('status','==','rejected'), orderBy('createdAt','desc'));
-        const unsubR=onSnapshot(qRej,(snap)=>{
-          const ids=new Set();
-          snap.forEach(d=>{ const p={id:d.id, ...d.data()}; ids.add(p.id); upsertLocalPin(p); });
-          streams.mineRejected=ids; recomputeVisible();
-        });
-        unsubs.push(unsubA,unsubP,unsubR);
-      }
+      if(unsubPins) return;
+      const qPins=query(collection(db,'pins'), orderBy('createdAt','desc'));
+      unsubPins=onSnapshot(qPins,(snap)=>{
+        const seen=new Set();
+        snap.forEach(d=>{ const p={id:d.id, ...d.data()}; seen.add(p.id); upsertLocalPin(p); });
+        for(const id of Array.from(state.markers.keys())) if(!seen.has(id)){ removeMarker(id); state.locations=state.locations.filter(x=>x.id!==id); }
+        renderList();
+      });
     }
 
     // ====== Local cache + render ======
-    function clearMarkers(){ for(const id of Array.from(state.markers.keys())) removeMarker(id); state.locationsMap.clear(); renderList(); }
-    function upsertLocalPin(p){ state.locationsMap.set(p.id,p); upsertMarker(p); }
-
+    function clearMarkers(){ for(const id of Array.from(state.markers.keys())) removeMarker(id); state.locations=[]; renderList(); }
+    function upsertLocalPin(p){ const i=state.locations.findIndex(x=>x.id===p.id); if(i===-1) state.locations.push(p); else state.locations[i]=p; upsertMarker(p); }
     const fmtLatLng = (loc)=>`${fmt(loc.lat)}, ${fmt(loc.lng)}`;
+
     function markerPopupHtml(loc, canEdit){
-      const img=loc.photoUrl?`<img class="popup-img" src="${loc.photoUrl}" alt="" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:6px">`:'';
+      const img=loc.photo?`<img class="popup-img" src="${loc.photo}" alt="" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:6px">`:'';
       const who = loc.ownerUsername || loc.ownerEmail || '';
-      const statusText = loc.status && loc.status!=='approved' ? ` · <b>${loc.status==='pending'?'Pending review':'Rejected'}</b>` : '';
       const actions = canEdit ? `<div style="display:flex;gap:6px"><a href="#" data-action="edit" data-id="${loc.id}">Edit</a><a href="#" data-action="delete" data-id="${loc.id}" style="color:#ff9a9a">Delete</a></div>` : '';
       return `<div style="min-width:240px">${img}
         <div style="margin-bottom:6px">${escapeHtml(loc.title||'(untitled)')}</div>
-        <div style="color:#9aa3ad;font-size:12px;margin-bottom:6px">${typeName(loc.type)} · ${fmtLatLng(loc)}${statusText}${who?` · by ${escapeHtml(who)}`:''}</div>
+        <div style="color:#9aa3ad;font-size:12px;margin-bottom:6px">${typeName(loc.type)} · ${fmtLatLng(loc)}${who?` · by ${escapeHtml(who)}`:''}</div>
         ${loc.description?`<div style="white-space:pre-wrap;margin-bottom:8px">${escapeHtml(loc.description)}</div>`:''}
         ${actions}</div>`;
     }
     function tooltipHtml(loc){
       const s=(loc.description||'').slice(0,140);
-      const statusText = loc.status && loc.status!=='approved' ? ` · ${loc.status==='pending'?'Pending':'Rejected'}` : '';
-      return `<div class="tt"><div class="tt-title">${escapeHtml(loc.title||'(untitled)')}</div><div class="tt-meta">${typeName(loc.type)} · ${fmtLatLng(loc)}${statusText}</div>${s?`<div class="tt-desc">${escapeHtml(s)}</div>`:''}</div>`;
+      return `<div class="tt"><div class="tt-title">${escapeHtml(loc.title||'(untitled)')}</div><div class="tt-meta">${typeName(loc.type)} · ${fmtLatLng(loc)}</div>${s?`<div class="tt-desc">${escapeHtml(s)}</div>`:''}</div>`;
     }
     function makeIcon(loc){
       const glyph = loc.type===TYPE_DANGER?'⚠️':'🐱';
-      const html = `<div class="pin ${typeClass(loc.type)} ${statusClass(loc.status)}"><div class="bubble">${
-        loc.photoUrl ? `<img class="thumb" src="${loc.photoUrl}" alt="">` : `<div class="glyph">${glyph}</div>`
+      const html = `<div class="pin ${typeClass(loc.type)}"><div class="bubble">${
+        loc.photo ? `<img class="thumb" src="${loc.photo}" alt="">` : `<div class="glyph">${glyph}</div>`
       }</div><div class="stem"></div></div>`;
       return L.divIcon({ className:'pin-icon', html, iconSize:[46,60], iconAnchor:[23,58], popupAnchor:[0,-56], tooltipAnchor:[0,-58] });
     }
@@ -517,26 +415,21 @@
 
     function renderList(){
       listEl.innerHTML='';
-      const data = Array.from(state.locationsMap.values())
-        .sort((a,b)=>((b.createdAt?.seconds||0)-(a.createdAt?.seconds||0)));
-      if(!data.length){
+      if(!state.locations.length){
         const li=document.createElement('li'); li.className='loc';
         li.innerHTML='<div class="title" style="grid-column:1/-1;color:var(--muted)">No locations yet. Click a mode (Lost Cat or Danger), then click the map.</div>';
         listEl.appendChild(li); return;
       }
       const user=auth.currentUser; const isAdmin=(user?.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase();
-      for(const loc of data){
+      for(const loc of state.locations){
         const li=document.createElement('li'); li.className='loc'; li.dataset.id=loc.id;
         const title=document.createElement('div'); title.className='title';
         const mine=(loc.ownerUid===user?.uid); const who = loc.ownerUsername || loc.ownerEmail || '';
         const ownerTag = (!isAdmin && !mine && who) ? `<span class="who" style="margin-left:8px">by ${escapeHtml(who)}</span>` : '';
-        const statusTag = loc.status && loc.status!=='approved'
-          ? `<span class="badge ${loc.status==='pending'?'pending':'rejected'}">${loc.status==='pending'?'Pending':'Rejected'}</span>` : '';
-        title.innerHTML = `${escapeHtml(loc.title||'(untitled)')} <span class="badge ${typeClass(loc.type)}">${typeName(loc.type)}</span> ${statusTag} ${ownerTag}`;
+        title.innerHTML = `${escapeHtml(loc.title||'(untitled)')} <span class="badge ${typeClass(loc.type)}">${typeName(loc.type)}</span> ${ownerTag}`;
         const meta=document.createElement('div'); meta.className='meta'; meta.textContent=fmtLatLng(loc);
         const actions=document.createElement('div'); actions.className='actions';
-        const flyBtn=document.createElement('button'); flyBtn.textContent='View';
-        flyBtn.onclick=()=>{ map.flyTo([loc.lat,loc.lng],Math.max(map.getZoom(),15),{duration:0.7}); const m=state.markers.get(loc.id); if(m) m.openPopup(); };
+        const flyBtn=document.createElement('button'); flyBtn.textContent='View'; flyBtn.onclick=()=>{ map.flyTo([loc.lat,loc.lng],Math.max(map.getZoom(),15),{duration:0.7}); const m=state.markers.get(loc.id); if(m) m.openPopup(); };
         actions.append(flyBtn);
         if(isAdmin || mine){
           const editBtn=document.createElement('button'); editBtn.textContent='Edit'; editBtn.onclick=()=>openEditModal(loc.id);
@@ -547,21 +440,12 @@
       }
     }
 
-    // ====== Modal + image (now uploads to Storage) ======
-    map.on('click',(e)=>{ if(state.activeType){ if(!state.termsAccepted){ showTerms(); return; } openCreateModal(e.latlng); } });
+    // ====== Modal + image ======
+    map.on('click',(e)=>{ if(state.activeType) openCreateModal(e.latlng); });
 
-    function setPhotoPreview(value, {existing=false}={}){
-      if(existing){
-        state.existingPhotoUrl = value || null;
-        state.draftPhotoDataUrl = null;
-        state.photoChanged = false;
-        state.photoRemoved = false;
-      }else if(value){
-        state.draftPhotoDataUrl = value; state.photoChanged = true; state.photoRemoved = false;
-      }else{
-        state.draftPhotoDataUrl = null; state.photoRemoved = !!state.existingPhotoUrl; state.photoChanged = false;
-      }
-      if(value){ photoPreview.src=value; photoPreview.style.display='block'; removePhotoBtn.style.display='inline-block'; }
+    function setPhotoPreview(dataUrl){
+      state.draftPhoto = dataUrl || null;
+      if(state.draftPhoto){ photoPreview.src=state.draftPhoto; photoPreview.style.display='block'; removePhotoBtn.style.display='inline-block'; }
       else { photoPreview.removeAttribute('src'); photoPreview.style.display='none'; removePhotoBtn.style.display='none'; photoInput.value=''; }
     }
     function openCreateModal(latlng){
@@ -572,28 +456,29 @@
       setSaving(false);
       modalTitle.textContent='New location';
       titleInput.value=''; descInput.value=''; coordsInput.value=`${fmt(latlng.lat)}, ${fmt(latlng.lng)}`;
+
+      // Type comes from active mode; show preview, keep radios hidden
       const t = state.activeType || 'lostcat';
       document.querySelector(`input[name="pinType"][value="${t}"]`).checked = true;
-      typeGroup.style.display = 'none'; typePreview.textContent = 'Pin type: ' + typeName(t);
+      typeGroup.style.display = 'none';
+      typePreview.textContent = 'Pin type: ' + typeName(t);
+
       modalBackdrop.hidden=false; setTimeout(()=>titleInput.focus(),0);
     }
     function openEditModal(id){
-      const loc = state.locationsMap.get(id); if(!loc) return;
+      const loc = state.locations.find(x=>x.id===id); if(!loc) return;
       const isAdmin=((auth.currentUser?.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase());
       if(!(isAdmin || loc.ownerUid===auth.currentUser?.uid)) return alert('You can edit only your own pins.');
-      state.editingId=id; state.draftLatLng={lat:loc.lat,lng:loc.lng};
-      setPhotoPreview(loc.photoUrl||null,{existing:true});
+      state.editingId=id; state.draftLatLng={lat:loc.lat,lng:loc.lng}; setPhotoPreview(loc.photo||null);
       modalTitle.textContent='Edit location'; titleInput.value=loc.title||''; descInput.value=loc.description||''; coordsInput.value=`${fmt(loc.lat)}, ${fmt(loc.lng)}`;
       document.querySelector(`input[name="pinType"][value="${loc.type==='danger'?'danger':'lostcat'}"]`).checked=true;
+
       if(isAdmin){ typeGroup.style.display='flex'; typePreview.textContent=''; }
       else { typeGroup.style.display='none'; typePreview.textContent='Pin type: ' + typeName(loc.type); }
+
       modalBackdrop.hidden=false; setTimeout(()=>titleInput.focus(),0);
     }
-    function closeModal(){
-      modalBackdrop.hidden=true; state.editingId=null; state.draftLatLng=null; state.pendingPinId=null;
-      setSaving(false); setPhotoPreview(null); typeGroup.style.display='none'; typePreview.textContent='';
-      state.existingPhotoUrl=null; state.photoChanged=false; state.photoRemoved=false;
-    }
+    function closeModal(){ modalBackdrop.hidden=true; state.editingId=null; state.draftLatLng=null; state.pendingPinId=null; setSaving(false); setPhotoPreview(null); typeGroup.style.display='none'; typePreview.textContent=''; }
     cancelBtn.onclick=closeModal;
     modalBackdrop.addEventListener('click',(e)=>{ if(e.target===modalBackdrop) closeModal(); });
 
@@ -602,8 +487,7 @@
       try{ const dataUrl=await processImage(f,256,'image/jpeg',0.85); setPhotoPreview(dataUrl); }
       catch{ alert('Could not read the image.'); }
     };
-    removePhotoBtn.onclick=()=> setPhotoPreview(null);
-
+    removePhotoBtn.onclick=()=>setPhotoPreview(null);
     function processImage(file,size=256,mime='image/jpeg',q=0.85){
       return new Promise((resolve,reject)=>{
         const fr=new FileReader();
@@ -614,20 +498,6 @@
         }; img.onerror=()=>reject(new Error('img')); img.src=fr.result; }; fr.onerror=()=>reject(new Error('file')); fr.readAsDataURL(file);
       });
     }
-    function dataUrlToBlob(dataUrl){
-      const arr=dataUrl.split(','), mime=(arr[0].match(/:(.*?);/)||[])[1]||'image/jpeg';
-      const bstr=atob(arr[1]); let n=bstr.length; const u8=new Uint8Array(n);
-      while(n--) u8[n]=bstr.charCodeAt(n); return new Blob([u8],{type:mime});
-    }
-    async function uploadPhoto(uid, pinId, dataUrl){
-      const path=`pins/${uid}/${pinId}/thumb.jpg`;
-      const r=sref(storage, path);
-      const blob=dataUrlToBlob(dataUrl);
-      await uploadBytes(r, blob, { contentType:'image/jpeg', cacheControl:'public,max-age=604800' });
-      const url=await getDownloadURL(r);
-      return { url, path };
-    }
-    async function deletePhotoByPath(path){ try{ await deleteObject(sref(storage, path)); }catch(_){} }
 
     // ====== Quota helpers ======
     async function pickFreeSlot(uid, type){
@@ -637,35 +507,23 @@
       return null;
     }
 
-    // ====== CRUD (with status & Storage upload) ======
-    async function createPin({id, title,description,type,lat,lng}){
+    // ====== CRUD ======
+    async function createPin({id, title,description,type,lat,lng,photo}){
       const user=auth.currentUser; if(!user) return;
       const uid=user.uid; const email=user.email||'';
       const isAdmin=(email.toLowerCase()===ADMIN_EMAIL.toLowerCase());
+
       const pinId = id || doc(collection(db,'pins')).id;
-
-      // Optional upload
-      let photoUrl=null, photoPath=null;
-      if(state.draftPhotoDataUrl){
-        const up=await uploadPhoto(uid, pinId, state.draftPhotoDataUrl);
-        photoUrl=up.url; photoPath=up.path;
-      }
-
-      // Quota for non-admin
-      let slot=null;
+      let slot = null;
       if(!isAdmin){
         slot = await pickFreeSlot(uid, type);
         if(!slot){ alert(`Limit reached: 5 ${typeName(type)} pins.`); return; }
       }
-
       const batch = writeBatch(db);
       batch.set(doc(db,'pins',pinId), {
-        title, description, type, lat, lng,
-        photoUrl, photoPath,
+        title, description, type, lat, lng, photo: photo||null,
         ownerUid: uid, ownerEmail: email, ownerUsername: null,
         createdAt: serverTimestamp(),
-        status: 'pending',           // <— start pending
-        moderation: { image: { flagged:false }, text: { flagged:false } },
         slot: slot || null
       });
       if(!isAdmin){
@@ -674,39 +532,20 @@
       await batch.commit();
     }
 
-    async function updatePin(id, {title,description,lat,lng,type}){
-      const ref=doc(db,'pins',id);
-      const snap=await getDoc(ref); if(!snap.exists()) return;
-      const prev=snap.data();
-      const isAdmin=((auth.currentUser?.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase());
-
-      // Handle photo replace/remove
-      let patch = { title, description, lat, lng };
-      if(state.photoRemoved && prev.photoPath){
-        await deletePhotoByPath(prev.photoPath);
-        patch.photoUrl = null; patch.photoPath = null;
-      }else if(state.photoChanged && state.draftPhotoDataUrl){
-        const up=await uploadPhoto(prev.ownerUid || auth.currentUser.uid, id, state.draftPhotoDataUrl);
-        if(prev.photoPath && prev.photoPath!==up.path){ await deletePhotoByPath(prev.photoPath); }
-        patch.photoUrl = up.url; patch.photoPath = up.path;
-      }
-
-      // Admin may change type; non-admin edit keeps status (owner cannot approve)
-      if(isAdmin && type){ patch.type = type; }
-
-      await updateDoc(ref, patch);
+    async function updatePin(id, {title,description,lat,lng,photo,type}){
+      const patch={ title, description, lat, lng, photo: photo||null };
+      if(((auth.currentUser?.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase()) && type) patch.type=type; // admin may change type
+      await updateDoc(doc(db,'pins',id), patch);
     }
 
     function confirmDelete(id){ if(confirm('Delete this pin?')) deletePin(id); }
     async function deletePin(id){
-      const ref=doc(db,'pins',id);
-      const snap=await getDoc(ref); if(!snap.exists()) return;
+      const snap=await getDoc(doc(db,'pins',id)); if(!snap.exists()) return;
       const p=snap.data();
       const isAdmin=((auth.currentUser?.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase());
       if(!(isAdmin || p.ownerUid===auth.currentUser?.uid)) return alert('You can delete only your own pins.');
-      if(p.photoPath){ await deletePhotoByPath(p.photoPath); }
       const batch=writeBatch(db);
-      batch.delete(ref);
+      batch.delete(doc(db,'pins',id));
       if(p.ownerUid && p.type && p.slot){
         batch.delete(doc(db, `users/${p.ownerUid}/quota/${p.type}/slots/${p.slot}`));
       }
@@ -723,29 +562,19 @@
     }
     saveBtn.onclick=async ()=>{
       if(state.saving) return;
-      if(!state.termsAccepted){ showTerms(); return; }
       setSaving(true);
-
-      const title=titleInput.value.trim().slice(0,120)||'(untitled)';
-      const description=descInput.value.trim().slice(0,800);
-      const combined = `${title}\n${description}`;
-      if(violatesTextPolicy(combined)){
-        alert('Your text appears to contain disallowed content (donations, services, or adult terms). Please revise per the Terms.');
-        setSaving(false); return;
-      }
+      const title=titleInput.value.trim()||'(untitled)';
+      const description=descInput.value.trim();
       if(!state.draftLatLng){ closeModal(); return; }
 
       try{
         if(state.editingId){
           const radio = document.querySelector('input[name="pinType"]:checked')?.value;
           const isAdmin=((auth.currentUser?.email||'').toLowerCase()===ADMIN_EMAIL.toLowerCase());
-          await updatePin(state.editingId,{
-            title, description, lat:state.draftLatLng.lat, lng:state.draftLatLng.lng,
-            type: isAdmin ? (radio==='danger'?'danger':'lostcat') : undefined
-          });
-        }else{
+          await updatePin(state.editingId,{ title, description, lat:state.draftLatLng.lat, lng:state.draftLatLng.lng, photo:state.draftPhoto, type:isAdmin ? (radio==='danger'?'danger':'lostcat') : undefined });
+        } else {
           if(!state.activeType){ alert('Select a pin type: Lost Cat or Danger (left panel).'); setSaving(false); return; }
-          await createPin({ id: state.pendingPinId, title, description, type: state.activeType, lat:state.draftLatLng.lat, lng:state.draftLatLng.lng });
+          await createPin({ id: state.pendingPinId, title, description, type: state.activeType, lat:state.draftLatLng.lat, lng:state.draftLatLng.lng, photo:state.draftPhoto });
         }
         closeModal();
       }catch(e){

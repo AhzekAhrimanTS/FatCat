@@ -383,9 +383,9 @@
       }
 
       // roles / ban
-      const role=(udoc.data()?.role||'').toString().toLowerCase();
-      state.isAdmin = (user.email||'').toLowerCase()===OWNER_EMAIL.toLowerCase();
-      state.isMod   = state.isAdmin || role==='mod' || role==='moderator';
+      const role = (udoc.data()?.role || '').toString().toLowerCase();
+      state.isAdmin  = (user.email || '').toLowerCase() === OWNER_EMAIL.toLowerCase();
+      state.isMod    = state.isAdmin || role === 'mod' || role === 'moderator';
       state.isBanned = !!udoc.data()?.banned;
 
       const tags=[];

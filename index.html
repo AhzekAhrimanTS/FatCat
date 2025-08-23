@@ -651,29 +651,34 @@
 
     // ====== CRUD ======
     async function createPin({id, title,description,type,lat,lng,photo}){
-      const user=auth.currentUser; if(!user) return;
-      const uid=user.uid; const email=(user.email||'').toLowerCase();
-      const privileged = (email === OWNER_EMAIL.toLowerCase()) || state.isMod; // admin OR moderator
-
+      const user = auth.currentUser; if(!user) return;
+      const uid = user.uid;
+      const email = (user.email || '').toLowerCase();
+    
+      // Admin or moderator?
+      const privileged = (email === OWNER_EMAIL.toLowerCase()) || state.isMod;
+    
       const pinId = id || doc(collection(db,'pins')).id;
       let slot = null;
-
+    
       const batch = writeBatch(db);
-      if(!privileged){
+      if (!privileged) {
         slot = await pickFreeSlot(uid, type);
-        if(!slot){ alert(`Limit reached: 5 ${typeName(type)} pins.`); return; }
+        if (!slot) { alert(`Limit reached: 5 ${typeName(type)} pins.`); return; }
       }
-
-      batch.set(doc(db,'pins',pinId), {
-        title, description, type, lat, lng, photo: photo||null,
-        ownerUid: uid, ownerEmail: user.email || '', ownerUsername: null,
+    
+      batch.set(doc(db,'pins', pinId), {
+        title, description, type, lat, lng, photo: photo || null,
+        ownerUid: uid, ownerEmail: user.email || '',
+        ownerUsername: null,
         createdAt: serverTimestamp(),
         slot: slot || null
       });
-
-      if(!privileged){
+    
+      if (!privileged) {
         batch.set(doc(db, `users/${uid}/quota/${type}/slots/${slot}`), { pinId });
       }
+    
       await batch.commit();
     }
 

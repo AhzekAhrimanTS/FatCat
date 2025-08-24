@@ -15,7 +15,7 @@
           crossorigin></script>
 
   <style>
-    :root {
+    :root{
       --bg:#0f1115; --bg-elev:#161a22; --fg:#d7dce2; --muted:#9aa3ad;
       --accent:#7aa2f7; --danger:#ef5350; --cat:#f1a33c; --border:#232839; --ok:#3ac97a;
       --dog:#86e07c; --pet:#7adff2; --item:#c084fc;
@@ -25,21 +25,19 @@
 
     /* Layout */
     #app{display:grid;grid-template-columns:380px 1fr;grid-template-rows:100vh}
-    #panel{background:var(--bg-elev);border-right:1px solid var(--border);display:flex;flex-direction:column;min-width:340px}
+    #sidebar{background:var(--bg-elev);border-right:1px solid var(--border);display:flex;flex-direction:column;min-width:340px}
     #map{height:100%;width:100%}
 
     /* Desktop brand */
-    .brand{padding:14px 16px;color:var(--muted);border-bottom:1px solid var(--border);
-      display:flex;justify-content:space-between;align-items:center}
+    .brand{padding:14px 16px;color:var(--muted);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
     .brand .title{font-weight:600;color:#e2e8f0}
     .brand .who{display:block;font-size:12px;color:var(--muted);margin-top:4px}
     .brand .left{display:flex;flex-direction:column}
 
-    /* Controls / lists */
+    /* Controls / lists (desktop) */
     .controls{padding:12px;border-bottom:1px solid var(--border);
       display:grid;grid-template-columns:1fr auto;gap:8px}
-    .controls input[type="text"]{background:#111521;border:1px solid var(--border);
-      color:var(--fg);padding:10px;border-radius:8px}
+    .controls input[type="text"]{background:#111521;border:1px solid var(--border);color:var(--fg);padding:10px;border-radius:8px}
     .controls .row{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
     button,label.btn{background:#171d2b;border:1px solid var(--border);color:var(--fg);
       padding:10px 12px;border-radius:10px;cursor:pointer;font-size:15px}
@@ -47,17 +45,9 @@
     button.primary{background:#1a2744;border-color:#243154;box-shadow:0 0 0 1px rgba(122,162,247,.15) inset}
     button.danger{border-color:#4a2626;background:#2b1414;color:#ffb3b3}
     button[disabled]{opacity:.6;cursor:not-allowed}
-    .mode-btn .dot{display:inline-block;width:10px;height:10px;border-radius:999px;margin-right:8px;vertical-align:-1px}
-    .mode-btn.cat  .dot{background:var(--cat)}
-    .mode-btn.dog  .dot{background:var(--dog)}
-    .mode-btn.pet  .dot{background:var(--pet)}
-    .mode-btn.item .dot{background:var(--item)}
-    .mode-btn.dang .dot{background:var(--danger)}
-    .mode-strip{display:flex;gap:8px;overflow:auto;padding-bottom:2px}
 
     #locationList{list-style:none;padding:0;margin:0;overflow:auto;flex:1}
-    .loc{border-bottom:1px solid var(--border);padding:10px 12px;display:grid;
-      grid-template-columns:1fr auto;gap:4px 8px;align-items:center}
+    .loc{border-bottom:1px solid var(--border);padding:10px 12px;display:grid;grid-template-columns:1fr auto;gap:4px 8px;align-items:center}
     .loc .title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .loc .meta{color:var(--muted);font-size:12px}
     .loc .actions{display:flex;gap:6px}
@@ -67,28 +57,6 @@
     .badge.pet {background:rgba(122,223,242,.15);color:#d2f6ff;border:1px solid rgba(122,223,242,.35)}
     .badge.item{background:rgba(192,132,252,.15);color:#ecd6ff;border:1px solid rgba(192,132,252,.35)}
     .badge.danger{background:rgba(239,83,80,.15);color:#ffb3b3;border:1px solid rgba(239,83,80,.35)}
-
-    /* Moderation */
-    .tabs{display:flex;gap:8px;margin:8px 12px 0}
-    .tab{padding:8px 12px;border:1px solid var(--border);border-radius:10px;background:#121829;cursor:pointer}
-    .tab.active{background:#1a2744;border-color:#243154}
-    .tabpanel{display:none}
-    .tabpanel.active{display:block}
-    .mod-panel{padding:12px}
-    .mod-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-    .mod-header h3{margin:0;font-size:14px;color:#cbd5e1}
-    #userList{list-style:none;margin:0;padding:0;max-height:28vh;overflow:auto;border:1px solid var(--border);border-radius:8px}
-    .user-row{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;padding:10px;border-bottom:1px dashed #1f2433}
-    .user-row:last-child{border-bottom:0}
-    .u-meta{font-size:12px;color:var(--muted)}
-    .u-tags{display:flex;gap:6px;align-items:center}
-    .tag{font-size:10px;padding:2px 6px;border-radius:999px;border:1px solid var(--border);color:#aeb8c6}
-    .tag.mod{border-color:#37517e;color:#bdd6ff;background:rgba(122,162,247,.1)}
-    .tag.admin{border-color:#3d7a5b;color:#bdf2d8;background:rgba(58,201,122,.08)}
-    .tag.banned{border-color:#5c2b2b;color:#ffb3b3;background:rgba(239,83,80,.10)}
-    .status{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
-    .dot{width:8px;height:8px;border-radius:999px;background:#4b5563}
-    .dot.online{background:var(--ok)}
 
     /* Map hint */
     .pin-hint{position:absolute;top:12px;right:12px;z-index:500;background:rgba(10,14,24,.9);
@@ -142,41 +110,38 @@
       border-radius:10px;box-shadow:0 10px 25px rgba(0,0,0,.35)}
     .tt-title{margin-bottom:4px}.tt-meta{color:var(--muted);font-size:12px;margin-bottom:4px}.tt-desc{font-size:13px;max-width:260px;white-space:normal}
 
-    /* Mobile‑first tweaks */
-    .mobile-only{display:none}
-    .desktop-only{display:block}
-
-    /* Top bar (mobile) */
+    /* Mobile top bar (always) */
     #topbar{position:fixed;top:0;left:0;right:0;z-index:1200;background:rgba(16,20,32,.9);
-      backdrop-filter: blur(6px); display:flex;align-items:center;justify-content:space-between;
+      backdrop-filter: blur(6px); display:none;align-items:center;justify-content:space-between;
       padding:10px 12px;border-bottom:1px solid #1e2636}
     #topbar .title{font-weight:600}
     #topbar .who{font-size:12px;color:var(--muted)}
 
-    /* Bottom sheet behavior on mobile */
-    @media(max-width: 1040px){
+    /* Mobile bottom bar: always visible, small, scrollable */
+    #bottomBar{position:fixed;left:0;right:0;bottom:0;z-index:1200;background:rgba(16,20,32,.95);
+      border-top:1px solid var(--border);display:none;gap:6px;padding:8px}
+    .mode-strip{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+    .mode-strip::-webkit-scrollbar{display:none}
+    .mode-btn .dot{display:inline-block;width:10px;height:10px;border-radius:999px;margin-right:8px;vertical-align:-1px}
+    .mode-btn.cat  .dot{background:var(--cat)}
+    .mode-btn.dog  .dot{background:var(--dog)}
+    .mode-btn.pet  .dot{background:var(--pet)}
+    .mode-btn.item .dot{background:var(--item)}
+    .mode-btn.dang .dot{background:var(--danger)}
+    .action-row{display:flex;gap:8px;overflow:auto}
+
+    /* Mobile layout rules */
+    @media (max-width:1040px){
       #app{grid-template-columns:1fr}
-      #panel{
-        position:fixed;left:0;right:0;bottom:0;height:62vh;background:var(--bg-elev);
-        border-top:1px solid var(--border);border-right:none;border-left:none;z-index:1100;
-        transform:translateY(100%);transition:transform .26s ease;
-        box-shadow:0 -16px 32px rgba(0,0,0,.35);min-width:unset
-      }
-      #panel.open{transform:translateY(0)}
-      .brand.desktop-only{display:none}
-      .mobile-only{display:block}
-      .desktop-only{display:none}
+      #sidebar{display:none}
+      #topbar{display:flex}
+      #bottomBar{display:grid}
       #map{height:100vh}
-      body:not(.auth) #app{filter:none} /* map blurs anyway behind gate */
+      body:not(.auth) #app{filter:none}
     }
 
-    .sheet-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--border)}
-    .sheet-title{font-weight:600}
-    .sheet-sub{font-size:12px;color:var(--muted)}
-
     /* In-app browser warning */
-    #inAppWarning{display:none;position:fixed;bottom:0;left:0;right:0;z-index:3000;background:#2b1414;color:#ffb3b3;border-top:1px solid #4a2626;padding:10px 12px;font-size:14px}
-
+    #inAppWarning{display:none;position:fixed;bottom:64px;left:0;right:0;z-index:1300;background:#2b1414;color:#ffb3b3;border-top:1px solid #4a2626;padding:10px 12px;font-size:14px}
     .leaflet-container{background:#0c0f15}
   </style>
 </head>
@@ -186,18 +151,15 @@
     <div class="card">
       <h2>KAUST Pins</h2>
       <div class="muted">Sign in with Google (KAUST accounts only).</div>
-
       <div class="stack">
         <label class="consent-row">
           <input type="checkbox" id="consentCheck">
-          <span>I agree to the <a href="#" id="openTermsLink">Terms &amp; Consent</a> and consent to the processing of my KAUST email for this service.</span>
+          <span>I agree to the <a href="#" id="openTermsLink">Terms &amp; Consent</a> and consent to processing my KAUST email for this service.</span>
         </label>
-
         <button id="googleBtn" class="primary" disabled>Continue with Google</button>
         <div id="gateInfo" class="ok"></div>
         <div id="gateError" class="error"></div>
       </div>
-
       <div class="gate-foot">
         <small style="opacity:.85">
           Mark your lost pets and items.<br>
@@ -209,9 +171,36 @@
   </div>
 
   <div id="app">
+    <!-- Desktop sidebar -->
+    <aside id="sidebar">
+      <div class="brand">
+        <div class="left">
+          <div class="title">KAUST Pins</div>
+          <div id="whoami" class="who"></div>
+        </div>
+        <button id="logoutBtn">Sign out</button>
+      </div>
+      <div class="controls">
+        <input id="searchInput" type="text" placeholder="Search a place (e.g., KAUST, Jeddah)" />
+        <button id="searchBtn" title="Find place">Search</button>
+        <div class="row">
+          <button id="locateBtn" title="Center on my location">Locate me</button>
+          <button id="deleteAllBtn" class="danger">Delete All Pins (mine)</button>
+          <button id="openUsersBtn" style="display:none">Users</button>
+        </div>
+        <div class="row">
+          <button id="modeCatBtn"   class="mode-btn cat"><span class="dot"></span>Lost Cat</button>
+          <button id="modeDogBtn"   class="mode-btn dog"><span class="dot"></span>Lost Dog</button>
+          <button id="modePetBtn"   class="mode-btn pet"><span class="dot"></span>Lost Pet</button>
+          <button id="modeItemBtn"  class="mode-btn item"><span class="dot"></span>Lost Item</button>
+          <button id="modeDangerBtn" class="mode-btn dang"><span class="dot"></span>Danger</button>
+        </div>
+      </div>
+      <ul id="locationList"></ul>
+    </aside>
+
     <!-- Mobile top bar -->
-    <div id="topbar" class="mobile-only">
-      <button id="menuBtn" class="primary">☰</button>
+    <div id="topbar">
       <div>
         <div class="title">KAUST Pins</div>
         <div id="whoamiTop" class="who"></div>
@@ -219,70 +208,41 @@
       <button id="logoutBtnTop">Sign out</button>
     </div>
 
-    <!-- Unified panel (desktop sidebar / mobile bottom sheet) -->
-    <aside id="panel">
-      <!-- Desktop header -->
-      <div class="brand desktop-only">
-        <div class="left">
-          <div class="title">KAUST Pins</div>
-          <div id="whoami" class="who"></div>
-        </div>
-        <button id="logoutBtn">Sign out</button>
+    <!-- Mobile bottom controls (always visible) -->
+    <div id="bottomBar" aria-label="Controls">
+      <div class="mode-strip">
+        <button id="modeCatBtn_m"   class="mode-btn cat"><span class="dot"></span>Lost Cat</button>
+        <button id="modeDogBtn_m"   class="mode-btn dog"><span class="dot"></span>Lost Dog</button>
+        <button id="modePetBtn_m"   class="mode-btn pet"><span class="dot"></span>Lost Pet</button>
+        <button id="modeItemBtn_m"  class="mode-btn item"><span class="dot"></span>Lost Item</button>
+        <button id="modeDangerBtn_m" class="mode-btn dang"><span class="dot"></span>Danger</button>
       </div>
-
-      <!-- Mobile sheet head -->
-      <div class="sheet-head mobile-only">
-        <div>
-          <div class="sheet-title">Menu</div>
-          <div id="whoamiSheet" class="sheet-sub"></div>
-        </div>
-        <button id="closePanel">Close</button>
+      <div class="action-row">
+        <button id="searchBtn_m" title="Find place">Search</button>
+        <button id="locateBtn_m" title="Center on my location">Locate me</button>
+        <button id="deleteAllBtn_m" class="danger">Delete All Pins (mine)</button>
+        <button id="openUsersBtn_m" style="display:none">Users</button>
       </div>
-
-      <!-- Tabs (mobile) -->
-      <div class="tabs mobile-only">
-        <button id="tabPins" class="tab active">Pins</button>
-        <button id="tabUsers" class="tab">Users</button>
-      </div>
-
-      <!-- Controls + list (Pins tab) -->
-      <div id="tabPinsPanel" class="tabpanel active">
-        <div class="controls">
-          <input id="searchInput" type="text" placeholder="Search a place (e.g., KAUST, Jeddah)" />
-          <button id="searchBtn" title="Find place">Search</button>
-          <div class="row mode-strip">
-            <button id="modeCatBtn"   class="mode-btn cat"><span class="dot"></span>Lost Cat</button>
-            <button id="modeDogBtn"   class="mode-btn dog"><span class="dot"></span>Lost Dog</button>
-            <button id="modePetBtn"   class="mode-btn pet"><span class="dot"></span>Lost Pet</button>
-            <button id="modeItemBtn"  class="mode-btn item"><span class="dot"></span>Lost Item</button>
-            <button id="modeDangerBtn" class="mode-btn dang"><span class="dot"></span>Danger</button>
-            <button id="locateBtn" title="Center on my location">Locate me</button>
-          </div>
-          <div class="row">
-            <button id="deleteAllBtn" class="danger">Delete All Pins (mine)</button>
-          </div>
-        </div>
-        <ul id="locationList"></ul>
-      </div>
-
-      <!-- Users tab / Moderation -->
-      <div id="tabUsersPanel" class="tabpanel">
-        <div id="modPanel" class="mod-panel" style="display:none">
-          <div class="mod-header">
-            <h3>Users</h3>
-            <small class="u-meta">Online &amp; last activity</small>
-          </div>
-          <ul id="userList"></ul>
-        </div>
-        <div id="modEmpty" class="u-meta" style="padding:12px;display:none">You are not a moderator.</div>
-      </div>
-    </aside>
+    </div>
 
     <!-- Map -->
     <main style="position:relative">
       <div id="map"></div>
       <div id="pinHint" class="pin-hint" style="display:none">Tap the map to place a pin</div>
     </main>
+  </div>
+
+  <!-- Users (moderation) modal -->
+  <div id="usersModal" class="modal-backdrop" hidden>
+    <div class="modal">
+      <h3>Users</h3>
+      <div class="terms-body" style="max-height:60vh">
+        <ul id="userList" style="list-style:none;margin:0;padding:0"></ul>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px">
+        <button id="closeUsersBtn">Close</button>
+      </div>
+    </div>
   </div>
 
   <!-- Terms & Consent Modal -->
@@ -384,7 +344,7 @@
       onSnapshot, query, orderBy, where, writeBatch, serverTimestamp
     } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
 
-    /* ---------- Firebase config ---------- */
+    /* ---------- Config ---------- */
     const firebaseConfig = {
       apiKey: "AIzaSyCVxRVywtfJIV6G55r1se3BoYVjtHxWDFM",
       authDomain: "fat-fat-cat.firebaseapp.com",
@@ -394,8 +354,6 @@
       appId: "1:409243971382:web:646a6858479a9740d04d97"
     };
     const appFB = initializeApp(firebaseConfig);
-
-    // Robust mobile auth
     const auth = initializeAuth(appFB, {
       persistence: [
         indexedDBLocalPersistence,
@@ -405,208 +363,180 @@
       ],
       popupRedirectResolver: browserPopupRedirectResolver
     });
-
     const db = getFirestore(appFB);
 
     /* ---------- Owner/domain gate ---------- */
     const OWNER_EMAIL = 'lenatif09@gmail.com';
     const isAllowedEmail = (email) => {
-      const e = (email || '').toLowerCase();
-      return e === OWNER_EMAIL.toLowerCase() || /@kaust\.edu\.sa$/i.test(e);
+      const e=(email||'').toLowerCase();
+      return e===OWNER_EMAIL.toLowerCase() || /@kaust\.edu\.sa$/i.test(e);
     };
 
-    /* ---------- Terms/version ---------- */
-    const TERMS_VERSION = 'v2-2025-08-24';
-    const CONSENT_STASH_KEY = 'kaustpins.preconsent.v1';
+    /* ---------- Terms ---------- */
+    const TERMS_VERSION='v2-2025-08-24';
+    const CONSENT_STASH_KEY='kaustpins.preconsent.v1';
 
-    /* ---------- DOM refs ---------- */
-    const $ = (id)=>document.getElementById(id);
-    const gate=$('gate'), gateError=$('gateError'), gateInfo=$('gateInfo'), googleBtn=$('googleBtn'), consentCheck=$('consentCheck'), openTermsLink=$('openTermsLink');
+    /* ---------- DOM ---------- */
+    const $=(id)=>document.getElementById(id);
+    const gate=$('gate'), gateError=$('gateError'), googleBtn=$('googleBtn'), consentCheck=$('consentCheck'), openTermsLink=$('openTermsLink');
+    const termsModal=$('termsModal'), agreeTermsBtn=$('agreeTermsBtn'), closeTermsBtn=$('closeTermsBtn');
 
-    const topbar=$('topbar'), menuBtn=$('menuBtn'), logoutBtnTop=$('logoutBtnTop'), whoamiTop=$('whoamiTop');
-    const panel=$('panel'), closePanel=$('closePanel');
-    const whoami=$('whoami'), whoamiSheet=$('whoamiSheet'), logoutBtn=$('logoutBtn');
+    const whoami=$('whoami'), logoutBtn=$('logoutBtn');
+    const whoamiTop=$('whoamiTop'), logoutBtnTop=$('logoutBtnTop');
 
-    const tabPins=$('tabPins'), tabUsers=$('tabUsers'), tabPinsPanel=$('tabPinsPanel'), tabUsersPanel=$('tabUsersPanel');
-    const modPanel=$('modPanel'), modEmpty=$('modEmpty'), userList=$('userList');
+    const bottomBar=$('bottomBar');
+    const openUsersBtn=$('openUsersBtn'), openUsersBtn_m=$('openUsersBtn_m');
+    const usersModal=$('usersModal'), closeUsersBtn=$('closeUsersBtn'), userList=$('userList');
 
-    const listEl=$('locationList'), locateBtn=$('locateBtn');
-    const modeCatBtn=$('modeCatBtn'), modeDogBtn=$('modeDogBtn'), modePetBtn=$('modePetBtn'), modeItemBtn=$('modeItemBtn'), modeDangerBtn=$('modeDangerBtn');
-    const deleteAllBtn=$('deleteAllBtn');
-    const searchInput=$('searchInput'), searchBtn=$('searchBtn'), pinHint=$('pinHint');
+    const searchInput=$('searchInput'), searchBtn=$('searchBtn'), searchBtn_m=$('searchBtn_m');
+    const locateBtn=$('locateBtn'), locateBtn_m=$('locateBtn_m');
+    const deleteAllBtn=$('deleteAllBtn'), deleteAllBtn_m=$('deleteAllBtn_m');
+
+    const modeCatBtn=$('modeCatBtn'),   modeDogBtn=$('modeDogBtn'),   modePetBtn=$('modePetBtn'),   modeItemBtn=$('modeItemBtn'),   modeDangerBtn=$('modeDangerBtn');
+    const modeCatBtn_m=$('modeCatBtn_m'),modeDogBtn_m=$('modeDogBtn_m'),modePetBtn_m=$('modePetBtn_m'),modeItemBtn_m=$('modeItemBtn_m'),modeDangerBtn_m=$('modeDangerBtn_m');
 
     const pinModal=$('pinModal'), modalTitle=$('modalTitle'),
       titleInput=$('titleInput'), descInput=$('descInput'), coordsInput=$('coordsInput'),
       photoInput=$('photoInput'), photoPreview=$('photoPreview'), removePhotoBtn=$('removePhotoBtn'),
       cancelBtn=$('cancelBtn'), saveBtn=$('saveBtn'), typeGroup=$('typeGroup'), typePreview=$('typePreview');
 
-    const termsModal=$('termsModal'), agreeTermsBtn=$('agreeTermsBtn'), closeTermsBtn=$('closeTermsBtn'), termsTitle=$('termsTitle'), termsNote=$('termsNote');
+    const pinHint=$('pinHint');
 
-    /* ---------- In-app browser warning ---------- */
-    const IN_APP = /FBAN|FBAV|Instagram|Line\/|Twitter|LinkedInApp|Snapchat|Pinterest|WeChat|MiuiBrowser|WhatsApp/i.test(navigator.userAgent);
-    const inAppBar = $('inAppWarning'), openSystemBtn=$('openSystemBtn');
-    if (IN_APP) {
-      inAppBar.style.display = 'block';
-      openSystemBtn.onclick = () => {
-        window.open(location.href, '_blank', 'noopener,noreferrer');
-        alert('If a new tab didn’t open, use the ••• menu and choose “Open in browser”.');
-      };
+    /* ---------- In‑app browser warning ---------- */
+    const IN_APP=/FBAN|FBAV|Instagram|Line\/|Twitter|LinkedInApp|Snapchat|Pinterest|WeChat|MiuiBrowser|WhatsApp/i.test(navigator.userAgent);
+    const inAppBar=$('inAppWarning'), openSystemBtn=$('openSystemBtn');
+    if(IN_APP){
+      inAppBar.style.display='block';
+      openSystemBtn.onclick=()=>{ window.open(location.href,'_blank','noopener,noreferrer'); alert('If a new tab didn’t open, use the ••• menu → “Open in browser”.'); };
     }
 
-    /* ---------- Mobile helpers ---------- */
-    function openSheet(){ panel.classList.add('open'); }
-    function closeSheet(){ panel.classList.remove('open'); }
-    menuBtn?.addEventListener('click', openSheet);
-    closePanel?.addEventListener('click', closeSheet);
-
     /* ---------- Map ---------- */
-    const VIEW_KEY='pinboard.mapview.v4';
-    const savedView = JSON.parse(localStorage.getItem(VIEW_KEY) || "null");
-    const map = L.map('map', {
-      center: savedView ? [savedView.lat, savedView.lng] : [22.3088,39.1046],
-      zoom: savedView ? Math.max(1,Math.min(19,savedView.zoom|0)) : 15,
-      worldCopyJump:true
-    });
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      { maxZoom:19, attribution:'&copy; OpenStreetMap contributors' }).addTo(map);
-    map.on('moveend',()=>{ const c=map.getCenter(); localStorage.setItem(VIEW_KEY, JSON.stringify({lat:c.lat,lng:c.lng,zoom:map.getZoom()})); });
+    const VIEW_KEY='pinboard.mapview.v5';
+    const savedView=JSON.parse(localStorage.getItem(VIEW_KEY)||"null");
+    const map=L.map('map',{center:savedView?[savedView.lat,savedView.lng]:[22.3088,39.1046],zoom:savedView?Math.max(1,Math.min(19,savedView.zoom|0)):15,worldCopyJump:true});
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
+    map.on('moveend',()=>{const c=map.getCenter();localStorage.setItem(VIEW_KEY,JSON.stringify({lat:c.lat,lng:c.lng,zoom:map.getZoom()}));});
 
     /* ---------- Types & helpers ---------- */
     const TYPES=['lostcat','lostdog','lostpet','lostitem','danger'];
-    const TYPE_LABEL={ lostcat:'Lost Cat', lostdog:'Lost Dog', lostpet:'Lost Pet', lostitem:'Lost Item', danger:'Danger' };
-    const glyphForType=(t)=> t==='danger'?'⚠️' : t==='lostdog'?'🐶' : t==='lostpet'?'🐾' : t==='lostitem'?'❓' : '🐱';
-    const typeName=(t)=> TYPE_LABEL[t] || 'Unknown';
-    const typeClass=(t)=> ({lostcat:'cat',lostdog:'dog',lostpet:'pet',lostitem:'item',danger:'danger'}[t] || 'cat');
+    const TYPE_LABEL={lostcat:'Lost Cat',lostdog:'Lost Dog',lostpet:'Lost Pet',lostitem:'Lost Item',danger:'Danger'};
+    const glyphForType=(t)=>t==='danger'?'⚠️':t==='lostdog'?'🐶':t==='lostpet'?'🐾':t==='lostitem'?'❓':'🐱';
+    const typeName=(t)=>TYPE_LABEL[t]||'Unknown';
+    const typeClass=(t)=>({lostcat:'cat',lostdog:'dog',lostpet:'pet',lostitem:'item',danger:'danger'}[t]||'cat');
     const SLOT_IDS=['s1','s2','s3','s4','s5'];
     const fmt=(n)=>Number(n).toFixed(6);
     const fmtLatLng=(loc)=>`${fmt(loc.lat)}, ${fmt(loc.lng)}`;
     const escapeHtml=(s)=>String(s).replace(/[&<>"']/g,(m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 
     /* ---------- State ---------- */
-    const state={
-      activeType:null,
-      markers:new Map(),
-      locations:[],
-      draftLatLng:null,
-      draftPhoto:null,
-      editingId:null,
-      saving:false,
-      pendingPinId:null,
-      isAdmin:false,
-      isMod:false,
-      isBanned:false,
-      users:[],
-      hbTimer:null
-    };
+    const state={activeType:null,markers:new Map(),locations:[],draftLatLng:null,draftPhoto:null,editingId:null,saving:false,pendingPinId:null,isAdmin:false,isMod:false,isBanned:false,users:[],hbTimer:null};
+    const clampZoom=(z)=>Math.max(1,Math.min(19,z|0));
 
     /* ---------- Search & locate ---------- */
-    searchBtn.onclick=runSearch;
-    searchInput.onkeydown=(e)=>{ if(e.key==='Enter') runSearch(); };
+    if(searchInput){ searchInput.onkeydown=(e)=>{ if(e.key==='Enter') runSearch(); }; }
+    if(searchBtn){ searchBtn.onclick=runSearch; }
+    if(searchBtn_m){ searchBtn_m.onclick=runSearch; }
     async function runSearch(){
-      const q=searchInput.value.trim(); if(!q) return;
-      searchBtn.disabled=true; searchBtn.textContent='Searching…';
+      let q='';
+      if(searchInput){ q=searchInput.value.trim(); }
+      if(!q){ q=prompt('Search a place (e.g., KAUST, Jeddah):','')||''; q=q.trim(); if(searchInput) searchInput.value=q; }
+      if(!q) return;
+      (searchBtn||searchBtn_m).disabled=true; (searchBtn||searchBtn_m).textContent='Searching…';
       try{
         const res=await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}`,{headers:{'Accept':'application/json'}});
         const data=await res.json();
         if(Array.isArray(data)&&data.length){ const r=data[0]; map.flyTo([parseFloat(r.lat),parseFloat(r.lon)],14,{duration:0.7}); }
         else alert('No results found.');
       }catch{ alert('Search error.'); }
-      finally{ searchBtn.disabled=false; searchBtn.textContent='Search'; }
+      finally{ (searchBtn||searchBtn_m).disabled=false; (searchBtn||searchBtn_m).textContent='Search'; }
     }
-    locateBtn.onclick=()=>{
+    function onLocate(btn){
       if(!navigator.geolocation) return alert('Geolocation not supported.');
-      locateBtn.disabled=true; locateBtn.textContent='Locating…';
-      navigator.geolocation.getCurrentPosition((pos)=>{ map.flyTo([pos.coords.latitude,pos.coords.longitude],15,{duration:0.7}); locateBtn.disabled=false; locateBtn.textContent='Locate me'; },
-        ()=>{ alert('Could not get your location.'); locateBtn.disabled=false; locateBtn.textContent='Locate me'; },
-        { enableHighAccuracy:true, timeout:10000, maximumAge:60000 });
-    };
+      btn.disabled=true; btn.textContent='Locating…';
+      navigator.geolocation.getCurrentPosition((pos)=>{ map.flyTo([pos.coords.latitude,pos.coords.longitude],15,{duration:0.7}); btn.disabled=false; btn.textContent='Locate me'; },
+        ()=>{ alert('Could not get your location.'); btn.disabled=false; btn.textContent='Locate me'; },
+        {enableHighAccuracy:true,timeout:10000,maximumAge:60000});
+    }
+    if(locateBtn){ locateBtn.onclick=()=>onLocate(locateBtn); }
+    if(locateBtn_m){ locateBtn_m.onclick=()=>onLocate(locateBtn_m); }
 
-    /* ---------- Modes ---------- */
+    /* ---------- Modes (desktop + mobile buttons in sync) ---------- */
+    function setMode(type){
+      if(state.isBanned && !state.isAdmin && !state.isMod){ alert('You are banned and cannot create pins.'); return; }
+      state.activeType=(state.activeType===type)?null:type;
+      updateModeUI();
+    }
     function updateModeUI(){
       const t=state.activeType;
-      for (const [btn,type] of [[modeCatBtn,'lostcat'],[modeDogBtn,'lostdog'],[modePetBtn,'lostpet'],[modeItemBtn,'lostitem'],[modeDangerBtn,'danger']]) {
-        btn.classList.toggle('primary', t===type);
-      }
-      if(t){ pinHint.textContent = `Tap the map to place a ${typeName(t)} pin`; pinHint.style.display='block'; }
-      else { pinHint.style.display='none'; }
+      const sets=[
+        [modeCatBtn,'lostcat'],[modeDogBtn,'lostdog'],[modePetBtn,'lostpet'],[modeItemBtn,'lostitem'],[modeDangerBtn,'danger'],
+        [modeCatBtn_m,'lostcat'],[modeDogBtn_m,'lostdog'],[modePetBtn_m,'lostpet'],[modeItemBtn_m,'lostitem'],[modeDangerBtn_m,'danger']
+      ];
+      for(const [btn,typ] of sets){ if(!btn) continue; btn.classList.toggle('primary',t===typ); }
+      pinHint.style.display = t ? 'block' : 'none';
+      pinHint.textContent = t ? `Tap the map to place a ${typeName(t)} pin` : '';
     }
-    function setMode(type){
-      if (state.isBanned && !state.isAdmin && !state.isMod) { alert('You are banned and cannot create pins.'); return; }
-      state.activeType = (state.activeType === type) ? null : type;
-      updateModeUI();
-      if (window.matchMedia("(max-width: 1040px)").matches) openSheet();
-    }
-    modeCatBtn.onclick  = ()=> setMode('lostcat');
-    modeDogBtn.onclick  = ()=> setMode('lostdog');
-    modePetBtn.onclick  = ()=> setMode('lostpet');
-    modeItemBtn.onclick = ()=> setMode('lostitem');
-    modeDangerBtn.onclick=()=> setMode('danger');
+    const wireMode=(btn,type)=>{ if(btn) btn.onclick=()=>setMode(type); };
+    wireMode(modeCatBtn,'lostcat'); wireMode(modeDogBtn,'lostdog'); wireMode(modePetBtn,'lostpet'); wireMode(modeItemBtn,'lostitem'); wireMode(modeDangerBtn,'danger');
+    wireMode(modeCatBtn_m,'lostcat'); wireMode(modeDogBtn_m,'lostdog'); wireMode(modePetBtn_m,'lostpet'); wireMode(modeItemBtn_m,'lostitem'); wireMode(modeDangerBtn_m,'danger');
 
     /* ---------- Delete All Pins (mine) ---------- */
-    deleteAllBtn.onclick = async ()=>{
-      const user = auth.currentUser; if(!user) return;
+    async function deleteAllMine(){
+      const user=auth.currentUser; if(!user) return;
       if(!confirm('Delete ALL pins you have created? This cannot be undone.')) return;
       try{
-        const uid = user.uid;
-        const qMine = query(collection(db,'pins'), where('ownerUid','==', uid));
-        const snap = await getDocs(qMine);
-        if (snap.empty) { alert('You have no pins.'); return; }
-        let batch = writeBatch(db), ops = 0, count = 0;
-        for (const d of snap.docs) {
-          const p = d.data();
-          batch.delete(doc(db,'pins', d.id)); ops++; count++;
-          if (p.type && p.slot) { batch.delete(doc(db, `users/${uid}/quota/${p.type}/slots/${p.slot}`)); ops++; }
-          if (ops >= 450) { await batch.commit(); batch = writeBatch(db); ops = 0; }
+        const uid=user.uid;
+        const qMine=query(collection(db,'pins'), where('ownerUid','==',uid));
+        const snap=await getDocs(qMine);
+        if(snap.empty){ alert('You have no pins.'); return; }
+        let batch=writeBatch(db), ops=0, count=0;
+        for(const d of snap.docs){
+          const p=d.data();
+          batch.delete(doc(db,'pins',d.id)); ops++; count++;
+          if(p.type && p.slot){ batch.delete(doc(db,`users/${uid}/quota/${p.type}/slots/${p.slot}`)); ops++; }
+          if(ops>=450){ await batch.commit(); batch=writeBatch(db); ops=0; }
         }
-        if (ops > 0) await batch.commit();
+        if(ops>0) await batch.commit();
         alert(`Deleted ${count} pins.`);
-      } catch(e) {
-        alert(e?.message || 'Failed to delete all pins.');
-      }
-    };
+      }catch(e){ alert(e?.message||'Failed to delete all pins.'); }
+    }
+    if(deleteAllBtn) deleteAllBtn.onclick=deleteAllMine;
+    if(deleteAllBtn_m) deleteAllBtn_m.onclick=deleteAllMine;
 
     /* ---------- Map interactions ---------- */
     map.on('click',(e)=>{ if(state.activeType){ if(state.isBanned && !state.isAdmin && !state.isMod){ alert('You are banned and cannot create pins.'); return; } openCreateModal(e.latlng); } });
 
     /* ---------- Modal + image ---------- */
     function setPhotoPreview(dataUrl){
-      state.draftPhoto = dataUrl || null;
+      state.draftPhoto=dataUrl||null;
       if(state.draftPhoto){ photoPreview.src=state.draftPhoto; photoPreview.style.display='block'; removePhotoBtn.style.display='inline-block'; }
       else { photoPreview.removeAttribute('src'); photoPreview.style.display='none'; removePhotoBtn.style.display='none'; photoInput.value=''; }
     }
     function openCreateModal(latlng){
-      state.editingId = null;
-      state.draftLatLng = latlng;
-      state.pendingPinId = (self.crypto?.randomUUID?.() ? self.crypto.randomUUID() : (Date.now().toString(36)+Math.random().toString(36).slice(2)));
-      setPhotoPreview(null);
-      setSaving(false);
+      state.editingId=null; state.draftLatLng=latlng;
+      state.pendingPinId=(self.crypto?.randomUUID?.()?self.crypto.randomUUID():(Date.now().toString(36)+Math.random().toString(36).slice(2)));
+      setPhotoPreview(null); setSaving(false);
       modalTitle.textContent='New location';
       titleInput.value=''; descInput.value=''; coordsInput.value=`${fmt(latlng.lat)}, ${fmt(latlng.lng)}`;
-      const t = state.activeType || 'lostcat';
-      const r = document.querySelector(`input[name="pinType"][value="${t}"]`);
-      if (r) r.checked = true;
-      typeGroup.style.display = 'none'; typePreview.textContent = 'Pin type: ' + typeName(t);
+      const t=state.activeType||'lostcat';
+      const r=document.querySelector(`input[name="pinType"][value="${t}"]`); if(r) r.checked=true;
+      typeGroup.style.display='none'; typePreview.textContent='Pin type: '+typeName(t);
       pinModal.hidden=false; setTimeout(()=>titleInput.focus(),0);
     }
     function openEditModal(id){
-      const loc = state.locations.find(x=>x.id===id); if(!loc) return;
+      const loc=state.locations.find(x=>x.id===id); if(!loc) return;
       if(!canEditLoc(loc)) return alert('You can edit only your own pins (or be mod/admin).');
       state.editingId=id; state.draftLatLng={lat:loc.lat,lng:loc.lng}; setPhotoPreview(loc.photo||null);
       modalTitle.textContent='Edit location'; titleInput.value=loc.title||''; descInput.value=loc.description||''; coordsInput.value=`${fmt(loc.lat)}, ${fmt(loc.lng)}`;
-      const r = document.querySelector(`input[name="pinType"][value="${loc.type}"]`);
-      if (r) r.checked = true;
+      const r=document.querySelector(`input[name="pinType"][value="${loc.type}"]`); if(r) r.checked=true;
       if(state.isAdmin){ typeGroup.style.display='flex'; typePreview.textContent=''; }
-      else { typeGroup.style.display='none'; typePreview.textContent='Pin type: ' + typeName(loc.type); }
+      else { typeGroup.style.display='none'; typePreview.textContent='Pin type: '+typeName(loc.type); }
       pinModal.hidden=false; setTimeout(()=>titleInput.focus(),0);
     }
     function closePinModal(){ pinModal.hidden=true; state.editingId=null; state.draftLatLng=null; state.pendingPinId=null; setSaving(false); setPhotoPreview(null); typeGroup.style.display='none'; typePreview.textContent=''; }
     cancelBtn.onclick=closePinModal;
     pinModal.addEventListener('click',(e)=>{ if(e.target===pinModal) closePinModal(); });
-    photoInput.onchange=async (e)=>{
-      const f=e.target.files?.[0]; if(!f) return;
-      try{ const dataUrl=await processImage(f,256,'image/jpeg',0.85); setPhotoPreview(dataUrl); }
-      catch{ alert('Could not read the image.'); }
-    };
+    photoInput.onchange=async (e)=>{ const f=e.target.files?.[0]; if(!f) return; try{ const dataUrl=await processImage(f,256,'image/jpeg',0.85); setPhotoPreview(dataUrl); }catch{ alert('Could not read the image.'); } };
     removePhotoBtn.onclick=()=>setPhotoPreview(null);
     function processImage(file,size=256,mime='image/jpeg',q=0.85){
       return new Promise((resolve,reject)=>{
@@ -620,65 +550,55 @@
     }
 
     /* ---------- Quota helper ---------- */
-    async function pickFreeSlot(uid, type){
-      const snap = await getDocs(collection(db, `users/${uid}/quota/${type}/slots`));
+    async function pickFreeSlot(uid,type){
+      const snap=await getDocs(collection(db,`users/${uid}/quota/${type}/slots`));
       const used=new Set(); snap.forEach(d=>used.add(d.id));
       for(const s of SLOT_IDS){ if(!used.has(s)) return s; }
       return null;
     }
 
     /* ---------- CRUD ---------- */
-    async function createPin({id, title,description,type,lat,lng,photo}){
-      const user = auth.currentUser; if(!user) return;
-      const uid = user.uid;
-      const email = (user.email || '').toLowerCase();
-      const privileged = state.isAdmin || state.isMod;
-      const pinId = id || doc(collection(db,'pins')).id;
+    async function createPin({id,title,description,type,lat,lng,photo}){
+      const user=auth.currentUser; if(!user) return;
+      const uid=user.uid; const email=(user.email||'').toLowerCase();
+      const privileged=state.isAdmin||state.isMod;
+      const pinId=id||doc(collection(db,'pins')).id;
 
-      let slot = null;
-      const batch = writeBatch(db);
-
-      if (!privileged) {
-        slot = await pickFreeSlot(uid, type);
-        if (!slot) { alert(`Limit reached: 5 ${typeName(type)} pins.`); return; }
-        batch.set(doc(db, `users/${uid}/quota/${type}/slots/${slot}`), { pinId });
+      let slot=null; const batch=writeBatch(db);
+      if(!privileged){
+        slot=await pickFreeSlot(uid,type);
+        if(!slot){ alert(`Limit reached: 5 ${typeName(type)} pins.`); return; }
+        batch.set(doc(db,`users/${uid}/quota/${type}/slots/${slot}`),{pinId});
       }
-
-      batch.set(doc(db,'pins', pinId), {
-        title, description, type, lat, lng, photo: photo || null,
-        ownerUid: uid, ownerEmail: email, ownerUsername: null,
-        createdAt: serverTimestamp(),
-        slot: slot || null
+      batch.set(doc(db,'pins',pinId),{
+        title,description,type,lat,lng,photo:photo||null,
+        ownerUid:uid,ownerEmail:email,ownerUsername:null,
+        createdAt:serverTimestamp(),slot:slot||null
       });
-
       await batch.commit();
     }
 
-    async function updatePin(id, {title,description,lat,lng,photo,type}){
-      const patch={ title, description, lat, lng, photo: photo||null };
+    async function updatePin(id,{title,description,lat,lng,photo,type}){
+      const patch={title,description,lat,lng,photo:photo||null};
       if(state.isAdmin && type && TYPES.includes(type)) patch.type=type;
-      await updateDoc(doc(db,'pins',id), patch);
+      await updateDoc(doc(db,'pins',id),patch);
     }
 
     function confirmDelete(id){ if(confirm('Delete this pin?')) deletePin(id); }
     async function deletePin(id){
       const snap=await getDoc(doc(db,'pins',id)); if(!snap.exists()) return;
-      const p=snap.data();
-      const me=auth.currentUser;
-      const can = (state.isAdmin || state.isMod || p.ownerUid===me?.uid) && !(state.isBanned && !state.isAdmin && !state.isMod);
+      const p=snap.data(); const me=auth.currentUser;
+      const can=(state.isAdmin||state.isMod||p.ownerUid===me?.uid)&&!(state.isBanned&&!state.isAdmin&&!state.isMod);
       if(!can) return alert('Not allowed.');
       const batch=writeBatch(db);
       batch.delete(doc(db,'pins',id));
-      if(p.ownerUid && p.type && p.slot){
-        batch.delete(doc(db, `users/${p.ownerUid}/quota/${p.type}/slots/${p.slot}`));
-      }
+      if(p.ownerUid && p.type && p.slot){ batch.delete(doc(db,`users/${p.ownerUid}/quota/${p.type}/slots/${p.slot}`)); }
       await batch.commit();
     }
 
-    /* ---------- Save (guard) ---------- */
+    /* ---------- Save guard ---------- */
     function setSaving(on){
-      state.saving=!!on;
-      saveBtn.disabled=on; cancelBtn.disabled=on; photoInput.disabled=on;
+      state.saving=!!on; saveBtn.disabled=on; cancelBtn.disabled=on; photoInput.disabled=on;
       titleInput.readOnly=on; descInput.readOnly=on;
       if(on){ saveBtn.dataset._old=saveBtn.textContent; saveBtn.textContent='Saving…'; }
       else { saveBtn.textContent=saveBtn.dataset._old||'Save'; }
@@ -690,68 +610,47 @@
       const title=titleInput.value.trim()||'(untitled)';
       const description=descInput.value.trim();
       if(!state.draftLatLng){ closePinModal(); return; }
-
       try{
         if(state.editingId){
           let newType;
           if(state.isAdmin){
-            const radio = document.querySelector('input[name="pinType"]:checked')?.value;
-            if (TYPES.includes(radio)) newType = radio;
+            const r=document.querySelector('input[name="pinType"]:checked')?.value;
+            if(TYPES.includes(r)) newType=r;
           }
-          await updatePin(state.editingId,{ title, description, lat:state.draftLatLng.lat, lng:state.draftLatLng.lng, photo:state.draftPhoto, type:newType });
-        } else {
-          if(!state.activeType){ alert('Select a pin type: Lost Cat/Dog/Pet/Item/Danger (menu).'); setSaving(false); return; }
-          await createPin({ id: state.pendingPinId, title, description, type: state.activeType, lat:state.draftLatLng.lat, lng:state.draftLatLng.lng, photo:state.draftPhoto });
+          await updatePin(state.editingId,{title,description,lat:state.draftLatLng.lat,lng:state.draftLatLng.lng,photo:state.draftPhoto,type:newType});
+        }else{
+          if(!state.activeType){ alert('Select a pin type first.'); setSaving(false); return; }
+          await createPin({id:state.pendingPinId,title,description,type:state.activeType,lat:state.draftLatLng.lat,lng:state.draftLatLng.lng,photo:state.draftPhoto});
         }
         closePinModal();
-      }catch(e){
-        alert(e?.message || 'Save failed (rules/quota).');
-        setSaving(false);
-      }
+      }catch(e){ alert(e?.message||'Save failed (rules/quota).'); setSaving(false); }
     };
 
     /* ---------- Markers & list ---------- */
     function clearMarkers(){ for(const id of Array.from(state.markers.keys())) removeMarker(id); state.locations=[]; renderList(); }
     function upsertLocalPin(p){ const i=state.locations.findIndex(x=>x.id===p.id); if(i===-1) state.locations.push(p); else state.locations[i]=p; upsertMarker(p); }
-    function canEditLoc(loc){
-      const u=auth.currentUser;
-      if(!u) return false;
-      if(state.isAdmin || state.isMod) return true;
-      return (loc.ownerUid===u.uid) && !state.isBanned;
-    }
-    function markerPopupHtml(loc, canEdit){
+    function canEditLoc(loc){ const u=auth.currentUser; if(!u) return false; if(state.isAdmin||state.isMod) return true; return (loc.ownerUid===u.uid)&&!state.isBanned; }
+    function markerPopupHtml(loc,canEdit){
       const img=loc.photo?`<img class="popup-img" src="${loc.photo}" alt="" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:6px">`:''; 
-      const who = loc.ownerUsername || loc.ownerEmail || '';
-      const actions = [];
-      if (canEdit) {
-        actions.push(`<a href="#" data-action="edit" data-id="${loc.id}">Edit</a>`);
-        actions.push(`<a href="#" data-action="delete" data-id="${loc.id}" style="color:#ff9a9a">Delete</a>`);
-      }
-      const actionsHtml = actions.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap">${actions.join(' ')}</div>` : '';
+      const who=loc.ownerUsername||loc.ownerEmail||''; const acts=[];
+      if(canEdit){ acts.push(`<a href="#" data-action="edit" data-id="${loc.id}">Edit</a>`); acts.push(`<a href="#" data-action="delete" data-id="${loc.id}" style="color:#ffb3b3">Delete</a>`); }
       return `<div style="min-width:240px">${img}
         <div style="margin-bottom:6px">${escapeHtml(loc.title||'(untitled)')}</div>
         <div style="color:#9aa3ad;font-size:12px;margin-bottom:6px">${typeName(loc.type)} · ${fmtLatLng(loc)}${who?` · by ${escapeHtml(who)}`:''}</div>
         ${loc.description?`<div style="white-space:pre-wrap;margin-bottom:8px">${escapeHtml(loc.description)}</div>`:''}
-        ${actionsHtml}</div>`;
+        ${acts.length?`<div style="display:flex;gap:6px;flex-wrap:wrap">${acts.join(' ')}</div>`:''}</div>`;
     }
-    function tooltipHtml(loc){
-      const s=(loc.description||'').slice(0,140);
-      return `<div class="tt"><div class="tt-title">${escapeHtml(loc.title||'(untitled)')}</div><div class="tt-meta">${typeName(loc.type)} · ${fmtLatLng(loc)}</div>${s?`<div class="tt-desc">${escapeHtml(s)}</div>`:''}</div>`;
-    }
+    function tooltipHtml(loc){ const s=(loc.description||'').slice(0,140); return `<div class="tt"><div class="tt-title">${escapeHtml(loc.title||'(untitled)')}</div><div class="tt-meta">${typeName(loc.type)} · ${fmtLatLng(loc)}</div>${s?`<div class="tt-desc">${escapeHtml(s)}</div>`:''}</div>`; }
     function makeIcon(loc){
-      const html = `<div class="pin ${typeClass(loc.type)}"><div class="bubble">${
-        loc.photo ? `<img class="thumb" src="${loc.photo}" alt="">` : `<div class="glyph">${glyphForType(loc.type)}</div>`
-      }</div><div class="stem"></div></div>`;
-      return L.divIcon({ className:'pin-icon', html, iconSize:[46,60], iconAnchor:[23,58], popupAnchor:[0,-56], tooltipAnchor:[0,-58] });
+      const html=`<div class="pin ${typeClass(loc.type)}"><div class="bubble">${loc.photo?`<img class="thumb" src="${loc.photo}" alt="">`:`<div class="glyph">${glyphForType(loc.type)}</div>`}</div><div class="stem"></div></div>`;
+      return L.divIcon({className:'pin-icon',html,iconSize:[46,60],iconAnchor:[23,58],popupAnchor:[0,-56],tooltipAnchor:[0,-58]});
     }
     function addMarkerFor(loc){
-      const m=L.marker([loc.lat,loc.lng],{ draggable:canEditLoc(loc), icon:makeIcon(loc) });
-      m.bindPopup(markerPopupHtml(loc, canEditLoc(loc)));
+      const m=L.marker([loc.lat,loc.lng],{draggable:canEditLoc(loc),icon:makeIcon(loc)});
+      m.bindPopup(markerPopupHtml(loc,canEditLoc(loc)));
       m.bindTooltip(tooltipHtml(loc),{direction:'top',offset:[0,-54],className:'pin-tooltip',opacity:0.96});
-      m.on('dragend', async (e)=>{ if(!canEditLoc(loc)) return; const {lat,lng}=e.target.getLatLng(); try{ await updateDoc(doc(db,'pins',loc.id), { lat, lng }); } catch{ alert('Update failed.'); }});
-      m.on('popupopen', ()=>{ const el=m.getPopup().getElement(); el.querySelectorAll('a[data-action]').forEach(a=>{
-        a.addEventListener('click', (evt)=>{ evt.preventDefault(); const id=a.getAttribute('data-id'); const act=a.getAttribute('data-action'); if(act==='edit') openEditModal(id); if(act==='delete') confirmDelete(id); });
-      });});
+      m.on('dragend',async (e)=>{ if(!canEditLoc(loc)) return; const {lat,lng}=e.target.getLatLng(); try{ await updateDoc(doc(db,'pins',loc.id),{lat,lng}); }catch{ alert('Update failed.'); }});
+      m.on('popupopen',()=>{ const el=m.getPopup().getElement(); el.querySelectorAll('a[data-action]').forEach(a=>{ a.addEventListener('click',(evt)=>{ evt.preventDefault(); const id=a.getAttribute('data-id'); const act=a.getAttribute('data-action'); if(act==='edit') openEditModal(id); if(act==='delete') confirmDelete(id); });});});
       m.addTo(map); state.markers.set(loc.id,m);
     }
     function upsertMarker(loc){
@@ -759,203 +658,136 @@
       if(!m) addMarkerFor(loc);
       else{
         m.setLatLng([loc.lat,loc.lng]); m.setIcon(makeIcon(loc));
-        m.setPopupContent(markerPopupHtml(loc, canEditLoc(loc)));
+        m.setPopupContent(markerPopupHtml(loc,canEditLoc(loc)));
         const tt=m.getTooltip(); if(tt) tt.setContent(tooltipHtml(loc));
-        canEditLoc(loc) ? m.dragging.enable() : m.dragging.disable();
+        canEditLoc(loc)?m.dragging.enable():m.dragging.disable();
       }
     }
     function removeMarker(id){ const m=state.markers.get(id); if(m){ map.removeLayer(m); state.markers.delete(id);} }
     function renderList(){
-      listEl.innerHTML='';
+      const list=$('locationList'); if(!list) return;
+      list.innerHTML='';
       if(!state.locations.length){
         const li=document.createElement('li'); li.className='loc';
-        li.innerHTML='<div class="title" style="grid-column:1/-1;color:var(--muted)">No locations yet. Pick a mode (Lost Cat/Dog/Pet/Item/Danger), then tap the map.</div>';
-        listEl.appendChild(li); return;
+        li.innerHTML='<div class="title" style="grid-column:1/-1;color:var(--muted)">No locations yet. Pick a type (Cat/Dog/Pet/Item/Danger), then tap the map.</div>';
+        list.appendChild(li); return;
       }
       const u=auth.currentUser;
       for(const loc of state.locations){
         const li=document.createElement('li'); li.className='loc'; li.dataset.id=loc.id;
         const title=document.createElement('div'); title.className='title';
-        const mine=(loc.ownerUid===u?.uid); const who = loc.ownerUsername || loc.ownerEmail || '';
-        const ownerTag = (!mine && who) ? `<span class="who" style="margin-left:8px">by ${escapeHtml(who)}</span>` : '';
-        title.innerHTML = `${escapeHtml(loc.title||'(untitled)')} <span class="badge ${typeClass(loc.type)}">${typeName(loc.type)}</span> ${ownerTag}`;
+        const mine=(loc.ownerUid===u?.uid); const who=loc.ownerUsername||loc.ownerEmail||'';
+        const ownerTag=(!mine&&who)?`<span class="who" style="margin-left:8px">by ${escapeHtml(who)}</span>`:'';
+        title.innerHTML=`${escapeHtml(loc.title||'(untitled)')} <span class="badge ${typeClass(loc.type)}">${typeName(loc.type)}</span> ${ownerTag}`;
         const meta=document.createElement('div'); meta.className='meta'; meta.textContent=fmtLatLng(loc);
         const actions=document.createElement('div'); actions.className='actions';
-        const flyBtn=document.createElement('button'); flyBtn.textContent='View';
-        flyBtn.onclick=()=>{ map.flyTo([loc.lat,loc.lng],Math.max(map.getZoom(),15),{duration:0.7}); const m=state.markers.get(loc.id); if(m) m.openPopup(); };
+        const flyBtn=document.createElement('button'); flyBtn.textContent='View'; flyBtn.onclick=()=>{ map.flyTo([loc.lat,loc.lng],Math.max(map.getZoom(),15),{duration:0.7}); const m=state.markers.get(loc.id); if(m) m.openPopup(); };
         actions.append(flyBtn);
-        if(canEditLoc(loc)){
-          const editBtn=document.createElement('button'); editBtn.textContent='Edit'; editBtn.onclick=()=>openEditModal(loc.id);
-          const delBtn=document.createElement('button'); delBtn.textContent='Delete'; delBtn.className='danger'; delBtn.onclick=()=>confirmDelete(loc.id);
-          actions.append(editBtn,delBtn);
-        }
-        li.append(title,actions,meta); listEl.appendChild(li);
+        if(canEditLoc(loc)){ const editBtn=document.createElement('button'); editBtn.textContent='Edit'; editBtn.onclick=()=>openEditModal(loc.id); const delBtn=document.createElement('button'); delBtn.textContent='Delete'; delBtn.className='danger'; delBtn.onclick=()=>confirmDelete(loc.id); actions.append(editBtn,delBtn); }
+        li.append(title,actions,meta); list.appendChild(li);
       }
     }
 
     /* ---------- Feeds ---------- */
-    let unsubPins=null, unsubUsers=null;
-    function stopFeeds(){ if(unsubPins){unsubPins();unsubPins=null;} if(unsubUsers){unsubUsers();unsubUsers=null;} }
+    let unsubPins=null,unsubUsers=null;
     function startPinsFeed(){
       if(unsubPins) return;
-      const qPins=query(collection(db,'pins'), orderBy('createdAt','desc'));
+      const qPins=query(collection(db,'pins'),orderBy('createdAt','desc'));
       unsubPins=onSnapshot(qPins,(snap)=>{
         const seen=new Set();
-        snap.forEach(d=>{ const p={id:d.id, ...d.data()}; seen.add(p.id); upsertLocalPin(p); });
-        for(const id of Array.from(state.markers.keys())) if(!seen.has(id)){ removeMarker(id); state.locations = state.locations.filter(x=>x.id!==id); }
+        snap.forEach(d=>{ const p={id:d.id,...d.data()}; seen.add(p.id); upsertLocalPin(p); });
+        for(const id of Array.from(state.markers.keys())) if(!seen.has(id)){ removeMarker(id); state.locations=state.locations.filter(x=>x.id!==id); }
         renderList();
       });
     }
+    function stopFeeds(){ if(unsubPins){unsubPins();unsubPins=null;} if(unsubUsers){unsubUsers();unsubUsers=null;} }
     function startUsersFeed(){
       if(unsubUsers) return;
-      const qUsers = query(collection(db,'users'), orderBy('createdAt','desc'));
-      unsubUsers = onSnapshot(qUsers,(snap)=>{
-        state.users = [];
-        snap.forEach(d=> state.users.push({ id:d.id, ...d.data() }));
+      const qUsers=query(collection(db,'users'),orderBy('createdAt','desc'));
+      unsubUsers=onSnapshot(qUsers,(snap)=>{
+        state.users=[]; snap.forEach(d=>state.users.push({id:d.id,...d.data()}));
         renderUsers();
       });
     }
-    function timeAgo(ts) {
-      if (!ts) return 'never';
-      const t = typeof ts.toMillis === 'function' ? ts.toMillis() : (typeof ts === 'number' ? ts : Date.parse(ts));
-      const s = Math.max(0, Math.floor((Date.now()-t)/1000));
-      if (s < 60) return s+'s ago';
-      const m = Math.floor(s/60); if(m < 60) return m+'m ago';
-      const h = Math.floor(m/60); if(h < 24) return h+'h ago';
-      const d = Math.floor(h/24); return d+'d ago';
-    }
+    function timeAgo(ts){ if(!ts) return 'never'; const t=typeof ts.toMillis==='function'?ts.toMillis():(typeof ts==='number'?ts:Date.parse(ts)); const s=Math.max(0,Math.floor((Date.now()-t)/1000)); if(s<60) return s+'s ago'; const m=Math.floor(s/60); if(m<60) return m+'m ago'; const h=Math.floor(m/60); if(h<24) return h+'h ago'; const d=Math.floor(h/24); return d+'d ago'; }
     function renderUsers(){
-      userList.innerHTML = '';
-      if(!state.users.length){
-        const li=document.createElement('li'); li.className='user-row';
-        li.innerHTML = '<div class="u-meta">No users yet.</div>';
-        userList.appendChild(li); return;
-      }
-      const me = auth.currentUser;
-      const now = Date.now();
+      userList.innerHTML='';
+      if(!state.users.length){ const li=document.createElement('li'); li.style.padding='8px'; li.textContent='No users yet.'; userList.appendChild(li); return; }
+      const me=auth.currentUser; const now=Date.now();
       for(const u of state.users){
-        const isOwner = (u.email||'').toLowerCase()===OWNER_EMAIL.toLowerCase();
-        const isMod   = ['mod','moderator'].includes((u.role||'').toString().toLowerCase());
-        const online = u.lastActiveAt && (now - (u.lastActiveAt.toMillis ? u.lastActiveAt.toMillis() : Date.parse(u.lastActiveAt))) < 120000;
+        const isOwner=(u.email||'').toLowerCase()===OWNER_EMAIL.toLowerCase();
+        const isMod=['mod','moderator'].includes((u.role||'').toString().toLowerCase());
+        const online=u.lastActiveAt && (now-(u.lastActiveAt.toMillis?u.lastActiveAt.toMillis():Date.parse(u.lastActiveAt)))<120000;
 
-        const li=document.createElement('li'); li.className='user-row';
-        const left=document.createElement('div');
-        const right=document.createElement('div'); right.className='u-tags';
-
-        left.innerHTML = `
-          <div>${escapeHtml(u.email||'(unknown)')}</div>
-          <div class="status"><span class="dot ${online?'online':''}"></span>${online?'Online':'Last active '+timeAgo(u.lastActiveAt)}</div>
-        `;
-
-        if(isOwner) { const t=document.createElement('span'); t.className='tag admin'; t.textContent='owner'; right.appendChild(t); }
-        else if(isMod){ const t=document.createElement('span'); t.className='tag mod'; t.textContent='mod'; right.appendChild(t); }
-        if(u.banned){ const t=document.createElement('span'); t.className='tag banned'; t.textContent='banned'; right.appendChild(t); }
-
-        const canBan = (() => {
+        const li=document.createElement('li'); li.style.padding='10px'; li.style.borderBottom='1px dashed #1f2433';
+        const head=document.createElement('div'); head.style.display='flex'; head.style.justifyContent='space-between'; head.style.alignItems='center';
+        const left=document.createElement('div'); left.innerHTML=`<div>${escapeHtml(u.email||'(unknown)')}</div><div style="font-size:12px;color:#9aa3ad"><span style="display:inline-block;width:8px;height:8px;border-radius:999px;margin-right:6px;background:${online?'#3ac97a':'#4b5563'}"></span>${online?'Online':'Last active '+timeAgo(u.lastActiveAt)}</div>`;
+        const right=document.createElement('div');
+        const roleTag=document.createElement('span'); roleTag.style.fontSize='10px'; roleTag.style.border='1px solid var(--border)'; roleTag.style.borderRadius='999px'; roleTag.style.padding='2px 6px'; roleTag.style.marginRight='6px';
+        roleTag.textContent=isOwner?'owner':isMod?'mod':'';
+        if(isOwner){ roleTag.style.borderColor='#3d7a5b'; roleTag.style.color='#bdf2d8'; roleTag.style.background='rgba(58,201,122,.08)'; right.appendChild(roleTag); }
+        else if(isMod){ roleTag.style.borderColor='#37517e'; roleTag.style.color='#bdd6ff'; roleTag.style.background='rgba(122,162,247,.1)'; right.appendChild(roleTag); }
+        if(u.banned){ const b=document.createElement('span'); b.textContent='banned'; b.style.fontSize='10px'; b.style.marginRight='6px'; b.style.border='1px solid #4a2626'; b.style.color='#ffb3b3'; b.style.borderRadius='999px'; b.style.padding='2px 6px'; b.style.background='rgba(239,83,80,.10)'; right.appendChild(b); }
+        const canBan=( ()=>{
           if(!me) return false;
-          const iAmOwner = state.isAdmin;
-          const iAmMod   = state.isMod && !state.isAdmin;
-          const targetIsSelf = u.id === me.uid;
-          if(isOwner || targetIsSelf) return false;
+          const iAmOwner=state.isAdmin; const iAmMod=state.isMod && !state.isAdmin;
+          const targetIsSelf=u.id===me.uid;
+          if(isOwner||targetIsSelf) return false;
           if(iAmOwner) return true;
           if(iAmMod) return !isMod;
           return false;
         })();
-
         if(state.isAdmin || state.isMod){
-          const btn=document.createElement('button');
-          btn.className = 'danger';
-          btn.textContent = u.banned ? 'Unban' : 'Ban';
-          btn.disabled = !canBan;
-          btn.onclick = async ()=>{ try{ await updateDoc(doc(db,'users',u.id), { banned: !u.banned }); } catch(e){ alert(e?.message || 'Permission denied (rules).'); } };
+          const btn=document.createElement('button'); btn.className='danger'; btn.textContent=u.banned?'Unban':'Ban'; btn.disabled=!canBan;
+          btn.onclick=async()=>{ try{ await updateDoc(doc(db,'users',u.id),{banned:!u.banned}); }catch(e){ alert(e?.message||'Permission denied (rules).'); } };
           right.appendChild(btn);
         }
-
-        li.append(left,right); userList.appendChild(li);
+        head.append(left,right); li.appendChild(head); userList.appendChild(li);
       }
     }
 
-    /* ---------- Tabs (mobile) ---------- */
-    function activateTab(which){
-      if(which==='pins'){ tabPins.classList.add('active'); tabUsers.classList.remove('active'); tabPinsPanel.classList.add('active'); tabUsersPanel.classList.remove('active'); }
-      else { tabUsers.classList.add('active'); tabPins.classList.remove('active'); tabUsersPanel.classList.add('active'); tabPinsPanel.classList.remove('active'); }
+    /* ---------- Users modal open/close ---------- */
+    function updateUsersButtons(){
+      const show = state.isAdmin || state.isMod;
+      if(openUsersBtn) openUsersBtn.style.display = show ? 'inline-block' : 'none';
+      if(openUsersBtn_m) openUsersBtn_m.style.display = show ? 'inline-block' : 'none';
     }
-    tabPins?.addEventListener('click', ()=>activateTab('pins'));
-    tabUsers?.addEventListener('click', ()=>activateTab('users'));
+    if(openUsersBtn) openUsersBtn.onclick=()=>{ usersModal.hidden=false; };
+    if(openUsersBtn_m) openUsersBtn_m.onclick=()=>{ usersModal.hidden=false; };
+    closeUsersBtn.onclick=()=>{ usersModal.hidden=true; };
+    usersModal.addEventListener('click',(e)=>{ if(e.target===usersModal) usersModal.hidden=true; });
 
-    /* ---------- Auth UI: terms & sign-in ---------- */
-    consentCheck.addEventListener('change', () => {
-      googleBtn.disabled = !consentCheck.checked;
-      gateError.textContent = '';
-    });
-    openTermsLink.addEventListener('click',(e)=>{
-      e.preventDefault();
-      termsTitle.textContent = 'Terms & Consent';
-      termsNote.textContent = 'Please read carefully. Tick “I Agree” to continue.';
-      termsModal.hidden = false;
-    });
+    /* ---------- Save (auth/terms) ---------- */
+    consentCheck.addEventListener('change',()=>{ googleBtn.disabled=!consentCheck.checked; gateError.textContent=''; });
+    openTermsLink.addEventListener('click',(e)=>{ e.preventDefault(); termsModal.hidden=false; });
     let _postLoginConsentRef=null;
-    agreeTermsBtn.onclick = async ()=>{
-      if (_postLoginConsentRef) {
-        try {
-          await updateDoc(_postLoginConsentRef, {
-            terms: { accepted: true, version: TERMS_VERSION, acceptedAt: serverTimestamp() }
-          });
-          termsModal.hidden = true;
-          _postLoginConsentRef = null;
-          const udoc = await getDoc(doc(db,'users',auth.currentUser.uid));
-          await finishLogin(auth.currentUser, udoc);
-        } catch (e) {
-          alert(e?.message || 'Could not record consent.');
-        }
-      } else {
-        consentCheck.checked = true;
-        googleBtn.disabled = false;
-        termsModal.hidden = true;
+    agreeTermsBtn.onclick=async()=>{
+      if(_postLoginConsentRef){
+        try{ await updateDoc(_postLoginConsentRef,{terms:{accepted:true,version:TERMS_VERSION,acceptedAt:serverTimestamp()}}); termsModal.hidden=true; _postLoginConsentRef=null; const udoc=await getDoc(doc(db,'users',auth.currentUser.uid)); await finishLogin(auth.currentUser,udoc); }
+        catch(e){ alert(e?.message||'Could not record consent.'); }
+      }else{
+        consentCheck.checked=true; googleBtn.disabled=false; termsModal.hidden=true;
       }
     };
-    closeTermsBtn.onclick = ()=>{ termsModal.hidden = true; };
+    closeTermsBtn.onclick=()=>{ termsModal.hidden=true; };
 
-    const provider=new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt:'select_account', hd:'kaust.edu.sa' });
-
-    googleBtn.onclick = async () => {
-      gateError.textContent = '';
-      if (!consentCheck.checked) {
-        gateError.textContent = 'Please tick the “I agree” checkbox to continue.';
-        return;
-      }
-      try {
-        // Popup first (Android Chrome often OK); fallback to redirect otherwise
-        try {
-          await signInWithPopup(auth, provider);
-        } catch (e) {
-          if (
-            e?.code === 'auth/operation-not-supported-in-this-environment' ||
-            e?.code === 'auth/popup-blocked' ||
-            e?.code === 'auth/popup-closed-by-user'
-          ) {
-            await signInWithRedirect(auth, provider);
-          } else {
-            throw e;
-          }
+    /* ---------- Google sign-in ---------- */
+    const provider=new GoogleAuthProvider(); provider.setCustomParameters({prompt:'select_account',hd:'kaust.edu.sa'});
+    googleBtn.onclick=async()=>{
+      gateError.textContent='';
+      if(!consentCheck.checked){ gateError.textContent='Please tick the “I agree” checkbox to continue.'; return; }
+      try{
+        try{ await signInWithPopup(auth,provider); }
+        catch(e){
+          if(e?.code==='auth/operation-not-supported-in-this-environment'||e?.code==='auth/popup-blocked'||e?.code==='auth/popup-closed-by-user'){ await signInWithRedirect(auth,provider); }
+          else{ throw e; }
         }
-      } catch (e) {
-        gateError.textContent = e?.code || e?.message || 'Google sign‑in failed';
-      }
+      }catch(e){ gateError.textContent=e?.code||e?.message||'Google sign‑in failed'; }
     };
+    getRedirectResult(auth).catch(err=>{ gateError.textContent=err?.code||err?.message||'Google sign‑in failed'; });
 
-    getRedirectResult(auth)
-      .then(res => {
-        if (res && res.user) console.debug('[auth] redirect completed for', res.user.email);
-      })
-      .catch(err => {
-        console.error('Google redirect error', err);
-        gateError.textContent = err?.code || err?.message || 'Google sign‑in failed';
-      });
-
-    logoutBtn?.addEventListener('click', ()=>signOut(auth));
-    logoutBtnTop?.addEventListener('click', ()=>signOut(auth));
+    logoutBtn?.addEventListener('click',()=>signOut(auth));
+    logoutBtnTop?.addEventListener('click',()=>signOut(auth));
 
     /* ---------- Auth state ---------- */
     onAuthStateChanged(auth, async (user)=>{
@@ -963,88 +795,62 @@
       stopFeeds(); state.users=[]; renderUsers(); clearMarkers();
 
       if(!user){
-        document.body.classList.remove('auth');
-        whoami.textContent=''; whoamiTop.textContent=''; whoamiSheet.textContent='';
-        closeSheet();
+        document.body.classList.remove('auth'); whoami.textContent=''; whoamiTop.textContent='';
         return;
       }
+      if(!isAllowedEmail(user.email)){ gateError.innerHTML=`This account (<b>${user.email}</b>) isn’t allowed. Use your KAUST account.`; await signOut(auth); return; }
 
-      if(!isAllowedEmail(user.email)){
-        gateError.innerHTML = `This account (<b>${user.email}</b>) isn’t allowed. Please choose your KAUST account.`;
-        await signOut(auth);
-        return;
-      }
-
-      // Unlock UI immediately (prevents "loop" feeling on mobile)
-      document.body.classList.add('auth');
-      whoami.textContent = user.email; whoamiTop.textContent = user.email; whoamiSheet.textContent = user.email;
+      // Unlock UI immediately
+      document.body.classList.add('auth'); whoami.textContent=user.email; whoamiTop.textContent=user.email;
 
       // Ensure user profile
-      const uref=doc(db,'users',user.uid);
-      let udoc;
-      try {
+      const uref=doc(db,'users',user.uid); let udoc;
+      try{
         udoc=await getDoc(uref);
         if(!udoc.exists()){
-          await setDoc(uref,{ email:user.email, createdAt:serverTimestamp(), role:null, banned:false, lastActiveAt:serverTimestamp() });
+          await setDoc(uref,{email:user.email,createdAt:serverTimestamp(),role:null,banned:false,lastActiveAt:serverTimestamp()});
           udoc=await getDoc(uref);
         }
-      } catch (e) {
-        gateError.textContent = 'Account setup error: ' + (e?.code || e?.message || e);
-        return;
-      }
+      }catch(e){ gateError.textContent='Account setup error: '+(e?.code||e?.message||e); return; }
 
-      // Apply pre-login consent stash if present
-      const hasTerms = !!(udoc.data()?.terms && udoc.data().terms.accepted === true && udoc.data().terms.version === TERMS_VERSION);
+      // Terms check
+      const hasTerms=!!(udoc.data()?.terms && udoc.data().terms.accepted===true && udoc.data().terms.version===TERMS_VERSION);
       if(!hasTerms){
         try{
-          const stash = JSON.parse(localStorage.getItem(CONSENT_STASH_KEY) || 'null');
-          if (stash?.accepted) {
-            await updateDoc(uref, { terms: { accepted:true, version: TERMS_VERSION, acceptedAt: serverTimestamp() } });
-            localStorage.removeItem(CONSENT_STASH_KEY);
-            udoc = await getDoc(uref);
-          }
+          const stash=JSON.parse(localStorage.getItem(CONSENT_STASH_KEY)||'null');
+          if(stash?.accepted){ await updateDoc(uref,{terms:{accepted:true,version:TERMS_VERSION,acceptedAt:serverTimestamp()}}); localStorage.removeItem(CONSENT_STASH_KEY); udoc=await getDoc(uref); }
         }catch(_){}
       }
-
-      const stillNoTerms = !(udoc.data()?.terms && udoc.data().terms.accepted === true && udoc.data().terms.version === TERMS_VERSION);
-      if(stillNoTerms){
-        termsTitle.textContent = 'Terms & Consent';
-        termsNote.textContent  = 'You must agree to continue. Cancel will sign you out.';
-        _postLoginConsentRef = uref;
-        termsModal.hidden = false;
-        closeTermsBtn.onclick = async ()=>{ termsModal.hidden = true; _postLoginConsentRef=null; await signOut(auth); document.body.classList.remove('auth'); };
+      if(!(udoc.data()?.terms && udoc.data().terms.accepted===true && udoc.data().terms.version===TERMS_VERSION)){
+        _postLoginConsentRef=uref; termsModal.hidden=false;
+        closeTermsBtn.onclick=async()=>{ termsModal.hidden=true; _postLoginConsentRef=null; await signOut(auth); document.body.classList.remove('auth'); };
         return;
       }
 
-      await finishLogin(user, udoc);
+      await finishLogin(user,udoc);
     });
 
-    async function finishLogin(user, udoc){
-      // roles / ban
-      const role = (udoc.data()?.role || '').toString().toLowerCase();
-      state.isAdmin  = (user.email || '').toLowerCase() === OWNER_EMAIL.toLowerCase();
-      state.isMod    = state.isAdmin || role === 'mod' || role === 'moderator';
-      state.isBanned = !!udoc.data()?.banned;
+    async function finishLogin(user,udoc){
+      const role=(udoc.data()?.role||'').toString().toLowerCase();
+      state.isAdmin=(user.email||'').toLowerCase()===OWNER_EMAIL.toLowerCase();
+      state.isMod=state.isAdmin || role==='mod' || role==='moderator';
+      state.isBanned=!!udoc.data()?.banned;
 
       const tags=[]; if(state.isAdmin) tags.push('admin'); else if(state.isMod) tags.push('mod'); if(state.isBanned) tags.push('banned');
-      const tagStr = (tags.length?' • '+tags.join(' • '):'');
-      whoami.textContent = user.email + tagStr;
-      whoamiTop.textContent = user.email + tagStr;
-      whoamiSheet.textContent = user.email + tagStr;
+      whoami.textContent=user.email+(tags.length?' • '+tags.join(' • '):'');
+      whoamiTop.textContent=user.email+(tags.length?' • '+tags.join(' • '):'');
+
+      updateUsersButtons();
 
       // presence heartbeat
-      try{ await updateDoc(doc(db,'users',user.uid), { lastActiveAt: serverTimestamp() }); }catch{}
-      state.hbTimer = setInterval(async ()=>{ try{ await updateDoc(doc(db,'users',user.uid), { lastActiveAt: serverTimestamp() }); }catch{} }, 60000);
-      window.addEventListener('visibilitychange', async ()=>{ if(document.visibilityState==='visible'){ try{ await updateDoc(doc(db,'users',user.uid), { lastActiveAt: serverTimestamp() }); }catch{} } });
+      try{ await updateDoc(doc(db,'users',user.uid),{lastActiveAt:serverTimestamp()}); }catch{}
+      state.hbTimer=setInterval(async()=>{ try{ await updateDoc(doc(db,'users',user.uid),{lastActiveAt:serverTimestamp()}); }catch{} },60000);
+      window.addEventListener('visibilitychange',async()=>{ if(document.visibilityState==='visible'){ try{ await updateDoc(doc(db,'users',user.uid),{lastActiveAt:serverTimestamp()}); }catch{} } });
 
       // start data
       startPinsFeed();
-      if(state.isAdmin || state.isMod){ startUsersFeed(); modPanel.style.display='block'; modEmpty.style.display='none'; }
-      else { modPanel.style.display='none'; modEmpty.style.display='block'; }
+      if(state.isAdmin||state.isMod) startUsersFeed();
     }
-
-    /* ---------- Close sheet when map tapped (mobile) ---------- */
-    map.on('click', ()=>{ if(window.matchMedia("(max-width: 1040px)").matches) closeSheet(); });
 
   </script>
 </body>

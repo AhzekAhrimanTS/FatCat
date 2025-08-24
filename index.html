@@ -239,7 +239,7 @@
         <button id="closePanel">Close</button>
       </div>
 
-      <!-- Tabs (mobile shows two tabs; desktop we just stack) -->
+      <!-- Tabs (mobile) -->
       <div class="tabs mobile-only">
         <button id="tabPins" class="tab active">Pins</button>
         <button id="tabUsers" class="tab">Users</button>
@@ -265,7 +265,7 @@
         <ul id="locationList"></ul>
       </div>
 
-      <!-- Users tab / Moderation (also visible on desktop if mod/admin) -->
+      <!-- Users tab / Moderation -->
       <div id="tabUsersPanel" class="tabpanel">
         <div id="modPanel" class="mod-panel" style="display:none">
           <div class="mod-header">
@@ -366,9 +366,18 @@
     /* ---------- Firebase SDKs ---------- */
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js';
     import {
-      getAuth, onAuthStateChanged, signOut,
-      GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult,
-      setPersistence, browserLocalPersistence, browserSessionPersistence, inMemoryPersistence
+      initializeAuth,
+      indexedDBLocalPersistence,
+      browserLocalPersistence,
+      browserSessionPersistence,
+      inMemoryPersistence,
+      browserPopupRedirectResolver,
+      onAuthStateChanged,
+      signOut,
+      GoogleAuthProvider,
+      signInWithPopup,
+      signInWithRedirect,
+      getRedirectResult
     } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
     import {
       getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc,
@@ -385,7 +394,18 @@
       appId: "1:409243971382:web:646a6858479a9740d04d97"
     };
     const appFB = initializeApp(firebaseConfig);
-    const auth = getAuth(appFB);
+
+    // Robust mobile auth
+    const auth = initializeAuth(appFB, {
+      persistence: [
+        indexedDBLocalPersistence,
+        browserLocalPersistence,
+        browserSessionPersistence,
+        inMemoryPersistence
+      ],
+      popupRedirectResolver: browserPopupRedirectResolver
+    });
+
     const db = getFirestore(appFB);
 
     /* ---------- Owner/domain gate ---------- */
@@ -434,19 +454,10 @@
     }
 
     /* ---------- Mobile helpers ---------- */
-    const isMobile=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
-
-    /* ---------- Auth persistence fallbacks ---------- */
-    async function setBestPersistence() {
-      try { await setPersistence(auth, browserLocalPersistence); }
-      catch { try { await setPersistence(auth, browserSessionPersistence); }
-      catch { await setPersistence(auth, inMemoryPersistence); } }
-    }
-    const persistenceReady = setBestPersistence().catch(()=>{});
-
-    /* ---------- Google provider ---------- */
-    const provider=new GoogleAuthProvider();
-    provider.setCustomParameters({ prompt:'select_account', hd:'kaust.edu.sa' });
+    function openSheet(){ panel.classList.add('open'); }
+    function closeSheet(){ panel.classList.remove('open'); }
+    menuBtn?.addEventListener('click', openSheet);
+    closePanel?.addEventListener('click', closeSheet);
 
     /* ---------- Map ---------- */
     const VIEW_KEY='pinboard.mapview.v4';
@@ -463,10 +474,10 @@
     /* ---------- Types & helpers ---------- */
     const TYPES=['lostcat','lostdog','lostpet','lostitem','danger'];
     const TYPE_LABEL={ lostcat:'Lost Cat', lostdog:'Lost Dog', lostpet:'Lost Pet', lostitem:'Lost Item', danger:'Danger' };
-    const SLOT_IDS=['s1','s2','s3','s4','s5'];
     const glyphForType=(t)=> t==='danger'?'⚠️' : t==='lostdog'?'🐶' : t==='lostpet'?'🐾' : t==='lostitem'?'❓' : '🐱';
     const typeName=(t)=> TYPE_LABEL[t] || 'Unknown';
     const typeClass=(t)=> ({lostcat:'cat',lostdog:'dog',lostpet:'pet',lostitem:'item',danger:'danger'}[t] || 'cat');
+    const SLOT_IDS=['s1','s2','s3','s4','s5'];
     const fmt=(n)=>Number(n).toFixed(6);
     const fmtLatLng=(loc)=>`${fmt(loc.lat)}, ${fmt(loc.lng)}`;
     const escapeHtml=(s)=>String(s).replace(/[&<>"']/g,(m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
@@ -510,7 +521,7 @@
         { enableHighAccuracy:true, timeout:10000, maximumAge:60000 });
     };
 
-    /* ---------- Mode buttons ---------- */
+    /* ---------- Modes ---------- */
     function updateModeUI(){
       const t=state.activeType;
       for (const [btn,type] of [[modeCatBtn,'lostcat'],[modeDogBtn,'lostdog'],[modePetBtn,'lostpet'],[modeItemBtn,'lostitem'],[modeDangerBtn,'danger']]) {
@@ -523,7 +534,6 @@
       if (state.isBanned && !state.isAdmin && !state.isMod) { alert('You are banned and cannot create pins.'); return; }
       state.activeType = (state.activeType === type) ? null : type;
       updateModeUI();
-      // On mobile, open the sheet briefly when choosing a mode to confirm
       if (window.matchMedia("(max-width: 1040px)").matches) openSheet();
     }
     modeCatBtn.onclick  = ()=> setMode('lostcat');
@@ -865,12 +875,6 @@
       }
     }
 
-    /* ---------- Bottom sheet (mobile) ---------- */
-    function openSheet(){ panel.classList.add('open'); }
-    function closeSheet(){ panel.classList.remove('open'); }
-    menuBtn?.addEventListener('click', openSheet);
-    closePanel?.addEventListener('click', closeSheet);
-
     /* ---------- Tabs (mobile) ---------- */
     function activateTab(which){
       if(which==='pins'){ tabPins.classList.add('active'); tabUsers.classList.remove('active'); tabPinsPanel.classList.add('active'); tabUsersPanel.classList.remove('active'); }
@@ -912,28 +916,42 @@
     };
     closeTermsBtn.onclick = ()=>{ termsModal.hidden = true; };
 
-    googleBtn.onclick=async ()=>{
-      gateError.textContent='';
-      if(!consentCheck.checked){
-        gateError.textContent='Please tick the “I agree” checkbox to continue.';
+    const provider=new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt:'select_account', hd:'kaust.edu.sa' });
+
+    googleBtn.onclick = async () => {
+      gateError.textContent = '';
+      if (!consentCheck.checked) {
+        gateError.textContent = 'Please tick the “I agree” checkbox to continue.';
         return;
       }
-      try{
-        localStorage.setItem(CONSENT_STASH_KEY, JSON.stringify({ accepted: true, version: TERMS_VERSION, at: Date.now() }));
-        await persistenceReady;
-        if(isMobile) await signInWithRedirect(auth, provider);
-        else         await signInWithPopup(auth, provider);
-      }catch(e){
-        gateError.textContent = e.code || e.message || 'Google sign-in failed';
+      try {
+        // Popup first (Android Chrome often OK); fallback to redirect otherwise
+        try {
+          await signInWithPopup(auth, provider);
+        } catch (e) {
+          if (
+            e?.code === 'auth/operation-not-supported-in-this-environment' ||
+            e?.code === 'auth/popup-blocked' ||
+            e?.code === 'auth/popup-closed-by-user'
+          ) {
+            await signInWithRedirect(auth, provider);
+          } else {
+            throw e;
+          }
+        }
+      } catch (e) {
+        gateError.textContent = e?.code || e?.message || 'Google sign‑in failed';
       }
     };
+
     getRedirectResult(auth)
       .then(res => {
         if (res && res.user) console.debug('[auth] redirect completed for', res.user.email);
       })
       .catch(err => {
         console.error('Google redirect error', err);
-        gateError.textContent = (err.code || err.message || 'Google sign‑in failed');
+        gateError.textContent = err?.code || err?.message || 'Google sign‑in failed';
       });
 
     logoutBtn?.addEventListener('click', ()=>signOut(auth));
@@ -941,7 +959,6 @@
 
     /* ---------- Auth state ---------- */
     onAuthStateChanged(auth, async (user)=>{
-      // Stop feeds & heartbeats
       if(state.hbTimer){ clearInterval(state.hbTimer); state.hbTimer=null; }
       stopFeeds(); state.users=[]; renderUsers(); clearMarkers();
 
@@ -958,29 +975,37 @@
         return;
       }
 
-      // ensure profile
-      const uref=doc(db,'users',user.uid);
-      let udoc=await getDoc(uref);
-      if(!udoc.exists()){
-        await setDoc(uref,{ email:user.email, createdAt:serverTimestamp(), role:null, banned:false, lastActiveAt:serverTimestamp() });
-        udoc=await getDoc(uref);
-      }
-
-      // unlock UI now (so mobile doesn't look like loop)
+      // Unlock UI immediately (prevents "loop" feeling on mobile)
       document.body.classList.add('auth');
+      whoami.textContent = user.email; whoamiTop.textContent = user.email; whoamiSheet.textContent = user.email;
 
-      // record pre-login consent if present
-      const stash = JSON.parse(localStorage.getItem(CONSENT_STASH_KEY) || 'null');
-      const hasTerms = !!(udoc.data()?.terms && udoc.data().terms.accepted === true && udoc.data().terms.version === TERMS_VERSION);
-      if(!hasTerms && stash?.accepted){
-        try{
-          await updateDoc(uref, { terms: { accepted:true, version: TERMS_VERSION, acceptedAt: serverTimestamp() } });
-          localStorage.removeItem(CONSENT_STASH_KEY);
-          udoc = await getDoc(uref);
-        }catch(e){ /* will prompt below */ }
+      // Ensure user profile
+      const uref=doc(db,'users',user.uid);
+      let udoc;
+      try {
+        udoc=await getDoc(uref);
+        if(!udoc.exists()){
+          await setDoc(uref,{ email:user.email, createdAt:serverTimestamp(), role:null, banned:false, lastActiveAt:serverTimestamp() });
+          udoc=await getDoc(uref);
+        }
+      } catch (e) {
+        gateError.textContent = 'Account setup error: ' + (e?.code || e?.message || e);
+        return;
       }
 
-      // if still missing consent, require it before loading data
+      // Apply pre-login consent stash if present
+      const hasTerms = !!(udoc.data()?.terms && udoc.data().terms.accepted === true && udoc.data().terms.version === TERMS_VERSION);
+      if(!hasTerms){
+        try{
+          const stash = JSON.parse(localStorage.getItem(CONSENT_STASH_KEY) || 'null');
+          if (stash?.accepted) {
+            await updateDoc(uref, { terms: { accepted:true, version: TERMS_VERSION, acceptedAt: serverTimestamp() } });
+            localStorage.removeItem(CONSENT_STASH_KEY);
+            udoc = await getDoc(uref);
+          }
+        }catch(_){}
+      }
+
       const stillNoTerms = !(udoc.data()?.terms && udoc.data().terms.accepted === true && udoc.data().terms.version === TERMS_VERSION);
       if(stillNoTerms){
         termsTitle.textContent = 'Terms & Consent';
@@ -988,7 +1013,6 @@
         _postLoginConsentRef = uref;
         termsModal.hidden = false;
         closeTermsBtn.onclick = async ()=>{ termsModal.hidden = true; _postLoginConsentRef=null; await signOut(auth); document.body.classList.remove('auth'); };
-        whoami.textContent = user.email; whoamiTop.textContent = user.email; whoamiSheet.textContent = user.email;
         return;
       }
 
@@ -1019,7 +1043,7 @@
       else { modPanel.style.display='none'; modEmpty.style.display='block'; }
     }
 
-    /* ---------- Mobile: close sheet when map is tapped (optional) ---------- */
+    /* ---------- Close sheet when map tapped (mobile) ---------- */
     map.on('click', ()=>{ if(window.matchMedia("(max-width: 1040px)").matches) closeSheet(); });
 
   </script>

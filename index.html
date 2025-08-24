@@ -812,6 +812,7 @@
           await setDoc(uref, {
             email: user.email,              // keep original casing
             createdAt: serverTimestamp(),
+            role:null,
             banned: false,                  // default
             lastActiveAt: serverTimestamp() // presence seed
             // DO NOT include 'role' here; only admins can set it later

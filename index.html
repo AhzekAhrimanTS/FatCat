@@ -15,14 +15,8 @@
           crossorigin></script>
 
   <style>
-    :root {
-      --bg:#0f1115; --bg-elev:#161a22; --fg:#d7dce2; --muted:#9aa3ad;
-      --accent:#7aa2f7; --danger:#ef5350; --cat:#f1a33c; --border:#232839; --ok:#3ac97a;
-      /* new types */
-      --dog:#86e07c;   /* green */
-      --pet:#7adff2;   /* cyan  */
-      --item:#c084fc;  /* purple */
-    }
+    :root { --bg:#0f1115; --bg-elev:#161a22; --fg:#d7dce2; --muted:#9aa3ad;
+      --accent:#7aa2f7; --danger:#ef5350; --cat:#f1a33c; --border:#232839; --ok:#3ac97a; }
     html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;}
     #app{display:grid;grid-template-columns:380px 1fr;grid-template-rows:100vh}
@@ -48,9 +42,6 @@
     button[disabled]{opacity:.6;cursor:not-allowed}
     .mode-btn .dot{display:inline-block;width:10px;height:10px;border-radius:999px;margin-right:8px;vertical-align:-1px}
     .mode-btn.cat  .dot{background:var(--cat)}
-    .mode-btn.dog  .dot{background:var(--dog)}
-    .mode-btn.pet  .dot{background:var(--pet)}
-    .mode-btn.item .dot{background:var(--item)}
     .mode-btn.dang .dot{background:var(--danger)}
 
     #locationList{list-style:none;padding:0;margin:0;overflow:auto;flex:1}
@@ -62,10 +53,6 @@
     .badge{font-size:11px;padding:2px 8px;border-radius:999px;margin-left:8px}
     .badge.cat{background:rgba(241,163,60,.15);color:#ffd49a;border:1px solid rgba(241,163,60,.35)}
     .badge.danger{background:rgba(239,83,80,.15);color:#ffb3b3;border:1px solid rgba(239,83,80,.35)}
-    /* new badges */
-    .badge.dog {background:rgba(134,224,124,.15);color:#d4f7cf;border:1px solid rgba(134,224,124,.35)}
-    .badge.pet {background:rgba(122,223,242,.15);color:#d2f6ff;border:1px solid rgba(122,223,242,.35)}
-    .badge.item{background:rgba(192,132,252,.15);color:#ecd6ff;border:1px solid rgba(192,132,252,.35)}
 
     /* Moderation panel */
     .mod-panel{border-top:1px solid var(--border);padding:12px}
@@ -90,30 +77,33 @@
 
     /* Gate */
     #gate{position:fixed;inset:0;background:linear-gradient(180deg,#0d1017,#0f1115);display:grid;place-items:center;z-index:2000}
-    #gate .card{width:min(520px,92%);background:var(--bg-elev);border:1px solid var(--border);border-radius:12px;padding:18px;display:flex;flex-direction:column}
+    #gate .card{width:min(560px,92%);background:var(--bg-elev);border:1px solid var(--border);border-radius:12px;padding:18px;display:flex;flex-direction:column}
     #gate h2{margin:0 0 6px 0}
     #gate .muted{color:var(--muted);font-size:14px;margin-bottom:12px}
-    .stack{display:grid;gap:8px}
+    .stack{display:grid;gap:10px}
     .error{color:#ff9a9a;font-size:13px;min-height:18px}
     .ok{color:#b2f5d6}
     .gate-foot{margin-top:12px;border-top:1px dashed var(--border);padding-top:10px;color:var(--muted);font-size:12px}
+
+    /* Consent row */
+    .consent-row{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--muted)}
+    .consent-row input[type=checkbox]{margin-top:3px}
+    .phone{background:#111521;border:1px solid var(--border);color:var(--fg);padding:9px 10px;border-radius:8px}
 
     body.auth #gate{display:none}
     body:not(.auth) #app{filter:blur(4px);pointer-events:none;user-select:none}
 
     /* Modal */
     .modal-backdrop[hidden]{display:none}
-    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:grid;place-items:center;z-index:1000;padding:16px}
-    .modal{width:min(620px,100%);background:var(--bg-elev);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);display:grid;place-items:center;z-index:3000;padding:16px}
+    .modal{width:min(720px,100%);background:var(--bg-elev);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
     .modal h3{margin:0 0 10px 0}
     .modal .f{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
     .modal .f label{font-size:13px;color:var(--muted);margin-bottom:6px;display:block}
+    .terms-body{max-height:60vh;overflow:auto;background:#0f131d;border:1px solid var(--border);padding:12px;border-radius:8px}
     .modal input[type="text"], .modal textarea{width:100%;background:#111521;border:1px solid var(--border);color:#fff;padding:10px;border-radius:8px;outline:none;resize:vertical}
     .modal textarea{min-height:80px;grid-column:1/-1}
     .type-group{display:none}
-    .type-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:#101522}
-    .type-pill .dot{width:10px;height:10px;border-radius:999px}
-    .dot.cat{background:var(--cat)} .dot.dog{background:var(--dog)} .dot.pet{background:var(--pet)} .dot.item{background:var(--item)} .dot.danger{background:var(--danger)}
     .photo-prev{grid-column:1/-1;width:100%;max-height:220px;object-fit:cover;border-radius:10px;display:none}
     .mini-note{grid-column:1/-1;color:var(--muted);font-size:12px}
 
@@ -126,10 +116,7 @@
     .pin .bubble .glyph{font-size:22px;line-height:1}
     .pin .stem{position:absolute;left:50%;bottom:4px;transform:translateX(-50%);
       width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-top:14px solid #4a5a88;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
-    .pin.cat   .bubble{border-color:var(--cat)}   .pin.cat   .stem{border-top-color:var(--cat)}
-    .pin.dog   .bubble{border-color:var(--dog)}   .pin.dog   .stem{border-top-color:var(--dog)}
-    .pin.pet   .bubble{border-color:var(--pet)}   .pin.pet   .stem{border-top-color:var(--pet)}
-    .pin.item  .bubble{border-color:var(--item)}  .pin.item  .stem{border-top-color:var(--item)}
+    .pin.cat .bubble{border-color:var(--cat)} .pin.cat .stem{border-top-color:var(--cat)}
     .pin.danger .bubble{border-color:var(--danger)} .pin.danger .stem{border-top-color:var(--danger)}
     .leaflet-tooltip.pin-tooltip{background:rgba(12,16,26,.96);color:#fff;border:1px solid var(--border);
       border-radius:10px;box-shadow:0 10px 25px rgba(0,0,0,.35)}
@@ -145,17 +132,24 @@
     <div class="card">
       <h2>KAUST Pins</h2>
       <div class="muted">Sign in with Google (KAUST accounts only).</div>
+
       <div class="stack">
-        <button id="googleBtn" class="primary">Continue with Google</button>
+        <label class="consent-row">
+          <input type="checkbox" id="consentCheck">
+          <span>
+            I agree to the <a href="#" id="openTermsLink">Terms &amp; Consent</a>, and I consent to the
+            processing of my KAUST email. (Optional) phone for contact:
+          </span>
+        </label>
+        <input id="consentPhone" type="tel" class="phone" placeholder="Optional phone number" />
+
+        <button id="googleBtn" class="primary" disabled>Continue with Google</button>
         <div id="gateInfo" class="ok"></div>
         <div id="gateError" class="error"></div>
       </div>
+
       <div id="gateFooter" class="gate-foot">
-        <small style="opacity:.85">
-          Mark your lost pets and items.<br>
-          ONLY KAUST EMAILS ALLOWED FOR ACCOUNTABILITY.<br>
-          by Ahzek Ahriman
-        </small>
+        <small style="opacity:.85">Find your missing cats.</small>
       </div>
     </div>
   </div>
@@ -173,20 +167,10 @@
       <div class="controls">
         <input id="searchInput" type="text" placeholder="Search a place (e.g., KAUST, Jeddah)" />
         <button id="searchBtn" title="Find place">Search</button>
-
-        <!-- Modes -->
         <div class="row">
-          <button id="modeCatBtn"   class="mode-btn cat"><span class="dot"></span>Lost Cat</button>
-          <button id="modeDogBtn"   class="mode-btn dog"><span class="dot"></span>Lost Dog</button>
-          <button id="modePetBtn"   class="mode-btn pet"><span class="dot"></span>Lost Pet</button>
-          <button id="modeItemBtn"  class="mode-btn item"><span class="dot"></span>Lost Item</button>
+          <button id="modeCatBtn" class="mode-btn cat"><span class="dot"></span>Lost Cat</button>
           <button id="modeDangerBtn" class="mode-btn dang"><span class="dot"></span>Danger</button>
           <button id="locateBtn" title="Center on my location">Locate me</button>
-        </div>
-
-        <!-- Delete-all (for current user) -->
-        <div class="row">
-          <button id="deleteAllBtn" class="danger">Delete All Pins (mine)</button>
         </div>
       </div>
 
@@ -208,7 +192,48 @@
     </main>
   </div>
 
-  <!-- Add/Edit Pin Modal -->
+  <!-- Terms & Consent Modal (used pre-login and post-login) -->
+  <div id="termsModal" class="modal-backdrop" hidden>
+    <div class="modal">
+      <h3 id="termsTitle">Terms &amp; Consent</h3>
+      <div id="termsNote" class="muted" style="margin:6px 0 8px 0;">Please read carefully.</div>
+      <div class="terms-body" id="termsBody" aria-label="Terms">
+        <p><strong>Purpose.</strong> KAUST Pins is a community tool to help locate missing pets/items and flag hazards on campus. We process your <em>KAUST email</em> and the content you submit (pins, descriptions, photos). You may optionally provide a <em>phone number</em> so others or moderators can contact you regarding a pin.</p>
+
+        <p><strong>Lawful basis (consent) &amp; transparency.</strong> By agreeing, you consent to processing your personal data for the purposes above. You are informed of what we collect, why, and how we use it, consistent with the Personal Data Protection Law of the Kingdom of Saudi Arabia (PDPL) and its Implementing Regulations. You may withdraw consent at any time (see “Your rights”).</p>
+
+        <p><strong>What we collect.</strong> (1) KAUST email (required); (2) optional phone; (3) user‑generated content: pin type, location, title, description, optional photo; (4) service/hosting metadata (e.g., IP/device info) collected by Firebase/Google Cloud for security and reliability.</p>
+
+        <p><strong>Use &amp; sharing.</strong> We show pins on the map; moderators may review content for safety and policy compliance. We do not sell personal data. We share data only as necessary with hosting providers or if required by law.</p>
+
+        <p><strong>Cross‑border transfer.</strong> Firebase/Google Cloud may store/process data outside KSA. By agreeing, you consent to such transfers as permitted under the PDPL and its regulations on transfers outside the Kingdom. Transfers are subject to conditions set by SDAIA; we will apply available safeguards. </p>
+
+        <p><strong>Retention.</strong> We keep data while the service is active and you have an account. We may purge pins older than needed or after 12 months of inactivity. You can delete your pins at any time; you may also request account deletion.</p>
+
+        <p><strong>Your rights.</strong> Under PDPL, you can request access to, correction of, or deletion of your personal data and may withdraw consent. Contact <a href="mailto:lenatif09@gmail.com">lenatif09@gmail.com</a> to exercise your rights. We will respond consistent with PDPL timelines and procedures.</p>
+
+        <p><strong>Age &amp; conduct.</strong> This service is for adults. Do not post illegal, harmful, or unlawful content; do not fundraise or solicit money; do not post personal data of others without permission. We may remove content and suspend accounts for violations.</p>
+
+        <p><strong>Security &amp; breaches.</strong> We use reasonable technical and organizational measures. If a personal‑data incident occurs, we will follow applicable PDPL guidance and notify where required.</p>
+
+        <p><strong>Contact.</strong> Controller: KAUST Pins (community project). Email: <a href="mailto:lenatif09@gmail.com">lenatif09@gmail.com</a>. Governing law: Kingdom of Saudi Arabia. We may update these terms; we will ask you to re‑consent to material changes.</p>
+
+        <p style="opacity:.8"><em>Disclaimer: This text is a general template intended to reflect PDPL concepts and is not legal advice. For compliance questions, consult qualified counsel in KSA.</em></p>
+      </div>
+      <div class="f" style="margin-top:12px">
+        <div>
+          <label for="termsPhone">Phone (optional)</label>
+          <input id="termsPhone" type="text" placeholder="Add or update your phone"/>
+        </div>
+      </div>
+      <div class="row" style="display:flex;gap:8px;justify-content:flex-end">
+        <button id="closeTermsBtn">Cancel</button>
+        <button id="agreeTermsBtn" class="primary">I Agree</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Pin Modal (unchanged core UI) -->
   <div id="modalBackdrop" class="modal-backdrop" hidden>
     <div class="modal">
       <h3 id="modalTitle">New location</h3>
@@ -223,12 +248,8 @@
         </div>
         <div>
           <label>Pin type</label>
-          <!-- visible for owner in edit; admin can change type -->
           <div class="type-group" id="typeGroup">
             <label class="type-pill"><input type="radio" name="pinType" value="lostcat" checked /> <span class="dot cat"></span> Lost Cat</label>
-            <label class="type-pill"><input type="radio" name="pinType" value="lostdog" /> <span class="dot dog"></span> Lost Dog</label>
-            <label class="type-pill"><input type="radio" name="pinType" value="lostpet" /> <span class="dot pet"></span> Lost Pet</label>
-            <label class="type-pill"><input type="radio" name="pinType" value="lostitem" /> <span class="dot item"></span> Lost Item</label>
             <label class="type-pill"><input type="radio" name="pinType" value="danger" /> <span class="dot danger"></span> Danger</label>
           </div>
           <div id="typePreview" class="mini-note"></div>
@@ -266,7 +287,7 @@
     } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
     import {
       getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc,
-      onSnapshot, query, orderBy, where, writeBatch, serverTimestamp
+      onSnapshot, query, orderBy, writeBatch, serverTimestamp
     } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
 
     // ==== Firebase config ====
@@ -291,13 +312,20 @@
       return e === OWNER_EMAIL.toLowerCase() || /@kaust\.edu\.sa$/i.test(e);
     };
 
+    // ====== Terms version & local stash ======
+    const TERMS_VERSION = 'v1-2025-08-24';
+    const CONSENT_STASH_KEY = 'kaustpins.preconsent.v1';
+
     // ====== DOM ======
     const $ = (id)=>document.getElementById(id);
     const whoami=$('whoami'), logoutBtn=$('logoutBtn');
-    const gateError=$('gateError'), googleBtn=$('googleBtn');
+    const gateError=$('gateError'), googleBtn=$('googleBtn'), gate=$('gate');
+    const consentCheck=$('consentCheck'), openTermsLink=$('openTermsLink'), consentPhone=$('consentPhone');
+
+    const termsModal=$('termsModal'), agreeTermsBtn=$('agreeTermsBtn'), closeTermsBtn=$('closeTermsBtn'), termsPhone=$('termsPhone'), termsTitle=$('termsTitle'), termsNote=$('termsNote');
+
     const listEl=$('locationList'), locateBtn=$('locateBtn');
-    const modeCatBtn=$('modeCatBtn'), modeDogBtn=$('modeDogBtn'), modePetBtn=$('modePetBtn'), modeItemBtn=$('modeItemBtn'), modeDangerBtn=$('modeDangerBtn');
-    const deleteAllBtn=$('deleteAllBtn');
+    const modeCatBtn=$('modeCatBtn'), modeDangerBtn=$('modeDangerBtn');
     const searchInput=$('searchInput'), searchBtn=$('searchBtn'), pinHint=$('pinHint');
     const modalBackdrop=$('modalBackdrop'), modalTitle=$('modalTitle'),
           titleInput=$('titleInput'), descInput=$('descInput'), coordsInput=$('coordsInput'),
@@ -314,18 +342,14 @@
       { maxZoom:19, attribution:'&copy; OpenStreetMap contributors' }).addTo(map);
     map.on('moveend',()=>{ const c=map.getCenter(); localStorage.setItem(VIEW_KEY, JSON.stringify({lat:c.lat,lng:c.lng,zoom:map.getZoom()})); });
 
-    // ====== Types / helpers ======
-    const TYPES = ['lostcat','lostdog','lostpet','lostitem','danger'];
-    const TYPE_LABEL = { lostcat:'Lost Cat', lostdog:'Lost Dog', lostpet:'Lost Pet', lostitem:'Lost Item', danger:'Danger' };
+    // ====== Helpers ======
+    const TYPE_LOSTCAT='lostcat', TYPE_DANGER='danger';
     const SLOT_IDS=['s1','s2','s3','s4','s5'];
     const fmt=(n)=>Number(n).toFixed(6);
+    const typeName=(t)=>t===TYPE_DANGER?'Danger':'Lost Cat';
+    const typeClass=(t)=>t===TYPE_DANGER?'danger':'cat';
     const escapeHtml=(s)=>String(s).replace(/[&<>"']/g,(m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
     const fmtLatLng = (loc)=>`${fmt(loc.lat)}, ${fmt(loc.lng)}`;
-
-    const typeName = (t)=> TYPE_LABEL[t] || 'Unknown';
-    const typeClass = (t)=> ({lostcat:'cat',lostdog:'dog',lostpet:'pet',lostitem:'item',danger:'danger'}[t] || 'cat');
-    const glyphForType = (t)=> t==='danger'?'⚠️' : t==='lostdog'?'🐶' : t==='lostpet'?'🐾' : t==='lostitem'?'❓' : '🐱';
-
     function timeAgo(ts) {
       if (!ts) return 'never';
       const t = typeof ts.toMillis === 'function' ? ts.toMillis() : (typeof ts === 'number' ? ts : Date.parse(ts));
@@ -375,14 +399,90 @@
         { enableHighAccuracy:true, timeout:10000, maximumAge:60000 });
     };
 
-    // ====== Google Sign-in ======
+    // ====== Mode buttons ======
+    function updateModeUI(){
+      modeCatBtn.classList.toggle('primary', state.activeType==='lostcat');
+      modeDangerBtn.classList.toggle('primary', state.activeType==='danger');
+      if(state.activeType){ pinHint.textContent = `Click on the map to place a ${state.activeType==='danger'?'Danger':'Lost Cat'} pin`; pinHint.style.display='block'; }
+      else { pinHint.style.display='none'; }
+    }
+    function setMode(type){
+      if (state.isBanned && !state.isAdmin && !state.isMod) { alert('You are banned and cannot create pins.'); return; }
+      state.activeType = (state.activeType === type) ? null : type;
+      updateModeUI();
+    }
+    modeCatBtn.onclick = ()=> setMode('lostcat');
+    modeDangerBtn.onclick = ()=> setMode('danger');
+
+    // ====== Google Sign-in + Consent ======
     const provider=new GoogleAuthProvider();
     provider.setCustomParameters({ prompt:'select_account' });
     setPersistence(auth, browserLocalPersistence).catch(()=>{});
+
+    // Enable button only when checked
+    consentCheck.addEventListener('change', () => {
+      googleBtn.disabled = !consentCheck.checked;
+      gateError.textContent = '';
+    });
+
+    openTermsLink.addEventListener('click', (e)=>{
+      e.preventDefault();
+      termsTitle.textContent = 'Terms & Consent';
+      termsNote.textContent = 'Please read carefully. Tick “I Agree” to continue.';
+      termsModal.hidden = false;
+      termsPhone.value = consentPhone.value.trim();
+    });
+
+    closeTermsBtn.onclick = ()=>{
+      termsModal.hidden = true;
+    };
+
+    // This flag is set when the modal is used post-login
+    let _postLoginConsentRef = null;
+
+    agreeTermsBtn.onclick = async ()=>{
+      if (_postLoginConsentRef) {
+        // Post-login forced acceptance flow
+        try {
+          const phone = termsPhone.value.trim() || null;
+          await updateDoc(_postLoginConsentRef, {
+            terms: { accepted: true, version: TERMS_VERSION, acceptedAt: serverTimestamp() },
+            ...(phone != null ? { phone } : {})
+          });
+          termsModal.hidden = true;
+          _postLoginConsentRef = null;
+          // Continue app init with fresh profile
+          const udoc = await getDoc(_postLoginConsentRef || doc(db,'users',auth.currentUser.uid));
+          await finishLogin(auth.currentUser, udoc);
+        } catch (e) {
+          alert(e?.message || 'Could not record consent.');
+        }
+      } else {
+        // Pre-login modal “I Agree” just checks the box and enables the button
+        consentCheck.checked = true;
+        googleBtn.disabled = false;
+        if (!termsPhone.value && consentPhone.value) termsPhone.value = consentPhone.value.trim();
+        termsModal.hidden = true;
+      }
+    };
+
     const isMobile=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
     googleBtn.onclick=async ()=>{
       gateError.textContent='';
+      if(!consentCheck.checked){
+        gateError.textContent='Please tick the “I agree” checkbox to continue.';
+        return;
+      }
       try{
+        // Stash pre-consent locally so we can write it immediately after OAuth
+        const stash = {
+          accepted: true,
+          version: TERMS_VERSION,
+          phone: (consentPhone.value.trim() || null),
+          at: Date.now()
+        };
+        localStorage.setItem(CONSENT_STASH_KEY, JSON.stringify(stash));
+
         if(isMobile) await signInWithRedirect(auth, provider);
         else         await signInWithPopup(auth, provider);
       }catch(e){
@@ -394,11 +494,10 @@
 
     // ====== Auth state ======
     let unsubPins=null, unsubUsers=null;
+    function stopFeeds(){ if(unsubPins){unsubPins();unsubPins=null;} if(unsubUsers){unsubUsers();unsubUsers=null;} }
     onAuthStateChanged(auth, async (user)=>{
       if(state.hbTimer){ clearInterval(state.hbTimer); state.hbTimer=null; }
-      if(unsubPins){unsubPins();unsubPins=null;}
-      if(unsubUsers){unsubUsers();unsubUsers=null;}
-      state.users=[]; renderUsers();
+      stopFeeds(); state.users=[]; renderUsers();
 
       if(!user){ document.body.classList.remove('auth'); whoami.textContent=''; clearMarkers(); return; }
 
@@ -409,18 +508,49 @@
         return;
       }
 
-      document.body.classList.add('auth');
-
       // Ensure user doc
       const uref=doc(db,'users',user.uid);
       let udoc=await getDoc(uref);
       if(!udoc.exists()){
         await setDoc(uref,{ email:user.email, createdAt:serverTimestamp(), role:null, banned:false, lastActiveAt:serverTimestamp() });
         udoc=await getDoc(uref);
-      } else {
-        try{ await updateDoc(uref,{ lastActiveAt: serverTimestamp() }); }catch{}
       }
 
+      // Record consent now if we have a pre-login stash
+      const stash = JSON.parse(localStorage.getItem(CONSENT_STASH_KEY) || 'null');
+      const hasTerms = !!(udoc.data()?.terms && udoc.data().terms.accepted === true && udoc.data().terms.version === TERMS_VERSION);
+      if(!hasTerms){
+        if(stash?.accepted){
+          try{
+            await updateDoc(uref,{
+              terms: { accepted:true, version: TERMS_VERSION, acceptedAt: serverTimestamp() },
+              ...(stash.phone != null ? { phone: stash.phone } : {})
+            });
+            localStorage.removeItem(CONSENT_STASH_KEY);
+            udoc = await getDoc(uref);
+          }catch(e){
+            // If we failed to write, force post-login modal
+          }
+        }
+      }
+
+      // If still not accepted, require post-login acceptance before unlocking app
+      const stillNoTerms = !(udoc.data()?.terms && udoc.data().terms.accepted === true && udoc.data().terms.version === TERMS_VERSION);
+      if(stillNoTerms){
+        termsTitle.textContent = 'Terms & Consent';
+        termsNote.textContent = 'You must agree to continue. Cancel will sign you out.';
+        termsPhone.value = stash?.phone || udoc.data()?.phone || '';
+        _postLoginConsentRef = uref;
+        termsModal.hidden = false;
+        closeTermsBtn.onclick = async ()=>{ termsModal.hidden = true; _postLoginConsentRef=null; await signOut(auth); };
+        return; // do not set body.auth yet
+      }
+
+      // All good: finish login
+      await finishLogin(user, udoc);
+    });
+
+    async function finishLogin(user, udoc){
       // roles / ban
       const role = (udoc.data()?.role || '').toString().toLowerCase();
       state.isAdmin  = (user.email || '').toLowerCase() === OWNER_EMAIL.toLowerCase();
@@ -430,15 +560,16 @@
       const tags=[]; if(state.isAdmin) tags.push('admin'); else if(state.isMod) tags.push('mod'); if(state.isBanned) tags.push('banned');
       whoami.textContent = user.email + (tags.length?' • '+tags.join(' • '):'');
 
-      // presence heartbeat
-      state.hbTimer = setInterval(async ()=>{ try{ await updateDoc(uref,{ lastActiveAt: serverTimestamp() }); }catch{} }, 60000);
-      window.addEventListener('visibilitychange', async ()=>{ if(document.visibilityState==='visible'){ try{ await updateDoc(uref,{ lastActiveAt: serverTimestamp() }); }catch{} }});
+      // Start presence heartbeat
+      try{ await updateDoc(doc(db,'users',user.uid), { lastActiveAt: serverTimestamp() }); }catch{}
+      state.hbTimer = setInterval(async ()=>{ try{ await updateDoc(doc(db,'users',user.uid), { lastActiveAt: serverTimestamp() }); }catch{} }, 60000);
+      window.addEventListener('visibilitychange', async ()=>{ if(document.visibilityState==='visible'){ try{ await updateDoc(doc(db,'users',user.uid), { lastActiveAt: serverTimestamp() }); }catch{} } });
 
-      // Start feeds
+      document.body.classList.add('auth');
       startPinsFeed();
       if(state.isAdmin || state.isMod){ startUsersFeed(); modPanel.style.display='block'; }
       else { modPanel.style.display='none'; }
-    });
+    }
 
     // ====== Users feed (admin/mod only) ======
     function startUsersFeed(){
@@ -450,7 +581,6 @@
         renderUsers();
       });
     }
-    function timeNow(){ return Date.now(); }
     function renderUsers(){
       userList.innerHTML = '';
       if(!state.users.length){
@@ -459,7 +589,7 @@
         userList.appendChild(li); return;
       }
       const me = auth.currentUser;
-      const now = timeNow();
+      const now = Date.now();
       for(const u of state.users){
         const isOwner = (u.email||'').toLowerCase()===OWNER_EMAIL.toLowerCase();
         const isMod   = ['mod','moderator'].includes((u.role||'').toString().toLowerCase());
@@ -524,7 +654,7 @@
       const actions = [];
       if (canEdit) {
         actions.push(`<a href="#" data-action="edit" data-id="${loc.id}">Edit</a>`);
-        actions.push(`<a href="#" data-action="delete" data-id="${loc.id}" style="color:#ffb3b3">Delete</a>`);
+        actions.push(`<a href="#" data-action="delete" data-id="${loc.id}" style="color:#ff9a9a">Delete</a>`);
       }
       const actionsHtml = actions.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap">${actions.join(' ')}</div>` : '';
 
@@ -539,8 +669,9 @@
       return `<div class="tt"><div class="tt-title">${escapeHtml(loc.title||'(untitled)')}</div><div class="tt-meta">${typeName(loc.type)} · ${fmtLatLng(loc)}</div>${s?`<div class="tt-desc">${escapeHtml(s)}</div>`:''}</div>`;
     }
     function makeIcon(loc){
+      const glyph = loc.type===TYPE_DANGER?'⚠️':'🐱';
       const html = `<div class="pin ${typeClass(loc.type)}"><div class="bubble">${
-        loc.photo ? `<img class="thumb" src="${loc.photo}" alt="">` : `<div class="glyph">${glyphForType(loc.type)}</div>`
+        loc.photo ? `<img class="thumb" src="${loc.photo}" alt="">` : `<div class="glyph">${glyph}</div>`
       }</div><div class="stem"></div></div>`;
       return L.divIcon({ className:'pin-icon', html, iconSize:[46,60], iconAnchor:[23,58], popupAnchor:[0,-56], tooltipAnchor:[0,-58] });
     }
@@ -576,7 +707,7 @@
       listEl.innerHTML='';
       if(!state.locations.length){
         const li=document.createElement('li'); li.className='loc';
-        li.innerHTML='<div class="title" style="grid-column:1/-1;color:var(--muted)">No locations yet. Click a mode (Lost Cat, Lost Dog, Lost Pet, Lost Item, or Danger), then click the map.</div>';
+        li.innerHTML='<div class="title" style="grid-column:1/-1;color:var(--muted)">No locations yet. Click a mode (Lost Cat or Danger), then click the map.</div>';
         listEl.appendChild(li); return;
       }
       const u=auth.currentUser;
@@ -618,8 +749,7 @@
       modalTitle.textContent='New location';
       titleInput.value=''; descInput.value=''; coordsInput.value=`${fmt(latlng.lat)}, ${fmt(latlng.lng)}`;
       const t = state.activeType || 'lostcat';
-      const r = document.querySelector(`input[name="pinType"][value="${t}"]`);
-      if (r) r.checked = true;
+      document.querySelector(`input[name="pinType"][value="${t}"]`).checked = true;
       typeGroup.style.display = 'none'; typePreview.textContent = 'Pin type: ' + typeName(t);
       modalBackdrop.hidden=false; setTimeout(()=>titleInput.focus(),0);
     }
@@ -628,8 +758,7 @@
       if(!canEditLoc(loc)) return alert('You can edit only your own pins (or be mod/admin).');
       state.editingId=id; state.draftLatLng={lat:loc.lat,lng:loc.lng}; setPhotoPreview(loc.photo||null);
       modalTitle.textContent='Edit location'; titleInput.value=loc.title||''; descInput.value=loc.description||''; coordsInput.value=`${fmt(loc.lat)}, ${fmt(loc.lng)}`;
-      const r = document.querySelector(`input[name="pinType"][value="${loc.type}"]`);
-      if (r) r.checked = true;
+      document.querySelector(`input[name="pinType"][value="${loc.type==='danger'?'danger':'lostcat'}"]`).checked=true;
       if(state.isAdmin){ typeGroup.style.display='flex'; typePreview.textContent=''; }
       else { typeGroup.style.display='none'; typePreview.textContent='Pin type: ' + typeName(loc.type); }
       modalBackdrop.hidden=false; setTimeout(()=>titleInput.focus(),0);
@@ -655,51 +784,6 @@
       });
     }
 
-    // ====== Mode buttons ======
-    function updateModeUI(){
-      const t=state.activeType;
-      modeCatBtn.classList.toggle('primary', t==='lostcat');
-      modeDogBtn.classList.toggle('primary', t==='lostdog');
-      modePetBtn.classList.toggle('primary', t==='lostpet');
-      modeItemBtn.classList.toggle('primary', t==='lostitem');
-      modeDangerBtn.classList.toggle('primary', t==='danger');
-      if(t){ pinHint.textContent = `Click on the map to place a ${typeName(t)} pin`; pinHint.style.display='block'; }
-      else { pinHint.style.display='none'; }
-    }
-    function setMode(type){
-      if (state.isBanned && !state.isAdmin && !state.isMod) { alert('You are banned and cannot create pins.'); return; }
-      state.activeType = (state.activeType === type) ? null : type;
-      updateModeUI();
-    }
-    modeCatBtn.onclick   = ()=> setMode('lostcat');
-    modeDogBtn.onclick   = ()=> setMode('lostdog');
-    modePetBtn.onclick   = ()=> setMode('lostpet');
-    modeItemBtn.onclick  = ()=> setMode('lostitem');
-    modeDangerBtn.onclick= ()=> setMode('danger');
-
-    // ====== Delete All Pins (current user) ======
-    deleteAllBtn.onclick = async ()=>{
-      const user = auth.currentUser; if(!user) return;
-      if(!confirm('Delete ALL pins you have created? This cannot be undone.')) return;
-      try{
-        const uid = user.uid;
-        const qMine = query(collection(db,'pins'), where('ownerUid','==', uid));
-        const snap = await getDocs(qMine);
-        if (snap.empty) { alert('You have no pins.'); return; }
-        let batch = writeBatch(db), ops = 0, count = 0;
-        for (const d of snap.docs) {
-          const p = d.data();
-          batch.delete(doc(db,'pins', d.id)); ops++; count++;
-          if (p.type && p.slot) { batch.delete(doc(db, `users/${uid}/quota/${p.type}/slots/${p.slot}`)); ops++; }
-          if (ops >= 450) { await batch.commit(); batch = writeBatch(db); ops = 0; }
-        }
-        if (ops > 0) await batch.commit();
-        alert(`Deleted ${count} pins.`);
-      } catch(e) {
-        alert(e?.message || 'Failed to delete all pins.');
-      }
-    };
-
     // ====== Quota helpers ======
     async function pickFreeSlot(uid, type){
       const snap = await getDocs(collection(db, `users/${uid}/quota/${type}/slots`));
@@ -714,32 +798,36 @@
       const uid = user.uid;
       const email = (user.email || '').toLowerCase();
 
-      const privileged = state.isAdmin || state.isMod;
+      // Admin or moderator?
+      const privileged = (email === OWNER_EMAIL.toLowerCase()) || state.isMod;
+
       const pinId = id || doc(collection(db,'pins')).id;
-
       let slot = null;
-      const batch = writeBatch(db);
 
+      const batch = writeBatch(db);
       if (!privileged) {
         slot = await pickFreeSlot(uid, type);
         if (!slot) { alert(`Limit reached: 5 ${typeName(type)} pins.`); return; }
-        batch.set(doc(db, `users/${uid}/quota/${type}/slots/${slot}`), { pinId }); // must be same batch
       }
 
       batch.set(doc(db,'pins', pinId), {
         title, description, type, lat, lng, photo: photo || null,
-        ownerUid: uid, ownerEmail: email,
+        ownerUid: uid, ownerEmail: user.email || '',
         ownerUsername: null,
         createdAt: serverTimestamp(),
         slot: slot || null
       });
+
+      if (!privileged) {
+        batch.set(doc(db, `users/${uid}/quota/${type}/slots/${slot}`), { pinId });
+      }
 
       await batch.commit();
     }
 
     async function updatePin(id, {title,description,lat,lng,photo,type}){
       const patch={ title, description, lat, lng, photo: photo||null };
-      if(state.isAdmin && type && TYPES.includes(type)) patch.type=type; // owner may change type
+      if(state.isAdmin && type) patch.type=type; // owner may change type
       await updateDoc(doc(db,'pins',id), patch);
     }
 
@@ -777,10 +865,9 @@
       try{
         if(state.editingId){
           const radio = document.querySelector('input[name="pinType"]:checked')?.value;
-          const newType = (state.isAdmin && TYPES.includes(radio)) ? radio : undefined;
-          await updatePin(state.editingId,{ title, description, lat:state.draftLatLng.lat, lng:state.draftLatLng.lng, photo:state.draftPhoto, type:newType });
+          await updatePin(state.editingId,{ title, description, lat:state.draftLatLng.lat, lng:state.draftLatLng.lng, photo:state.draftPhoto, type:(state.isAdmin ? (radio==='danger'?'danger':'lostcat') : undefined) });
         } else {
-          if(!state.activeType){ alert('Select a pin type: Lost Cat / Lost Dog / Lost Pet / Lost Item / Danger (left panel).'); setSaving(false); return; }
+          if(!state.activeType){ alert('Select a pin type: Lost Cat or Danger (left panel).'); setSaving(false); return; }
           await createPin({ id: state.pendingPinId, title, description, type: state.activeType, lat:state.draftLatLng.lat, lng:state.draftLatLng.lng, photo:state.draftPhoto });
         }
         closeModal();

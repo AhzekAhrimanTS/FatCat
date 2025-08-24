@@ -222,8 +222,8 @@
       </div>
       <div class="f" style="margin-top:12px">
         <div>
-          <label for="termsPhone">Phone (optional)</label>
-          <input id="termsPhone" type="text" placeholder="Add or update your phone"/>
+<!--           <label for="termsPhone">Phone (optional)</label>
+          <input id="termsPhone" type="text" placeholder="Add or update your phone"/> -->
         </div>
       </div>
       <div class="row" style="display:flex;gap:8px;justify-content:flex-end">
@@ -320,9 +320,9 @@
     const $ = (id)=>document.getElementById(id);
     const whoami=$('whoami'), logoutBtn=$('logoutBtn');
     const gateError=$('gateError'), googleBtn=$('googleBtn'), gate=$('gate');
-    const consentCheck=$('consentCheck'), openTermsLink=$('openTermsLink'), consentPhone=$('consentPhone');
+    const consentCheck=$('consentCheck'), openTermsLink=$('openTermsLink');
 
-    const termsModal=$('termsModal'), agreeTermsBtn=$('agreeTermsBtn'), closeTermsBtn=$('closeTermsBtn'), termsPhone=$('termsPhone'), termsTitle=$('termsTitle'), termsNote=$('termsNote');
+    const termsModal=$('termsModal'), agreeTermsBtn=$('agreeTermsBtn'), closeTermsBtn=$('closeTermsBtn'), termsTitle=$('termsTitle'), termsNote=$('termsNote');
 
     const listEl=$('locationList'), locateBtn=$('locateBtn');
     const modeCatBtn=$('modeCatBtn'), modeDangerBtn=$('modeDangerBtn');
@@ -430,7 +430,7 @@
       termsTitle.textContent = 'Terms & Consent';
       termsNote.textContent = 'Please read carefully. Tick “I Agree” to continue.';
       termsModal.hidden = false;
-      termsPhone.value = consentPhone.value.trim();
+      // termsPhone.value = consentPhone.value.trim();
     });
 
     closeTermsBtn.onclick = ()=>{
@@ -444,7 +444,7 @@
       if (_postLoginConsentRef) {
         // Post-login forced acceptance flow
         try {
-          const phone = termsPhone.value.trim() || null;
+          // const phone = termsPhone.value.trim() || null;
           await updateDoc(_postLoginConsentRef, {
             terms: { accepted: true, version: TERMS_VERSION, acceptedAt: serverTimestamp() },
             ...(phone != null ? { phone } : {})
@@ -461,7 +461,7 @@
         // Pre-login modal “I Agree” just checks the box and enables the button
         consentCheck.checked = true;
         googleBtn.disabled = false;
-        if (!termsPhone.value && consentPhone.value) termsPhone.value = consentPhone.value.trim();
+        // if (!termsPhone.value && consentPhone.value) termsPhone.value = consentPhone.value.trim();
         termsModal.hidden = true;
       }
     };
@@ -478,7 +478,7 @@
         const stash = {
           accepted: true,
           version: TERMS_VERSION,
-          phone: (consentPhone.value.trim() || null),
+          // phone: (consentPhone.value.trim() || null),
           at: Date.now()
         };
         localStorage.setItem(CONSENT_STASH_KEY, JSON.stringify(stash));
@@ -539,7 +539,7 @@
       if(stillNoTerms){
         termsTitle.textContent = 'Terms & Consent';
         termsNote.textContent = 'You must agree to continue. Cancel will sign you out.';
-        termsPhone.value = stash?.phone || udoc.data()?.phone || '';
+        // termsPhone.value = stash?.phone || udoc.data()?.phone || '';
         _postLoginConsentRef = uref;
         termsModal.hidden = false;
         closeTermsBtn.onclick = async ()=>{ termsModal.hidden = true; _postLoginConsentRef=null; await signOut(auth); };

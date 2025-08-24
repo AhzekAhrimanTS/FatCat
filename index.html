@@ -803,27 +803,15 @@
       // Unlock UI immediately
       document.body.classList.add('auth'); whoami.textContent=user.email; whoamiTop.textContent=user.email;
 
-      // Ensure user profile (auto-create, NO 'role' on create)
-      const uref = doc(db, 'users', user.uid);
-      let udoc;
-      try {
-        udoc = await getDoc(uref);
-        if (!udoc.exists()) {
-          await setDoc(uref, {
-            email: user.email,              // keep original casing
-            createdAt: serverTimestamp(),
-            role:null,
-            banned: false,                  // default
-            lastActiveAt: serverTimestamp() // presence seed
-            // DO NOT include 'role' here; only admins can set it later
-          });
-          udoc = await getDoc(uref);
+      // Ensure user profile
+      const uref=doc(db,'users',user.uid); let udoc;
+      try{
+        udoc=await getDoc(uref);
+        if(!udoc.exists()){
+          await setDoc(uref,{email:user.email,createdAt:serverTimestamp(),role:null,banned:false,lastActiveAt:serverTimestamp()});
+          udoc=await getDoc(uref);
         }
-      } catch (e) {
-        gateError.textContent = 'Account setup error: ' + (e?.code || e?.message || e);
-        return;
-      }
-
+      }catch(e){ gateError.textContent='Account setup error: '+(e?.code||e?.message||e); return; }
 
       // Terms check
       const hasTerms=!!(udoc.data()?.terms && udoc.data().terms.accepted===true && udoc.data().terms.version===TERMS_VERSION);

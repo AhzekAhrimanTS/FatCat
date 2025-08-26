@@ -48,7 +48,7 @@
     button[disabled]{opacity:.6;cursor:not-allowed}
 
     #locationList{list-style:none;padding:0;margin:0;overflow:auto;flex:1}
-    .loc{border-bottom:1px solid var(--border);padding:10px 12px;display:grid;grid-template-columns:1fr auto;gap:4px 8px;align-items:center}
+    .loc{border-bottom:1px solid var(--border);padding:10px 12px;display:grid; grid-template-columns:minmax(0,1fr) auto; gap:4px 8px;align-items:center}
     .loc .title{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .loc .meta{color:var(--muted);font-size:12px}
     .loc .actions{display:flex;gap:6px}

@@ -725,7 +725,7 @@
       list.innerHTML='';
       if(!state.locations.length){
         const li=document.createElement('li'); li.className='loc';
-        li.innerHTML='<div class="title-row"><div class="title-text" style="color:var(--muted)">No locations yet. Pick a type (Cat/Dog/Pet/Item/Danger), then tap the map.</div></div>';
+        li.innerHTML='<div class="title-row"><div class="title-text" style="color:var(--muted)">No locations yet. Pick a type, then tap the map.</div></div>';
         list.appendChild(li); return;
       }
       const u=auth.currentUser;

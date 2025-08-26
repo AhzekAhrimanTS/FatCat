@@ -19,6 +19,7 @@
       --bg:#0f1115; --bg-elev:#161a22; --fg:#d7dce2; --muted:#9aa3ad;
       --accent:#7aa2f7; --danger:#ef5350; --cat:#f1a33c; --border:#232839; --ok:#3ac97a;
       --dog:#86e07c; --pet:#7adff2; --item:#c084fc;
+      --lost:#8b93a8;
     }
     html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;}
@@ -57,6 +58,11 @@
     .badge.pet {background:rgba(122,223,242,.15);color:#d2f6ff;border:1px solid rgba(122,223,242,.35)}
     .badge.item{background:rgba(192,132,252,.15);color:#ecd6ff;border:1px solid rgba(192,132,252,.35)}
     .badge.danger{background:rgba(239,83,80,.15);color:#ffb3b3;border:1px solid rgba(239,83,80,.35)}
+
+    /* Status badges (list) */
+    .badge.status{margin-left:6px}
+    .badge.status.found{background:rgba(58,201,122,.12);color:#bdf2d8;border:1px solid rgba(58,201,122,.35)}
+    .badge.status.lost{background:rgba(139,147,168,.12);color:#cbd2e1;border:1px solid rgba(139,147,168,.35)}
 
     /* Map hint */
     .pin-hint{position:absolute;top:12px;right:12px;z-index:500;background:rgba(10,14,24,.9);
@@ -106,6 +112,15 @@
     .pin.pet   .bubble{border-color:var(--pet)}   .pin.pet   .stem{border-top-color:var(--pet)}
     .pin.item  .bubble{border-color:var(--item)}  .pin.item  .stem{border-top-color:var(--item)}
     .pin.danger .bubble{border-color:var(--danger)} .pin.danger .stem{border-top-color:var(--danger)}
+    .pin.resolved .bubble{filter:saturate(.65) brightness(.9)}
+    .pin .statusTag{
+      position:absolute; top:-6px; right:-6px; font-size:10px; line-height:1; padding:4px 6px;
+      border-radius:999px; border:1px solid #1f2a3f; background:#0e1424; color:#cbd2e1;
+      box-shadow:0 2px 8px rgba(0,0,0,.35)
+    }
+    .pin .statusTag.found{background:rgba(58,201,122,.12); border-color:rgba(58,201,122,.35); color:#bdf2d8}
+    .pin .statusTag.lost{background:rgba(139,147,168,.12); border-color:rgba(139,147,168,.35); color:#cbd2e1}
+
     .leaflet-tooltip.pin-tooltip{background:rgba(12,16,26,.96);color:#fff;border:1px solid var(--border);
       border-radius:10px;box-shadow:0 10px 25px rgba(0,0,0,.35)}
     .tt-title{margin-bottom:4px}.tt-meta{color:var(--muted);font-size:12px;margin-bottom:4px}.tt-desc{font-size:13px;max-width:260px;white-space:normal}
@@ -573,7 +588,8 @@
       batch.set(doc(db,'pins',pinId),{
         title,description,type,lat,lng,photo:photo||null,
         ownerUid:uid,ownerEmail:email,ownerUsername:null,
-        createdAt:serverTimestamp(),slot:slot||null
+        createdAt:serverTimestamp(),slot:slot||null,
+        status:'open', resolvedAt:null, resolvedBy:null, resolvedByEmail:null
       });
       await batch.commit();
     }
@@ -582,6 +598,22 @@
       const patch={title,description,lat,lng,photo:photo||null};
       if(state.isAdmin && type && TYPES.includes(type)) patch.type=type;
       await updateDoc(doc(db,'pins',id),patch);
+    }
+
+    async function setPinStatus(id, status){
+      const allowed=['open','found','lost'];
+      if(!allowed.includes(status)) return;
+      try{
+        const patch={status};
+        if(status==='open'){
+          patch.resolvedAt=null; patch.resolvedBy=null; patch.resolvedByEmail=null;
+        }else{
+          patch.resolvedAt=serverTimestamp();
+          patch.resolvedBy=auth.currentUser?.uid||null;
+          patch.resolvedByEmail=auth.currentUser?.email||null;
+        }
+        await updateDoc(doc(db,'pins',id),patch);
+      }catch(e){ alert(e?.message||'Could not update status.'); }
     }
 
     function confirmDelete(id){ if(confirm('Delete this pin?')) deletePin(id); }
@@ -628,21 +660,39 @@
 
     /* ---------- Markers & list ---------- */
     function clearMarkers(){ for(const id of Array.from(state.markers.keys())) removeMarker(id); state.locations=[]; renderList(); }
-    function upsertLocalPin(p){ const i=state.locations.findIndex(x=>x.id===p.id); if(i===-1) state.locations.push(p); else state.locations[i]=p; upsertMarker(p); }
+    function upsertLocalPin(p){
+      // default status for legacy docs
+      if(!p.status) p.status='open';
+      const i=state.locations.findIndex(x=>x.id===p.id);
+      if(i===-1) state.locations.push(p); else state.locations[i]=p;
+      upsertMarker(p);
+    }
     function canEditLoc(loc){ const u=auth.currentUser; if(!u) return false; if(state.isAdmin||state.isMod) return true; return (loc.ownerUid===u.uid)&&!state.isBanned; }
+    function statusName(s){ return s==='found'?'Found':s==='lost'?'Lost':'Open'; }
     function markerPopupHtml(loc,canEdit){
-      const img=loc.photo?`<img class="popup-img" src="${loc.photo}" alt="" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:6px">`:''; 
+      const img=loc.photo?`<img class="popup-img" src="${loc.photo}" alt="" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:6px">`:'';
       const who=loc.ownerUsername||loc.ownerEmail||''; const acts=[];
-      if(canEdit){ acts.push(`<a href="#" data-action="edit" data-id="${loc.id}">Edit</a>`); acts.push(`<a href="#" data-action="delete" data-id="${loc.id}" style="color:#ffb3b3">Delete</a>`); }
+      if(canEdit){
+        if(loc.status!=='found') acts.push(`<a href="#" data-action="status" data-status="found" data-id="${loc.id}">Mark Found</a>`);
+        if(loc.status!=='lost') acts.push(`<a href="#" data-action="status" data-status="lost" data-id="${loc.id}">Mark Lost</a>`);
+        if(loc.status!=='open') acts.push(`<a href="#" data-action="status" data-status="open" data-id="${loc.id}">Reopen</a>`);
+        acts.push(`<a href="#" data-action="edit" data-id="${loc.id}">Edit</a>`);
+        acts.push(`<a href="#" data-action="delete" data-id="${loc.id}" style="color:#ffb3b3">Delete</a>`);
+      }
       return `<div style="min-width:240px">${img}
         <div style="margin-bottom:6px">${escapeHtml(loc.title||'(untitled)')}</div>
-        <div style="color:#9aa3ad;font-size:12px;margin-bottom:6px">${typeName(loc.type)} · ${fmtLatLng(loc)}${who?` · by ${escapeHtml(who)}`:''}</div>
+        <div style="color:#9aa3ad;font-size:12px;margin-bottom:6px">${typeName(loc.type)} · ${statusName(loc.status)} · ${fmtLatLng(loc)}${who?` · by ${escapeHtml(who)}`:''}</div>
         ${loc.description?`<div style="white-space:pre-wrap;margin-bottom:8px">${escapeHtml(loc.description)}</div>`:''}
-        ${acts.length?`<div style="display:flex;gap:6px;flex-wrap:wrap">${acts.join(' ')}</div>`:''}</div>`;
+        ${acts.length?`<div style="display:flex;gap:8px;flex-wrap:wrap">${acts.join(' ')}</div>`:''}</div>`;
     }
-    function tooltipHtml(loc){ const s=(loc.description||'').slice(0,140); return `<div class="tt"><div class="tt-title">${escapeHtml(loc.title||'(untitled)')}</div><div class="tt-meta">${typeName(loc.type)} · ${fmtLatLng(loc)}</div>${s?`<div class="tt-desc">${escapeHtml(s)}</div>`:''}</div>`; }
+    function tooltipHtml(loc){
+      const s=(loc.description||'').slice(0,140);
+      return `<div class="tt"><div class="tt-title">${escapeHtml(loc.title||'(untitled)')}</div><div class="tt-meta">${typeName(loc.type)} · ${statusName(loc.status)} · ${fmtLatLng(loc)}</div>${s?`<div class="tt-desc">${escapeHtml(s)}</div>`:''}</div>`;
+    }
     function makeIcon(loc){
-      const html=`<div class="pin ${typeClass(loc.type)}"><div class="bubble">${loc.photo?`<img class="thumb" src="${loc.photo}" alt="">`:`<div class="glyph">${glyphForType(loc.type)}</div>`}</div><div class="stem"></div></div>`;
+      const resolved = loc.status && loc.status!=='open';
+      const statusTag = resolved ? `<div class="statusTag ${loc.status}">${loc.status==='found'?'Found':'Lost'}</div>` : '';
+      const html=`<div class="pin ${typeClass(loc.type)} ${resolved?'resolved':''}"><div class="bubble">${loc.photo?`<img class="thumb" src="${loc.photo}" alt="">`:`<div class="glyph">${glyphForType(loc.type)}</div>`}</div><div class="stem"></div>${statusTag}</div>`;
       return L.divIcon({className:'pin-icon',html,iconSize:[46,60],iconAnchor:[23,58],popupAnchor:[0,-56],tooltipAnchor:[0,-58]});
     }
     function addMarkerFor(loc){
@@ -650,7 +700,18 @@
       m.bindPopup(markerPopupHtml(loc,canEditLoc(loc)));
       m.bindTooltip(tooltipHtml(loc),{direction:'top',offset:[0,-54],className:'pin-tooltip',opacity:0.96});
       m.on('dragend',async (e)=>{ if(!canEditLoc(loc)) return; const {lat,lng}=e.target.getLatLng(); try{ await updateDoc(doc(db,'pins',loc.id),{lat,lng}); }catch{ alert('Update failed.'); }});
-      m.on('popupopen',()=>{ const el=m.getPopup().getElement(); el.querySelectorAll('a[data-action]').forEach(a=>{ a.addEventListener('click',(evt)=>{ evt.preventDefault(); const id=a.getAttribute('data-id'); const act=a.getAttribute('data-action'); if(act==='edit') openEditModal(id); if(act==='delete') confirmDelete(id); });});});
+      m.on('popupopen',()=>{
+        const el=m.getPopup().getElement();
+        el.querySelectorAll('a[data-action]').forEach(a=>{
+          a.addEventListener('click',(evt)=>{
+            evt.preventDefault();
+            const id=a.getAttribute('data-id'); const act=a.getAttribute('data-action');
+            if(act==='edit') openEditModal(id);
+            if(act==='delete') confirmDelete(id);
+            if(act==='status'){ const st=a.getAttribute('data-status'); setPinStatus(id,st); }
+          });
+        });
+      });
       m.addTo(map); state.markers.set(loc.id,m);
     }
     function upsertMarker(loc){
@@ -664,6 +725,7 @@
       }
     }
     function removeMarker(id){ const m=state.markers.get(id); if(m){ map.removeLayer(m); state.markers.delete(id);} }
+
     function renderList(){
       const list=$('locationList'); if(!list) return;
       list.innerHTML='';
@@ -678,12 +740,20 @@
         const title=document.createElement('div'); title.className='title';
         const mine=(loc.ownerUid===u?.uid); const who=loc.ownerUsername||loc.ownerEmail||'';
         const ownerTag=(!mine&&who)?`<span class="who" style="margin-left:8px">by ${escapeHtml(who)}</span>`:'';
-        title.innerHTML=`${escapeHtml(loc.title||'(untitled)')} <span class="badge ${typeClass(loc.type)}">${typeName(loc.type)}</span> ${ownerTag}`;
+        const statusBadge = (loc.status && loc.status!=='open') ? `<span class="badge status ${loc.status}">${loc.status==='found'?'Found':'Lost'}</span>` : '';
+        title.innerHTML=`${escapeHtml(loc.title||'(untitled)')} <span class="badge ${typeClass(loc.type)}">${typeName(loc.type)}</span> ${statusBadge} ${ownerTag}`;
         const meta=document.createElement('div'); meta.className='meta'; meta.textContent=fmtLatLng(loc);
         const actions=document.createElement('div'); actions.className='actions';
         const flyBtn=document.createElement('button'); flyBtn.textContent='View'; flyBtn.onclick=()=>{ map.flyTo([loc.lat,loc.lng],Math.max(map.getZoom(),15),{duration:0.7}); const m=state.markers.get(loc.id); if(m) m.openPopup(); };
         actions.append(flyBtn);
-        if(canEditLoc(loc)){ const editBtn=document.createElement('button'); editBtn.textContent='Edit'; editBtn.onclick=()=>openEditModal(loc.id); const delBtn=document.createElement('button'); delBtn.textContent='Delete'; delBtn.className='danger'; delBtn.onclick=()=>confirmDelete(loc.id); actions.append(editBtn,delBtn); }
+        if(canEditLoc(loc)){
+          if(loc.status!=='found'){ const b=document.createElement('button'); b.textContent='Mark Found'; b.onclick=()=>setPinStatus(loc.id,'found'); actions.append(b); }
+          if(loc.status!=='lost'){ const b=document.createElement('button'); b.textContent='Mark Lost';  b.onclick=()=>setPinStatus(loc.id,'lost');  actions.append(b); }
+          if(loc.status!=='open'){ const b=document.createElement('button'); b.textContent='Reopen';     b.onclick=()=>setPinStatus(loc.id,'open');  actions.append(b); }
+          const editBtn=document.createElement('button'); editBtn.textContent='Edit'; editBtn.onclick=()=>openEditModal(loc.id);
+          const delBtn=document.createElement('button'); delBtn.textContent='Delete'; delBtn.className='danger'; delBtn.onclick=()=>confirmDelete(loc.id);
+          actions.append(editBtn,delBtn);
+        }
         li.append(title,actions,meta); list.appendChild(li);
       }
     }

@@ -379,7 +379,6 @@
     const CONSENT_STASH_KEY='kaustpins.preconsent.v1';
 
     /* ---------- DOM ---------- */
-    console.log('[DEBUG] Script starting…');
     const $=(id)=>document.getElementById(id);
     const gate=$('gate'), gateError=$('gateError'), googleBtn=$('googleBtn'), openTermsLink=$('openTermsLink');
     const termsModal=$('termsModal'), agreeTermsBtn=$('agreeTermsBtn'), closeTermsBtn=$('closeTermsBtn');
@@ -845,19 +844,16 @@
     closeTermsBtn.onclick=()=>{ termsModal.hidden=true; };
 
     /* ---------- Google sign-in ---------- */
-    console.log('[DEBUG] Wiring up Google sign-in button…');
     const provider=new GoogleAuthProvider(); provider.setCustomParameters({prompt:'select_account'});
     googleBtn.onclick=async()=>{
-      console.log('[DEBUG] Google button clicked');
       gateError.textContent='';
       try{
-        try{ console.log('[DEBUG] Attempting signInWithPopup…'); await signInWithPopup(auth,provider); console.log('[DEBUG] signInWithPopup succeeded'); }
+        try{ await signInWithPopup(auth,provider); }
         catch(e){
-          console.log('[DEBUG] signInWithPopup error:', e?.code, e?.message);
           if(e?.code==='auth/operation-not-supported-in-this-environment'||e?.code==='auth/popup-blocked'||e?.code==='auth/popup-closed-by-user'){ await signInWithRedirect(auth,provider); }
           else{ throw e; }
         }
-      }catch(e){ console.error('[DEBUG] Sign-in failed:', e); gateError.textContent=e?.code||e?.message||'Google sign‑in failed'; }
+      }catch(e){ gateError.textContent=e?.code||e?.message||'Google sign‑in failed'; }
     };
     getRedirectResult(auth).catch(err=>{ gateError.textContent=err?.code||err?.message||'Google sign‑in failed'; });
 
@@ -873,7 +869,7 @@
         document.body.classList.remove('auth'); whoami.textContent=''; whoamiTop.textContent='';
         return;
       }
-      if(!isAllowedEmail(user.email)){ gateError.innerHTML=`This account (<b>${user.email}</b>) is not allowed.`; await signOut(auth); return; }
+      if(!isAllowedEmail(user.email)){ gateError.innerHTML=`This account (<b>${user.email}</b>) isn’t allowed. Use your KAUST account.`; await signOut(auth); return; }
 
       // Unlock UI immediately
       document.body.classList.add('auth'); whoami.textContent=user.email; whoamiTop.textContent=user.email;
@@ -919,4 +915,13 @@
 
       // presence heartbeat
       try{ await updateDoc(doc(db,'users',user.uid),{lastActiveAt:serverTimestamp()}); }catch{}
-      state.hbTimer=setInterval(async()=>{ try{ await updateDoc(doc(db,'users',user.uid),{lastAc
+      state.hbTimer=setInterval(async()=>{ try{ await updateDoc(doc(db,'users',user.uid),{lastActiveAt:serverTimestamp()}); }catch{} },60000);
+      window.addEventListener('visibilitychange',async()=>{ if(document.visibilityState==='visible'){ try{ await updateDoc(doc(db,'users',user.uid),{lastActiveAt:serverTimestamp()}); }catch{} } });
+
+      // start data
+      startPinsFeed();
+      if(state.isAdmin||state.isMod) startUsersFeed();
+    }
+  </script>
+</body>
+</html>

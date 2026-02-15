@@ -415,9 +415,18 @@
     /* ---------- Map ---------- */
     const VIEW_KEY='pinboard.mapview.v5';
     const savedView=JSON.parse(localStorage.getItem(VIEW_KEY)||"null");
-    const map=L.map('map',{center:savedView?[savedView.lat,savedView.lng]:[22.3088,39.1046],zoom:savedView?Math.max(1,Math.min(19,savedView.zoom|0)):15,worldCopyJump:true});
+    const map=L.map('map',{center:savedView?[savedView.lat,savedView.lng]:[20,0],zoom:savedView?Math.max(1,Math.min(19,savedView.zoom|0)):2,worldCopyJump:true});
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
     map.on('moveend',()=>{const c=map.getCenter();localStorage.setItem(VIEW_KEY,JSON.stringify({lat:c.lat,lng:c.lng,zoom:map.getZoom()}));});
+
+    /* Auto-locate on first visit (no saved view) */
+    if(!savedView && navigator.geolocation){
+      navigator.geolocation.getCurrentPosition(
+        (pos)=>{ map.flyTo([pos.coords.latitude,pos.coords.longitude],14,{duration:1.2}); },
+        ()=>{/* denied or error — stay at world view */},
+        {enableHighAccuracy:true,timeout:10000,maximumAge:300000}
+      );
+    }
 
     /* ---------- Types & helpers ---------- */
     const TYPES=['lostcat','lostdog','lostpet','lostitem','danger'];

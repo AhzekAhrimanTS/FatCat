@@ -157,7 +157,7 @@
   <div id="gate">
     <div class="card">
       <h2>Lost Pins</h2>
-      <div class="muted">Sign in with Google (KAUST accounts only).</div>
+      <div class="muted">Sign in with Google to continue.</div>
       <div class="stack">
         <button id="googleBtn" class="primary">Continue with Google</button>
         <div id="gateInfo" class="ok"></div>
@@ -166,7 +166,7 @@
       <div class="gate-foot">
         <small style="opacity:.85">
           Mark your lost pets and items.<br>
-          ONLY KAUST EMAILS ALLOWED FOR ACCOUNTABILITY.<br>
+          by Ahzek Ahriman<br>
           by Ahzek Ahriman
         </small>
       </div>
@@ -254,9 +254,9 @@
       <h3 id="termsTitle">Terms &amp; Consent</h3>
       <div id="termsNote" class="muted" style="margin:6px 0 8px 0;">Please read carefully.</div>
       <div class="terms-body" id="termsBody" aria-label="Terms">
-        <p><strong>Purpose.</strong> Lost Pins is a community tool to help locate missing pets/items and flag hazards on campus. We process your <em>KAUST email</em> and the content you submit (pins, descriptions, photos).</p>
+        <p><strong>Purpose.</strong> Lost Pins is a community tool to help locate missing pets/items and flag hazards . We process your <em>Google email</em> and the content you submit (pins, descriptions, photos).</p>
         <p><strong>Lawful basis (consent) &amp; transparency.</strong> By agreeing, you consent to processing your personal data for the purposes above. You are informed of what we collect, why, and how we use it, consistent with the Personal Data Protection Law of the Kingdom of Saudi Arabia (PDPL) and its Implementing Regulations. You may withdraw consent at any time (see “Your rights”).</p>
-        <p><strong>What we collect.</strong> (1) KAUST email (required); (2) user‑generated content: pin type, location, title, description, optional photo; (3) service/hosting metadata (e.g., IP/device info) collected by Firebase/Google Cloud for security and reliability.</p>
+        <p><strong>What we collect.</strong> (1) Google email (required); (2) user‑generated content: pin type, location, title, description, optional photo; (3) service/hosting metadata (e.g., IP/device info) collected by Firebase/Google Cloud for security and reliability.</p>
         <p><strong>Use &amp; sharing.</strong> We show pins on the map; moderators may review content for safety and policy compliance. We do not sell personal data. We share data only as necessary with hosting providers or if required by law.</p>
         <p><strong>Cross‑border transfer.</strong> Firebase/Google Cloud may store/process data outside KSA. By agreeing, you consent to such transfers as permitted under the PDPL and its regulations on transfers outside the Kingdom.</p>
         <p><strong>Retention.</strong> We keep data while the service is active and you have an account. We may purge pins older than needed or after 12 months of inactivity. You can delete your pins at any time; you may also request account deletion.</p>
@@ -371,8 +371,7 @@
     /* ---------- Owner/domain gate ---------- */
     const OWNER_EMAIL = 'lenatif09@gmail.com';
     const isAllowedEmail = (email) => {
-      const e=(email||'').toLowerCase();
-      return e===OWNER_EMAIL.toLowerCase() || /@kaust\.edu\.sa$/i.test(e);
+      return !!(email && email.trim());
     };
 
     /* ---------- Terms ---------- */
@@ -380,6 +379,7 @@
     const CONSENT_STASH_KEY='kaustpins.preconsent.v1';
 
     /* ---------- DOM ---------- */
+    console.log('[DEBUG] Script starting…');
     const $=(id)=>document.getElementById(id);
     const gate=$('gate'), gateError=$('gateError'), googleBtn=$('googleBtn'), openTermsLink=$('openTermsLink');
     const termsModal=$('termsModal'), agreeTermsBtn=$('agreeTermsBtn'), closeTermsBtn=$('closeTermsBtn');
@@ -845,6 +845,7 @@
     closeTermsBtn.onclick=()=>{ termsModal.hidden=true; };
 
     /* ---------- Google sign-in ---------- */
+    console.log('[DEBUG] Wiring up Google sign-in button…');
     const provider=new GoogleAuthProvider(); provider.setCustomParameters({prompt:'select_account'});
     googleBtn.onclick=async()=>{
       console.log('[DEBUG] Google button clicked');
@@ -872,7 +873,7 @@
         document.body.classList.remove('auth'); whoami.textContent=''; whoamiTop.textContent='';
         return;
       }
-      if(!isAllowedEmail(user.email)){ gateError.innerHTML=`This account (<b>${user.email}</b>) isn’t allowed. Use your KAUST account.`; await signOut(auth); return; }
+      if(!isAllowedEmail(user.email)){ gateError.innerHTML=`This account (<b>${user.email}</b>) is not allowed.`; await signOut(auth); return; }
 
       // Unlock UI immediately
       document.body.classList.add('auth'); whoami.textContent=user.email; whoamiTop.textContent=user.email;

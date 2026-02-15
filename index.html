@@ -108,6 +108,9 @@
     .pin .bubble .glyph{font-size:22px;line-height:1}
     .pin .stem{position:absolute;left:50%;bottom:4px;transform:translateX(-50%);
       width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;border-top:14px solid #4a5a88;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
+    .pin .pin-name{position:absolute;left:50%;bottom:-14px;transform:translateX(-50%);
+      font-size:10px;font-weight:600;color:#e2e8f0;white-space:nowrap;max-width:90px;overflow:hidden;text-overflow:ellipsis;
+      background:rgba(12,16,26,.85);padding:1px 5px;border-radius:4px;text-align:center;pointer-events:none}
     .pin.cat   .bubble{border-color:var(--cat)}   .pin.cat   .stem{border-top-color:var(--cat)}
     .pin.dog   .bubble{border-color:var(--dog)}   .pin.dog   .stem{border-top-color:var(--dog)}
     .pin.pet   .bubble{border-color:var(--pet)}   .pin.pet   .stem{border-top-color:var(--pet)}
@@ -585,7 +588,7 @@
       }
       batch.set(doc(db,'pins',pinId),{
         title,description,type,lat,lng,photo:photo||null,
-        ownerUid:uid,ownerEmail:email,ownerUsername:null,
+        ownerUid:uid,ownerEmail:email,ownerUsername:user.displayName||email.split('@')[0],
         status:'open',resolvedAt:null,resolvedBy:null,
         createdAt:serverTimestamp(),slot:slot||null
       });
@@ -657,7 +660,7 @@
 
     function markerPopupHtml(loc,canEdit){
       const img=loc.photo?`<img class="popup-img" src="${loc.photo}" alt="" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:6px">`:'';
-      const who=loc.ownerUsername||loc.ownerEmail||'';
+      const who=loc.ownerUsername||loc.ownerEmail?.split('@')[0]||'';
       const acts=[];
       if(canEdit){
         if(loc.status!=='found') acts.push(`<a href="#" data-action="found" data-id="${loc.id}">Mark Found</a>`);
@@ -667,9 +670,10 @@
         acts.push(`<a href="#" data-action="delete" data-id="${loc.id}" style="color:#ffb3b3">Delete</a>`);
       }
       return `<div style="min-width:240px">${img}
-        <div style="margin-bottom:6px">${escapeHtml(loc.title||'(untitled)')}</div>
+        <div style="font-weight:600;font-size:15px;margin-bottom:4px">${escapeHtml(loc.title||'(untitled)')}</div>
+        ${who?`<div style="font-size:12px;margin-bottom:4px"><span style="background:rgba(122,162,247,.12);color:#bdd6ff;padding:2px 7px;border-radius:999px;border:1px solid rgba(122,162,247,.2)">👤 ${escapeHtml(who)}</span></div>`:''}
         <div style="color:#9aa3ad;font-size:12px;margin-bottom:6px">
-          ${typeName(loc.type)} · ${fmtLatLng(loc)}${who?` · by ${escapeHtml(who)}`:''}
+          ${typeName(loc.type)} · <span class="status-pill ${statusClass(loc.status)}">${statusLabel(loc.status)}</span>
           · <span class="status-pill ${statusClass(loc.status)}">${statusLabel(loc.status)}</span>
         </div>
         ${loc.description?`<div style="white-space:pre-wrap;margin-bottom:8px">${escapeHtml(loc.description)}</div>`:''}
@@ -678,15 +682,18 @@
     }
     function tooltipHtml(loc){
       const s=(loc.description||'').slice(0,140);
+      const who=loc.ownerUsername||loc.ownerEmail?.split('@')[0]||'';
       return `<div class="tt">
         <div class="tt-title">${escapeHtml(loc.title||'(untitled)')}</div>
-        <div class="tt-meta">${typeName(loc.type)} · ${fmtLatLng(loc)} · ${statusLabel(loc.status)}</div>
+        <div class="tt-meta">${typeName(loc.type)} · ${statusLabel(loc.status)}${who?` · by ${escapeHtml(who)}`:''}</div>
         ${s?`<div class="tt-desc">${escapeHtml(s)}</div>`:''}
       </div>`;
     }
     function makeIcon(loc){
-      const html=`<div class="pin ${typeClass(loc.type)}"><div class="bubble">${loc.photo?`<img class="thumb" src="${loc.photo}" alt="">`:`<div class="glyph">${glyphForType(loc.type)}</div>`}</div><div class="stem"></div></div>`;
-      return L.divIcon({className:'pin-icon',html,iconSize:[46,60],iconAnchor:[23,58],popupAnchor:[0,-56],tooltipAnchor:[0,-58]});
+      const name=loc.ownerUsername||loc.ownerEmail?.split('@')[0]||'';
+      const nameHtml=name?`<div class="pin-name">${escapeHtml(name.split(' ')[0])}</div>`:'';
+      const html=`<div class="pin ${typeClass(loc.type)}"><div class="bubble">${loc.photo?`<img class="thumb" src="${loc.photo}" alt="">`:`<div class="glyph">${glyphForType(loc.type)}</div>`}</div><div class="stem"></div>${nameHtml}</div>`;
+      return L.divIcon({className:'pin-icon',html,iconSize:[46,76],iconAnchor:[23,58],popupAnchor:[0,-56],tooltipAnchor:[0,-58]});
     }
     function addMarkerFor(loc){
       const m=L.marker([loc.lat,loc.lng],{draggable:canEditLoc(loc),icon:makeIcon(loc)});
@@ -737,8 +744,8 @@
         // Title row
         const titleRow=document.createElement('div'); titleRow.className='title-row';
         const titleText=document.createElement('div'); titleText.className='title-text';
-        const who=loc.ownerUsername||loc.ownerEmail||'';
-        const whoTag=(who?` <span class="who" style="margin-left:6px;color:#9aa3ad;font-size:12px">by ${escapeHtml(who)}</span>`:'');
+        const who=loc.ownerUsername||loc.ownerEmail?.split('@')[0]||'';
+        const whoTag=(who?` <span class="who" style="margin-left:6px;color:#7aa2f7;font-size:12px">👤 ${escapeHtml(who)}</span>`:'');
         titleText.innerHTML = `${escapeHtml(loc.title||'(untitled)')}${whoTag}`;
         const typeBadge=document.createElement('span'); typeBadge.className=`badge ${typeClass(loc.type)}`; typeBadge.textContent=typeName(loc.type);
         const statusPill=document.createElement('span'); statusPill.className=`status-pill ${statusClass(loc.status)}`; statusPill.textContent=statusLabel(loc.status);

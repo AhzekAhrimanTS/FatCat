@@ -832,7 +832,7 @@
     usersModal.addEventListener('click',(e)=>{ if(e.target===usersModal) usersModal.hidden=true; });
 
     /* ---------- Save (auth/terms) ---------- */
-    openTermsLink.addEventListener('click',(e)=>{ e.preventDefault(); termsModal.hidden=false; });
+    if(openTermsLink) openTermsLink.addEventListener('click',(e)=>{ e.preventDefault(); termsModal.hidden=false; });
     let _postLoginConsentRef=null;
     agreeTermsBtn.onclick=async()=>{
       if(_postLoginConsentRef){

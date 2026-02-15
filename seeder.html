@@ -434,6 +434,7 @@
         }
 
         const ownerEmail = pick(FAKE_EMAILS);
+        const fakeUid = 'seed_' + randId().replace(/-/g,'').slice(0,20);
         const resolvedAt = (p.status==='found'||p.status==='lost') ? serverTimestamp() : null;
         const resolvedBy = (p.status==='found'||p.status==='lost') ? pick(FAKE_EMAILS) : null;
 
@@ -445,8 +446,8 @@
             lat: p.lat,
             lng: p.lng,
             photo: photo || null,
-            ownerUid: uid,
-            ownerEmail: email,
+            ownerUid: fakeUid,
+            ownerEmail: ownerEmail,
             ownerUsername: ownerEmail.split('@')[0].replace('.',' '),
             status: p.status,
             resolvedAt,

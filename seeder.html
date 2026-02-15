@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>Lost Pins – Seeder</title>
+  <style>
+    body{background:#0f1115;color:#d7dce2;font-family:system-ui,sans-serif;padding:24px;max-width:800px;margin:auto}
+    h1{color:#7aa2f7}
+    button{background:#1a2744;border:1px solid #243154;color:#d7dce2;padding:12px 20px;border-radius:8px;cursor:pointer;font-size:15px;margin:4px}
+    button:hover{border-color:#3d5a9e}
+    button:disabled{opacity:.5;cursor:not-allowed}
+    .danger{background:#2b1414;border-color:#4a2626;color:#ffb3b3}
+    #log{background:#111521;border:1px solid #232839;border-radius:8px;padding:12px;margin-top:16px;max-height:500px;overflow:auto;font-size:13px;line-height:1.6;white-space:pre-wrap}
+    .ok{color:#3ac97a} .err{color:#ef5350} .info{color:#7aa2f7} .warn{color:#f1a33c}
+    .status{margin:12px 0;padding:10px;border-radius:8px;border:1px solid #232839}
+  </style>
+</head>
+<body>
+  <h1>🌍 Lost Pins Seeder</h1>
+  <p>Creates realistic pins around the world. Sign in as admin first.</p>
+  <div class="status" id="authStatus">Not signed in</div>
+  <div>
+    <button id="loginBtn">Sign in with Google</button>
+    <button id="seedBtn" disabled>🌱 Seed ~60 Pins</button>
+    <button id="clearBtn" class="danger" disabled>🗑️ Delete ALL seeded pins</button>
+  </div>
+  <div id="log"></div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js';
+    import {
+      getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged
+    } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js';
+    import {
+      getFirestore, collection, doc, getDoc, setDoc, getDocs, deleteDoc,
+      writeBatch, serverTimestamp, query, where
+    } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCVxRVywtfJIV6G55r1se3BoYVjtHxWDFM",
+      authDomain: "fat-fat-cat.firebaseapp.com",
+      projectId: "fat-fat-cat",
+      storageBucket: "fat-fat-cat.firebasestorage.app",
+      messagingSenderId: "409243971382",
+      appId: "1:409243971382:web:646a6858479a9740d04d97"
+    };
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const logEl = document.getElementById('log');
+    const authStatus = document.getElementById('authStatus');
+    const loginBtn = document.getElementById('loginBtn');
+    const seedBtn = document.getElementById('seedBtn');
+    const clearBtn = document.getElementById('clearBtn');
+
+    function log(msg, cls=''){
+      const span = document.createElement('span');
+      span.className = cls;
+      span.textContent = msg + '\n';
+      logEl.appendChild(span);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    let currentUser = null;
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+      if(user){
+        authStatus.textContent = `Signed in as ${user.email}`;
+        authStatus.style.borderColor = '#3ac97a';
+        seedBtn.disabled = false;
+        clearBtn.disabled = false;
+        loginBtn.textContent = 'Signed in ✓';
+        loginBtn.disabled = true;
+      } else {
+        authStatus.textContent = 'Not signed in';
+        authStatus.style.borderColor = '#232839';
+        seedBtn.disabled = true;
+        clearBtn.disabled = true;
+      }
+    });
+
+    loginBtn.onclick = async () => {
+      try {
+        await signInWithPopup(auth, new GoogleAuthProvider());
+      } catch(e) { log('Auth error: ' + e.message, 'err'); }
+    };
+
+    /* ========== REALISTIC PIN DATA ========== */
+
+    const CITIES = [
+      // Americas
+      {city:'New York City',lat:40.7580,lng:-73.9855,country:'USA'},
+      {city:'Los Angeles',lat:34.0522,lng:-118.2437,country:'USA'},
+      {city:'San Francisco',lat:37.7749,lng:-122.4194,country:'USA'},
+      {city:'Chicago',lat:41.8781,lng:-87.6298,country:'USA'},
+      {city:'Miami',lat:25.7617,lng:-80.1918,country:'USA'},
+      {city:'Austin',lat:30.2672,lng:-97.7431,country:'USA'},
+      {city:'Toronto',lat:43.6532,lng:-79.3832,country:'Canada'},
+      {city:'Mexico City',lat:19.4326,lng:-99.1332,country:'Mexico'},
+      {city:'São Paulo',lat:-23.5505,lng:-46.6333,country:'Brazil'},
+      {city:'Buenos Aires',lat:-34.6037,lng:-58.3816,country:'Argentina'},
+      // Europe
+      {city:'London',lat:51.5074,lng:-0.1278,country:'UK'},
+      {city:'Paris',lat:48.8566,lng:2.3522,country:'France'},
+      {city:'Berlin',lat:52.5200,lng:13.4050,country:'Germany'},
+      {city:'Amsterdam',lat:52.3676,lng:4.9041,country:'Netherlands'},
+      {city:'Rome',lat:41.9028,lng:12.4964,country:'Italy'},
+      {city:'Barcelona',lat:41.3874,lng:2.1686,country:'Spain'},
+      {city:'Istanbul',lat:41.0082,lng:28.9784,country:'Turkey'},
+      {city:'Stockholm',lat:59.3293,lng:18.0686,country:'Sweden'},
+      // Middle East
+      {city:'Jeddah',lat:21.4858,lng:39.1925,country:'Saudi Arabia'},
+      {city:'Riyadh',lat:24.7136,lng:46.6753,country:'Saudi Arabia'},
+      {city:'Dubai',lat:25.2048,lng:55.2708,country:'UAE'},
+      {city:'Amman',lat:31.9454,lng:35.9284,country:'Jordan'},
+      // Asia
+      {city:'Tokyo',lat:35.6762,lng:139.6503,country:'Japan'},
+      {city:'Seoul',lat:37.5665,lng:126.9780,country:'South Korea'},
+      {city:'Singapore',lat:1.3521,lng:103.8198,country:'Singapore'},
+      {city:'Bangkok',lat:13.7563,lng:100.5018,country:'Thailand'},
+      {city:'Mumbai',lat:19.0760,lng:72.8777,country:'India'},
+      {city:'Shanghai',lat:31.2304,lng:121.4737,country:'China'},
+      // Africa
+      {city:'Cape Town',lat:-33.9249,lng:18.4241,country:'South Africa'},
+      {city:'Nairobi',lat:-1.2921,lng:36.8219,country:'Kenya'},
+      {city:'Cairo',lat:30.0444,lng:31.2357,country:'Egypt'},
+      // Oceania
+      {city:'Sydney',lat:-33.8688,lng:151.2093,country:'Australia'},
+      {city:'Melbourne',lat:-37.8136,lng:144.9631,country:'Australia'},
+      {city:'Auckland',lat:-36.8485,lng:174.7633,country:'New Zealand'},
+    ];
+
+    const CAT_NAMES = ['Luna','Milo','Oliver','Cleo','Whiskers','Simba','Bella','Shadow','Ginger','Nala','Oreo','Patches','Smokey','Tiger','Mittens','Felix','Cinnamon','Pepper','Daisy','Jasper'];
+    const DOG_NAMES = ['Buddy','Max','Charlie','Cooper','Rocky','Bear','Duke','Tucker','Jack','Sadie','Bailey','Molly','Maggie','Lucy','Daisy','Rosie','Zeus','Rex','Bruno','Scout'];
+    const PET_NAMES = ['Thumper','Nibbles','Coco','Snowball','Sunny','Ziggy','Pip','Kiwi','Mango','Bubbles'];
+    const PET_TYPES = ['rabbit','hamster','parrot','turtle','guinea pig','ferret','cockatiel','chinchilla','iguana','hedgehog'];
+
+    const ITEM_TYPES = ['wallet','phone','backpack','laptop bag','keys','sunglasses','camera','watch','AirPods case','passport holder','ring','bracelet','umbrella','skateboard','bicycle'];
+    const ITEM_COLORS = ['black','brown','red','blue','navy','grey','green','pink','white','silver','gold'];
+
+    const DANGER_TYPES = [
+      {title:'Aggressive stray dog pack',desc:'Pack of 3-4 aggressive stray dogs spotted near the park entrance. They chased a jogger this morning. Animal control has been notified. Please avoid the area especially at dawn and dusk.'},
+      {title:'Open manhole cover',desc:'Missing manhole cover on the sidewalk near the main intersection. Very dangerous at night with poor lighting. City maintenance has been contacted but no ETA on repair.'},
+      {title:'Broken glass on walking path',desc:'Large amount of broken glass scattered across the walking path. Dangerous for pets and children. Please use the alternate route until cleanup is done.'},
+      {title:'Flooding in underpass',desc:'The pedestrian underpass is flooded with ~30cm of standing water after recent rain. Electrical hazard possible. Use the overpass instead.'},
+      {title:'Collapsed fence near cliff edge',desc:'The safety fence along the cliff lookout has collapsed in two sections. Extremely dangerous, especially in windy conditions. Parks department notified.'},
+      {title:'Wasp nest at bus stop',desc:'Large wasp nest under the bus stop shelter roof. Multiple people stung today. Pest control scheduled for tomorrow. Use the next stop for now.'},
+      {title:'Toxic algae bloom in pond',desc:'Green toxic algae bloom in the park pond. Do NOT let pets drink from it — can be fatal to dogs. Warning signs have been requested from the city.'},
+      {title:'Exposed electrical wire',desc:'Exposed electrical wire hanging from a damaged streetlight pole. Sparking intermittently. Keep children and pets away. Emergency services called.'},
+      {title:'Sinkhole forming in parking lot',desc:'A sinkhole roughly 1m wide is forming in the east corner of the parking lot. Area is not cordoned off yet. Reported to city infrastructure.'},
+      {title:'Icy sidewalk - multiple falls',desc:'Black ice on the shaded sidewalk section. At least 3 people have fallen today. No salt/grit has been applied. Walk on the street side carefully.'},
+    ];
+
+    const CAT_BREEDS = ['tabby','Siamese','Persian','Maine Coon','British Shorthair','Bengal','Ragdoll','Sphynx','Russian Blue','orange tabby','tuxedo','calico','tortoiseshell','black domestic shorthair','white longhair'];
+    const DOG_BREEDS = ['Golden Retriever','Labrador','German Shepherd','Beagle','Poodle','Bulldog','Husky','Border Collie','Corgi','Dachshund','Pit Bull mix','Chihuahua','Shiba Inu','Dalmatian','Australian Shepherd'];
+    const CAT_FEATURES = ['green eyes','blue eyes','one ear tipped','pink nose','white paws','notched left ear','bushy tail','no tail (Manx)','heterochromia (two different eye colors)','distinctive black spot on nose'];
+    const DOG_FEATURES = ['red collar','blue harness','no collar','floppy ears','docked tail','limps on front left leg','very friendly','shy around strangers','responds to name','microchipped'];
+
+    const REWARD_AMOUNTS = [null,null,null,50,100,150,200,250,300,500,1000];
+    const CURRENCIES_BY_COUNTRY = {
+      'USA':'USD','Canada':'CAD','Mexico':'MXN','Brazil':'BRL','Argentina':'ARS',
+      'UK':'GBP','France':'EUR','Germany':'EUR','Netherlands':'EUR','Italy':'EUR','Spain':'EUR','Sweden':'SEK',
+      'Turkey':'TRY','Saudi Arabia':'SAR','UAE':'AED','Jordan':'JOD',
+      'Japan':'JPY','South Korea':'KRW','Singapore':'SGD','Thailand':'THB','India':'INR','China':'CNY',
+      'South Africa':'ZAR','Kenya':'KES','Egypt':'EGP',
+      'Australia':'AUD','New Zealand':'NZD'
+    };
+
+    const STATUSES = ['open','open','open','open','open','found','lost'];
+
+    const pick = (arr) => arr[Math.floor(Math.random()*arr.length)];
+    const jitter = (v, range=0.008) => v + (Math.random()-0.5)*2*range;
+    const randId = () => crypto.randomUUID ? crypto.randomUUID() : (Date.now().toString(36)+Math.random().toString(36).slice(2));
+
+    function generateCatPin(city){
+      const name = pick(CAT_NAMES);
+      const breed = pick(CAT_BREEDS);
+      const feature = pick(CAT_FEATURES);
+      const reward = pick(REWARD_AMOUNTS);
+      const currency = CURRENCIES_BY_COUNTRY[city.country]||'USD';
+      const status = pick(STATUSES);
+      const areas = ['near the park','around the shopping district','close to the train station','in the residential area','near the university campus','by the waterfront','around the old town','near the main square'];
+      const area = pick(areas);
+
+      let desc = `${name} is a ${breed}, ${feature}. Last seen ${area} in ${city.city}. `;
+      desc += pick([
+        `${name} is an indoor cat who slipped out through an open window. Very scared of loud noises.`,
+        `Has been missing since ${pick(['Monday','Tuesday','Wednesday','last weekend','3 days ago'])}. Usually comes when called.`,
+        `${name} is elderly (${pick(['12','14','15','16'])} years old) and needs daily medication. Please check garages and sheds.`,
+        `Friendly and may approach strangers for food. Was wearing a ${pick(['red','blue','pink','green'])} collar with a bell.`,
+        `${name} was startled by ${pick(['fireworks','a thunderstorm','construction noise'])} and bolted. Likely hiding nearby.`,
+      ]);
+      if(reward) desc += ` 💰 ${reward} ${currency} reward for safe return!`;
+      desc += ` Please contact if spotted. Do not chase — leave food and water and call us.`;
+
+      return {
+        title: `Missing: ${name} the ${breed}`,
+        description: desc,
+        type: 'lostcat',
+        status,
+        lat: jitter(city.lat),
+        lng: jitter(city.lng),
+      };
+    }
+
+    function generateDogPin(city){
+      const name = pick(DOG_NAMES);
+      const breed = pick(DOG_BREEDS);
+      const feature = pick(DOG_FEATURES);
+      const reward = pick(REWARD_AMOUNTS);
+      const currency = CURRENCIES_BY_COUNTRY[city.country]||'USD';
+      const status = pick(STATUSES);
+      const circumstances = [
+        `${name} slipped out of the leash during a walk`,
+        `Escaped from the backyard through a gap in the fence`,
+        `Ran off during a visit to the dog park`,
+        `Got spooked by a car horn and bolted`,
+        `Jumped out of the car at a rest stop`,
+        `Dug under the garden fence while we were at work`,
+      ];
+
+      let desc = `${name} is a ${breed}, ${feature}. ${pick(circumstances)} in ${city.city}. `;
+      desc += pick([
+        `${name} is very friendly but might be nervous. Weighs about ${pick(['8','12','15','22','30','35','40'])}kg.`,
+        `Needs daily medication for ${pick(['heart condition','thyroid','arthritis','epilepsy'])}. Time-sensitive!`,
+        `${name} is a rescue and may be skittish around new people. Please do not chase.`,
+        `Has a distinctive ${pick(['bark','howl','whimper'])} and ${pick(['loves treats','responds to whistling','knows basic commands'])}. `,
+        `${name} was last seen heading toward ${pick(['the park','the river','the highway','the market area'])}.`,
+      ]);
+      if(reward) desc += ` 💰 ${reward} ${currency} reward — no questions asked!`;
+      desc += ` If found, please secure ${name} and call immediately. Fresh water appreciated.`;
+
+      return {
+        title: `LOST DOG: ${name} (${breed})`,
+        description: desc,
+        type: 'lostdog',
+        status,
+        lat: jitter(city.lat),
+        lng: jitter(city.lng),
+      };
+    }
+
+    function generatePetPin(city){
+      const name = pick(PET_NAMES);
+      const petType = pick(PET_TYPES);
+      const reward = pick(REWARD_AMOUNTS);
+      const currency = CURRENCIES_BY_COUNTRY[city.country]||'USD';
+      const status = pick(STATUSES);
+
+      let desc = `${name} the ${petType} escaped from home in ${city.city}. `;
+      desc += pick([
+        `${name} is a domesticated ${petType} who is not used to being outdoors. Very vulnerable.`,
+        `Was last seen in the garden area. ${name} is hand-tamed and may approach people.`,
+        `Cage was left open accidentally. ${name} is ${pick(['brown','white','grey','spotted','golden'])} colored and about ${pick(['10cm','15cm','20cm','30cm'])} long.`,
+        `${name} is a beloved family pet and our children are devastated. Any sighting helps!`,
+        `This ${petType} needs a specific diet and temperature-controlled environment. Health at risk.`,
+      ]);
+      if(reward) desc += ` 💰 ${reward} ${currency} reward for safe return.`;
+      desc += ` Please handle gently if found — ${petType}s stress easily.`;
+
+      return {
+        title: `Missing ${petType}: ${name}`,
+        description: desc,
+        type: 'lostpet',
+        status,
+        lat: jitter(city.lat),
+        lng: jitter(city.lng),
+      };
+    }
+
+    function generateItemPin(city){
+      const item = pick(ITEM_TYPES);
+      const color = pick(ITEM_COLORS);
+      const reward = pick(REWARD_AMOUNTS);
+      const currency = CURRENCIES_BY_COUNTRY[city.country]||'USD';
+      const status = pick(STATUSES);
+      const locations = ['at a café','on the bus','in a taxi','at the train station','at the airport','in the park','at the gym','at the library','at the mall','at a restaurant'];
+
+      let desc = `Lost my ${color} ${item} ${pick(locations)} in ${city.city}. `;
+      desc += pick([
+        `Contains important ${pick(['documents','personal items','work files','sentimental items'])}. Great sentimental value.`,
+        `Brand: ${pick(['Apple','Samsung','Nike','Samsonite','Coach','Ray-Ban','Canon','Fossil','JBL','Montblanc'])}. ${pick(['Nearly new','Well-worn','Has scratches on the side','Has stickers on it','Has my initials engraved'])}.`,
+        `Left it on ${pick(['a bench','the counter','the seat','the table','the floor'])} and realized ${pick(['10 minutes','30 minutes','an hour','2 hours'])} later. Went back but it was gone.`,
+        `If anyone finds it, please don't try to open/unlock it. Just contact me and I'll verify ownership.`,
+        `This has extreme sentimental value — it was a gift from ${pick(['my late grandmother','my partner','my parents for graduation'])}. Please.`,
+      ]);
+      if(reward) desc += ` 💰 ${reward} ${currency} reward — no questions asked!`;
+      desc += ` Please message if you find it. Thank you! 🙏`;
+
+      return {
+        title: `Lost ${color} ${item}`,
+        description: desc,
+        type: 'lostitem',
+        status,
+        lat: jitter(city.lat),
+        lng: jitter(city.lng),
+      };
+    }
+
+    function generateDangerPin(city){
+      const danger = pick(DANGER_TYPES);
+      return {
+        title: danger.title + ` — ${city.city}`,
+        description: danger.desc + ` Location: ${city.city}, ${city.country}. Please share this with neighbors and local community groups.`,
+        type: 'danger',
+        status: 'open',
+        lat: jitter(city.lat),
+        lng: jitter(city.lng),
+      };
+    }
+
+    /* ========== PHOTO FETCHING ========== */
+
+    async function fetchCatPhoto(){
+      try{
+        const res = await fetch('https://api.thecatapi.com/v1/images/search?size=small');
+        const data = await res.json();
+        if(data[0]?.url) return await urlToBase64(data[0].url);
+      }catch(e){ log('  Cat photo fetch failed, skipping','warn'); }
+      return null;
+    }
+
+    async function fetchDogPhoto(){
+      try{
+        const res = await fetch('https://dog.ceo/api/breeds/image/random');
+        const data = await res.json();
+        if(data?.message) return await urlToBase64(data.message);
+      }catch(e){ log('  Dog photo fetch failed, skipping','warn'); }
+      return null;
+    }
+
+    async function fetchRandomPhoto(){
+      try{
+        return await urlToBase64(`https://picsum.photos/256/256?random=${Math.random()}`);
+      }catch(e){ return null; }
+    }
+
+    async function urlToBase64(url){
+      try{
+        const res = await fetch(url);
+        const blob = await res.blob();
+        return await new Promise((resolve,reject)=>{
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = ()=>{
+            const c = document.createElement('canvas');
+            c.width = c.height = 256;
+            const ctx = c.getContext('2d');
+            const s = Math.min(img.width,img.height);
+            const sx = (img.width-s)/2, sy = (img.height-s)/2;
+            ctx.drawImage(img,sx,sy,s,s,0,0,256,256);
+            resolve(c.toDataURL('image/jpeg',0.85));
+          };
+          img.onerror = ()=>resolve(null);
+          img.src = URL.createObjectURL(blob);
+        });
+      }catch{ return null; }
+    }
+
+    /* ========== FAKE OWNER EMAILS ========== */
+
+    const FAKE_EMAILS = [
+      'sarah.johnson@gmail.com','mike.chen@outlook.com','emma.wilson@yahoo.com',
+      'raj.patel@gmail.com','sofia.garcia@hotmail.com','james.kim@gmail.com',
+      'anna.mueller@web.de','yuki.tanaka@gmail.com','omar.hassan@gmail.com',
+      'lisa.anderson@icloud.com','ahmed.ali@gmail.com','maria.santos@gmail.com',
+      'tom.baker@outlook.com','priya.sharma@gmail.com','lucas.martin@gmail.com',
+      'fatima.khan@yahoo.com','david.lee@gmail.com','nina.popova@mail.ru',
+      'carlos.rodriguez@gmail.com','hana.sato@gmail.com',
+    ];
+
+    /* ========== SEEDER ========== */
+
+    seedBtn.onclick = async () => {
+      if(!currentUser){ log('Not signed in!','err'); return; }
+      seedBtn.disabled = true; clearBtn.disabled = true;
+      log('=== Starting seed ===','info');
+      log(`Signed in as: ${currentUser.email}`,'info');
+
+      const uid = currentUser.uid;
+      const email = currentUser.email.toLowerCase();
+      let created = 0, failed = 0;
+
+      // Generate pin data: ~15 cats, ~15 dogs, ~8 pets, ~12 items, ~10 dangers
+      const pins = [];
+      const usedCities = [...CITIES].sort(()=>Math.random()-0.5);
+
+      // Cats
+      for(let i=0; i<15; i++){
+        const city = usedCities[i % usedCities.length];
+        pins.push({...generateCatPin(city), _needPhoto:'cat', _city:city.city});
+      }
+      // Dogs
+      for(let i=0; i<15; i++){
+        const city = usedCities[(i+5) % usedCities.length];
+        pins.push({...generateDogPin(city), _needPhoto:'dog', _city:city.city});
+      }
+      // Other pets
+      for(let i=0; i<8; i++){
+        const city = usedCities[(i+12) % usedCities.length];
+        pins.push({...generatePetPin(city), _needPhoto:'random', _city:city.city});
+      }
+      // Items
+      for(let i=0; i<12; i++){
+        const city = usedCities[(i+18) % usedCities.length];
+        pins.push({...generateItemPin(city), _needPhoto: Math.random()>0.5?'random':null, _city:city.city});
+      }
+      // Danger
+      for(let i=0; i<10; i++){
+        const city = usedCities[(i+25) % usedCities.length];
+        pins.push({...generateDangerPin(city), _needPhoto:null, _city:city.city});
+      }
+
+      log(`Generated ${pins.length} pin definitions. Fetching photos & writing to Firestore...`,'info');
+
+      for(let i=0; i<pins.length; i++){
+        const p = pins[i];
+        const pinId = randId();
+
+        // Fetch photo
+        let photo = null;
+        if(p._needPhoto === 'cat'){
+          log(`[${i+1}/${pins.length}] 📷 Fetching cat photo for "${p.title}"...`);
+          photo = await fetchCatPhoto();
+        } else if(p._needPhoto === 'dog'){
+          log(`[${i+1}/${pins.length}] 📷 Fetching dog photo for "${p.title}"...`);
+          photo = await fetchDogPhoto();
+        } else if(p._needPhoto === 'random'){
+          log(`[${i+1}/${pins.length}] 📷 Fetching photo for "${p.title}"...`);
+          photo = await fetchRandomPhoto();
+        } else {
+          log(`[${i+1}/${pins.length}] Writing "${p.title}"...`);
+        }
+
+        const ownerEmail = pick(FAKE_EMAILS);
+        const resolvedAt = (p.status==='found'||p.status==='lost') ? serverTimestamp() : null;
+        const resolvedBy = (p.status==='found'||p.status==='lost') ? pick(FAKE_EMAILS) : null;
+
+        try{
+          await setDoc(doc(db,'pins',pinId),{
+            title: p.title,
+            description: p.description,
+            type: p.type,
+            lat: p.lat,
+            lng: p.lng,
+            photo: photo || null,
+            ownerUid: uid,
+            ownerEmail: email,
+            ownerUsername: ownerEmail.split('@')[0].replace('.',' '),
+            status: p.status,
+            resolvedAt,
+            resolvedBy,
+            createdAt: serverTimestamp(),
+            slot: null,
+            _seeded: true,
+          });
+          created++;
+          log(`  ✓ Created in ${p._city}`, 'ok');
+        }catch(e){
+          failed++;
+          log(`  ✗ Failed: ${e.message}`, 'err');
+        }
+
+        // Small delay to avoid rate limits
+        await new Promise(r=>setTimeout(r,300));
+      }
+
+      log(`\n=== Done! Created: ${created}, Failed: ${failed} ===`,'info');
+      seedBtn.disabled = false; clearBtn.disabled = false;
+    };
+
+    /* ========== CLEANER ========== */
+
+    clearBtn.onclick = async () => {
+      if(!currentUser){ log('Not signed in!','err'); return; }
+      if(!confirm('Delete ALL seeded pins (_seeded=true)?')) return;
+      seedBtn.disabled = true; clearBtn.disabled = true;
+      log('=== Deleting seeded pins ===','info');
+
+      try{
+        const q = query(collection(db,'pins'), where('_seeded','==',true));
+        const snap = await getDocs(q);
+        log(`Found ${snap.size} seeded pins`,'info');
+        let count = 0;
+        let batch = writeBatch(db), ops = 0;
+        snap.forEach(d=>{
+          batch.delete(doc(db,'pins',d.id));
+          ops++; count++;
+          if(ops>=450){ batch.commit(); batch=writeBatch(db); ops=0; }
+        });
+        if(ops>0) await batch.commit();
+        log(`Deleted ${count} pins`,'ok');
+      }catch(e){
+        log('Delete error: '+e.message,'err');
+      }
+      seedBtn.disabled = false; clearBtn.disabled = false;
+    };
+  </script>
+</body>
+</html>

@@ -856,8 +856,16 @@
     const provider=new GoogleAuthProvider(); provider.setCustomParameters({prompt:'select_account'});
     googleBtn.onclick=async()=>{
       gateError.textContent='';
-      try{ await signInWithRedirect(auth,provider); }
-      catch(e){ gateError.textContent=e?.code||e?.message||'Google sign‑in failed'; }
+      try{
+        try{ await signInWithPopup(auth,provider); }
+        catch(e){
+          if(e?.code==='auth/popup-blocked'||e?.code==='auth/operation-not-supported-in-this-environment'){
+            await signInWithRedirect(auth,provider);
+          } else if(e?.code==='auth/popup-closed-by-user'){
+            /* user closed it — do nothing */
+          } else { throw e; }
+        }
+      }catch(e){ gateError.textContent=e?.code||e?.message||'Google sign‑in failed'; }
     };
     getRedirectResult(auth).catch(err=>{ gateError.textContent=err?.code||err?.message||'Google sign‑in failed'; });
 

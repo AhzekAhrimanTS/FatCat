@@ -159,11 +159,11 @@
   <div id="gate">
     <div class="card">
       <h2>Lost Pins</h2>
-      <div class="muted">Sign in with Google (KAUST accounts only).</div>
+      <div class="muted">Sign in with Google to continue.</div>
       <div class="stack">
         <label class="consent-row">
           <input type="checkbox" id="consentCheck">
-          <span>I agree to the <a href="#" id="openTermsLink">Terms &amp; Consent</a> and consent to processing my KAUST email for this service.</span>
+          <span>I agree to the <a href="#" id="openTermsLink">Terms &amp; Consent</a> and consent to processing my email for this service.</span>
         </label>
         <button id="googleBtn" class="primary" disabled>Continue with Google</button>
         <div id="gateInfo" class="ok"></div>
@@ -172,7 +172,6 @@
       <div class="gate-foot">
         <small style="opacity:.85">
           Mark your lost pets and items.<br>
-          ONLY KAUST EMAILS ALLOWED FOR ACCOUNTABILITY.<br>
           by Ahzek Ahriman
         </small>
       </div>
@@ -260,16 +259,16 @@
       <h3 id="termsTitle">Terms &amp; Consent</h3>
       <div id="termsNote" class="muted" style="margin:6px 0 8px 0;">Please read carefully.</div>
       <div class="terms-body" id="termsBody" aria-label="Terms">
-        <p><strong>Purpose.</strong> Lost Pins is a community tool to help locate missing pets/items and flag hazards on campus. We process your <em>KAUST email</em> and the content you submit (pins, descriptions, photos).</p>
+        <p><strong>Purpose.</strong> Lost Pins is a community tool to help locate missing pets/items and flag hazards. We process your <em>Google email</em> and the content you submit (pins, descriptions, photos).</p>
         <p><strong>Lawful basis (consent) &amp; transparency.</strong> By agreeing, you consent to processing your personal data for the purposes above. You are informed of what we collect, why, and how we use it, consistent with the Personal Data Protection Law of the Kingdom of Saudi Arabia (PDPL) and its Implementing Regulations. You may withdraw consent at any time (see “Your rights”).</p>
-        <p><strong>What we collect.</strong> (1) KAUST email (required); (2) user‑generated content: pin type, location, title, description, optional photo; (3) service/hosting metadata (e.g., IP/device info) collected by Firebase/Google Cloud for security and reliability.</p>
+        <p><strong>What we collect.</strong> (1) Google email (required); (2) user‑generated content: pin type, location, title, description, optional photo; (3) service/hosting metadata (e.g., IP/device info) collected by Firebase/Google Cloud for security and reliability.</p>
         <p><strong>Use &amp; sharing.</strong> We show pins on the map; moderators may review content for safety and policy compliance. We do not sell personal data. We share data only as necessary with hosting providers or if required by law.</p>
         <p><strong>Cross‑border transfer.</strong> Firebase/Google Cloud may store/process data outside KSA. By agreeing, you consent to such transfers as permitted under the PDPL and its regulations on transfers outside the Kingdom.</p>
         <p><strong>Retention.</strong> We keep data while the service is active and you have an account. We may purge pins older than needed or after 12 months of inactivity. You can delete your pins at any time; you may also request account deletion.</p>
-        <p><strong>Your rights.</strong> Under PDPL, you can request access to, correction of, or deletion of your personal data and may withdraw consent. Contact <a href="mailto:lenatif09@gmail.com">lenatif09@gmail.com</a> to exercise your rights.</p>
+        <p><strong>Your rights.</strong> Under PDPL, you can request access to, correction of, or deletion of your personal data and may withdraw consent. Contact <a href="/cdn-cgi/l/email-protection#f19d949f90859897c1c8b1969c90989ddf929e9c"><span class="__cf_email__" data-cfemail="94f8f1faf5e0fdf2a4add4f3f9f5fdf8baf7fbf9">[email&#160;protected]</span></a> to exercise your rights.</p>
         <p><strong>Age &amp; conduct.</strong> This service is for adults. Do not post illegal, harmful, or unlawful content; do not fundraise or solicit money; do not post personal data of others without permission. We may remove content and suspend accounts for violations.</p>
         <p><strong>Security &amp; breaches.</strong> We use reasonable technical and organizational measures. If a personal‑data incident occurs, we will follow applicable PDPL guidance and notify where required.</p>
-        <p><strong>Contact.</strong> Controller: Lost Pins (community project). Email: <a href="mailto:lenatif09@gmail.com">lenatif09@gmail.com</a>. Governing law: Kingdom of Saudi Arabia. We may update these terms; we will ask you to re‑consent to material changes.</p>
+        <p><strong>Contact.</strong> Controller: Lost Pins (community project). Email: <a href="/cdn-cgi/l/email-protection#066a636867726f60363f46616b676f6a2865696b"><span class="__cf_email__" data-cfemail="b0dcd5ded1c4d9d68089f0d7ddd1d9dc9ed3dfdd">[email&#160;protected]</span></a>. Governing law: Kingdom of Saudi Arabia. We may update these terms; we will ask you to re‑consent to material changes.</p>
       </div>
       <div class="row" style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
         <button id="closeTermsBtn">Cancel</button>
@@ -331,7 +330,7 @@
   </div>
 
   <!-- Firebase + App -->
-  <script type="module">
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="module">
     /* ---------- Firebase SDKs ---------- */
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js';
     import {
@@ -377,8 +376,7 @@
     /* ---------- Owner/domain gate ---------- */
     const OWNER_EMAIL = 'lenatif09@gmail.com';
     const isAllowedEmail = (email) => {
-      const e=(email||'').toLowerCase();
-      return e===OWNER_EMAIL.toLowerCase() || /@kaust\.edu\.sa$/i.test(e);
+      return !!(email && email.trim());
     };
 
     /* ---------- Terms ---------- */
@@ -422,9 +420,18 @@
     /* ---------- Map ---------- */
     const VIEW_KEY='pinboard.mapview.v5';
     const savedView=JSON.parse(localStorage.getItem(VIEW_KEY)||"null");
-    const map=L.map('map',{center:savedView?[savedView.lat,savedView.lng]:[22.3088,39.1046],zoom:savedView?Math.max(1,Math.min(19,savedView.zoom|0)):15,worldCopyJump:true});
+    const map=L.map('map',{center:savedView?[savedView.lat,savedView.lng]:[20,0],zoom:savedView?Math.max(1,Math.min(19,savedView.zoom|0)):2,worldCopyJump:true});
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
     map.on('moveend',()=>{const c=map.getCenter();localStorage.setItem(VIEW_KEY,JSON.stringify({lat:c.lat,lng:c.lng,zoom:map.getZoom()}));});
+
+    /* Auto-locate on first visit (no saved view) */
+    if(!savedView && navigator.geolocation){
+      navigator.geolocation.getCurrentPosition(
+        (pos)=>{ map.flyTo([pos.coords.latitude,pos.coords.longitude],14,{duration:1.2}); },
+        ()=>{/* denied or error — stay at world view */},
+        {enableHighAccuracy:true,timeout:10000,maximumAge:300000}
+      );
+    }
 
     /* ---------- Types & helpers ---------- */
     const TYPES=['lostcat','lostdog','lostpet','lostitem','danger'];
@@ -852,7 +859,7 @@
     closeTermsBtn.onclick=()=>{ termsModal.hidden=true; };
 
     /* ---------- Google sign-in ---------- */
-    const provider=new GoogleAuthProvider(); provider.setCustomParameters({prompt:'select_account',hd:'kaust.edu.sa'});
+    const provider=new GoogleAuthProvider(); provider.setCustomParameters({prompt:'select_account'});
     googleBtn.onclick=async()=>{
       gateError.textContent='';
       if(!consentCheck.checked){ gateError.textContent='Please tick the “I agree” checkbox to continue.'; return; }
@@ -878,7 +885,7 @@
         document.body.classList.remove('auth'); whoami.textContent=''; whoamiTop.textContent='';
         return;
       }
-      if(!isAllowedEmail(user.email)){ gateError.innerHTML=`This account (<b>${user.email}</b>) isn’t allowed. Use your KAUST account.`; await signOut(auth); return; }
+      if(!isAllowedEmail(user.email)){ gateError.innerHTML=`This account (<b>${user.email}</b>) isn’t allowed.`; await signOut(auth); return; }
 
       // Unlock UI immediately
       document.body.classList.add('auth'); whoami.textContent=user.email; whoamiTop.textContent=user.email;
@@ -924,13 +931,4 @@
 
       // presence heartbeat
       try{ await updateDoc(doc(db,'users',user.uid),{lastActiveAt:serverTimestamp()}); }catch{}
-      state.hbTimer=setInterval(async()=>{ try{ await updateDoc(doc(db,'users',user.uid),{lastActiveAt:serverTimestamp()}); }catch{} },60000);
-      window.addEventListener('visibilitychange',async()=>{ if(document.visibilityState==='visible'){ try{ await updateDoc(doc(db,'users',user.uid),{lastActiveAt:serverTimestamp()}); }catch{} } });
-
-      // start data
-      startPinsFeed();
-      if(state.isAdmin||state.isMod) startUsersFeed();
-    }
-  </script>
-</body>
-</html>
+      state.hbTimer=setInterval(async()=>{ try{ await updateDoc(doc(db,'users',user.uid),{lastAc

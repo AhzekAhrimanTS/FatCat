@@ -845,16 +845,18 @@
     closeTermsBtn.onclick=()=>{ termsModal.hidden=true; };
 
     /* ---------- Google sign-in ---------- */
-    const provider=new GoogleAuthProvider(); provider.setCustomParameters({prompt:'select_account',hd:'kaust.edu.sa'});
+    const provider=new GoogleAuthProvider(); provider.setCustomParameters({prompt:'select_account'});
     googleBtn.onclick=async()=>{
+      console.log('[DEBUG] Google button clicked');
       gateError.textContent='';
       try{
-        try{ await signInWithPopup(auth,provider); }
+        try{ console.log('[DEBUG] Attempting signInWithPopup…'); await signInWithPopup(auth,provider); console.log('[DEBUG] signInWithPopup succeeded'); }
         catch(e){
+          console.log('[DEBUG] signInWithPopup error:', e?.code, e?.message);
           if(e?.code==='auth/operation-not-supported-in-this-environment'||e?.code==='auth/popup-blocked'||e?.code==='auth/popup-closed-by-user'){ await signInWithRedirect(auth,provider); }
           else{ throw e; }
         }
-      }catch(e){ gateError.textContent=e?.code||e?.message||'Google sign‑in failed'; }
+      }catch(e){ console.error('[DEBUG] Sign-in failed:', e); gateError.textContent=e?.code||e?.message||'Google sign‑in failed'; }
     };
     getRedirectResult(auth).catch(err=>{ gateError.textContent=err?.code||err?.message||'Google sign‑in failed'; });
 

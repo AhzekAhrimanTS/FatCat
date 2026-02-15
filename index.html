@@ -933,6 +933,15 @@
       // start data
       startPinsFeed();
       if(state.isAdmin||state.isMod) startUsersFeed();
+
+      // Auto-locate on login
+      if(navigator.geolocation){
+        navigator.geolocation.getCurrentPosition(
+          (pos)=>{ map.flyTo([pos.coords.latitude,pos.coords.longitude],14,{duration:1.2}); },
+          ()=>{},
+          {enableHighAccuracy:true,timeout:10000,maximumAge:300000}
+        );
+      }
     }
   </script>
 </body>

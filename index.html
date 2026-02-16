@@ -783,6 +783,7 @@
     function setMode(type){
       if(state.isBanned && !state.isAdmin && !state.isMod){ alert('You are banned and cannot create pins.'); return; }
       state.activeType=(state.activeType===type)?null:type;
+      localStorage.setItem('lostpins_mode',state.activeType||'');
       updateModeUI();
     }
     function updateModeUI(){
@@ -1339,10 +1340,28 @@ ${loc.contact?`
           timeFilter.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
           btn.classList.add('active');
           state.filterHours=parseInt(btn.dataset.hours)||0;
+          localStorage.setItem('lostpins_filter',state.filterHours);
           applyTimeFilter();
         };
       });
     }
+
+    /* ---------- Restore saved UI prefs ---------- */
+    (function restorePrefs(){
+      // Active pin type
+      const savedMode=localStorage.getItem('lostpins_mode');
+      if(savedMode && TYPES.includes(savedMode)){ state.activeType=savedMode; updateModeUI(); }
+      // Time filter
+      const savedFilter=localStorage.getItem('lostpins_filter');
+      if(savedFilter!=null){
+        state.filterHours=parseInt(savedFilter)||0;
+        if(timeFilter){
+          timeFilter.querySelectorAll('button').forEach(b=>{
+            b.classList.toggle('active',String(parseInt(b.dataset.hours)||0)===String(state.filterHours));
+          });
+        }
+      }
+    })();
 
     /* ---------- Deep link (?pin=ID) ---------- */
     function checkDeepLink(){

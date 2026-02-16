@@ -153,6 +153,50 @@
     /* In-app browser warning */
     #inAppWarning{display:none;position:fixed;bottom:64px;left:0;right:0;z-index:1300;background:#2b1414;color:#ffb3b3;border-top:1px solid #4a2626;padding:10px 12px;font-size:14px}
     .leaflet-container{background:#0c0f15}
+
+    /* Time filter */
+    .time-filter{display:flex;gap:6px;flex-wrap:wrap;grid-column:1/-1}
+    .time-filter button{font-size:12px;padding:6px 10px}
+    .time-filter button.active{background:#1a2744;border-color:#3d5a9e;color:#7aa2f7}
+
+    /* Reward badge */
+    .reward-badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;
+      background:rgba(241,196,60,.12);color:#ffe08a;border:1px solid rgba(241,196,60,.3)}
+
+    /* Contact pill */
+    .contact-pill{display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:3px 8px;
+      border-radius:999px;background:rgba(58,201,122,.1);color:#bdf2d8;border:1px solid rgba(58,201,122,.25);cursor:pointer;text-decoration:none}
+    .contact-pill:hover{background:rgba(58,201,122,.2)}
+
+    /* Share / sighting buttons in popup */
+    .popup-action{display:inline-block;font-size:12px;padding:4px 10px;border-radius:6px;
+      border:1px solid var(--border);background:#171d2b;color:var(--fg);cursor:pointer;text-decoration:none}
+    .popup-action:hover{border-color:#3d5a9e}
+    .popup-action.share{border-color:rgba(122,162,247,.3);color:#bdd6ff}
+    .popup-action.sight{border-color:rgba(241,163,60,.3);color:#ffd49a}
+    .popup-action.flyer{border-color:rgba(187,154,247,.3);color:#d2bfff}
+
+    /* Language toggle */
+    .lang-toggle{position:fixed;bottom:16px;right:16px;z-index:9999;background:#1a2744;color:#7aa2f7;
+      border:1px solid #3d5a9e;border-radius:999px;padding:6px 14px;font-size:13px;cursor:pointer;
+      font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+    .lang-toggle:hover{background:#243555}
+    [dir="rtl"] .sidebar{direction:rtl;text-align:right}
+    [dir="rtl"] .controls input{text-align:right}
+    [dir="rtl"] .type-group{direction:rtl}
+    [dir="rtl"] .lang-toggle{right:auto;left:16px}
+
+    /* Notification bell */
+    .notif-toggle{background:none;border:1px solid var(--border);border-radius:8px;padding:4px 10px;
+      font-size:16px;cursor:pointer;color:var(--muted)}
+    .notif-toggle.active{color:#f7b955;border-color:rgba(247,185,85,.4)}
+    .notif-radius{font-size:11px;color:var(--muted);margin-top:2px}
+    .notif-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+
+    /* Sightings list in popup */
+    .sightings-list{margin-top:6px;max-height:120px;overflow:auto}
+    .sighting-item{font-size:11px;color:var(--muted);padding:3px 0;border-bottom:1px dashed rgba(255,255,255,.06)}
+    .sighting-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--cat);margin-right:4px;vertical-align:middle}
   </style>
 </head>
 <body>
@@ -200,6 +244,23 @@
           <button id="modePetBtn"   class="mode-btn pet"><span class="dot"></span>Lost Pet</button>
           <button id="modeItemBtn"  class="mode-btn item"><span class="dot"></span>Lost Item</button>
           <button id="modeDangerBtn" class="mode-btn dang"><span class="dot"></span>Danger</button>
+        </div>
+        <div class="time-filter" id="timeFilter">
+          <button data-hours="24">Last 24h</button>
+          <button data-hours="168">This week</button>
+          <button data-hours="720">This month</button>
+          <button data-hours="0" class="active">All time</button>
+        </div>
+        <div class="notif-row">
+          <button id="notifToggle" class="notif-toggle" title="Get alerts for new pins nearby">🔔 Alerts: Off</button>
+          <select id="notifRadius" style="font-size:12px;padding:4px;background:var(--panel);color:var(--fg);border:1px solid var(--border);border-radius:6px">
+            <option value="2">2 km</option>
+            <option value="5" selected>5 km</option>
+            <option value="10">10 km</option>
+            <option value="25">25 km</option>
+            <option value="50">50 km</option>
+            <option value="0">Any distance</option>
+          </select>
         </div>
       </div>
       <ul id="locationList"></ul>
@@ -312,11 +373,40 @@
           <label for="descInput">Description</label>
           <textarea id="descInput" placeholder="Notes, directions, etc."></textarea>
         </div>
+        <div>
+          <label for="contactInput">Contact (phone/WhatsApp)</label>
+          <input id="contactInput" type="text" placeholder="+966 5x xxx xxxx" />
+        </div>
+        <div>
+          <label for="rewardInput">Reward (optional)</label>
+          <input id="rewardInput" type="text" placeholder="e.g. 500 SAR" />
+        </div>
         <div class="mini-note">Photos are auto-cropped to square and compressed.</div>
       </div>
       <div class="row">
         <button id="cancelBtn">Cancel</button>
         <button id="saveBtn" class="primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Language Toggle -->
+  <button id="langToggle" class="lang-toggle">عربي</button>
+
+  <!-- Sighting Modal -->
+  <div id="sightingModal" class="modal-backdrop" hidden>
+    <div class="modal">
+      <h3>Report a Sighting</h3>
+      <div class="f">
+        <div style="grid-column:1/-1">
+          <label for="sightingNote">What did you see?</label>
+          <textarea id="sightingNote" placeholder="e.g. Saw a cat matching description near the park fountain, heading east"></textarea>
+        </div>
+        <div class="mini-note">Your current location will be recorded. This helps build a sighting trail on the map.</div>
+      </div>
+      <div class="row" style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+        <button id="cancelSightingBtn">Cancel</button>
+        <button id="saveSightingBtn" class="primary">Submit Sighting</button>
       </div>
     </div>
   </div>
@@ -404,6 +494,10 @@
       titleInput=$('titleInput'), descInput=$('descInput'), coordsInput=$('coordsInput'),
       photoInput=$('photoInput'), photoPreview=$('photoPreview'), removePhotoBtn=$('removePhotoBtn'),
       cancelBtn=$('cancelBtn'), saveBtn=$('saveBtn'), typeGroup=$('typeGroup'), typePreview=$('typePreview');
+    const contactInput=$('contactInput'), rewardInput=$('rewardInput');
+    const sightingModal=$('sightingModal'), sightingNote=$('sightingNote'),
+      cancelSightingBtn=$('cancelSightingBtn'), saveSightingBtn=$('saveSightingBtn');
+    const timeFilter=$('timeFilter');
 
     const pinHint=$('pinHint');
 
@@ -435,17 +529,123 @@
     const TYPES=['lostcat','lostdog','lostpet','lostitem','danger'];
     const TYPE_LABEL={lostcat:'Lost Cat',lostdog:'Lost Dog',lostpet:'Lost Pet',lostitem:'Lost Item',danger:'Danger'};
     const glyphForType=(t)=>t==='danger'?'⚠️':t==='lostdog'?'🐶':t==='lostpet'?'🐾':t==='lostitem'?'❓':'🐱';
-    const typeName=(t)=>TYPE_LABEL[t]||'Unknown';
+    const typeName=(tp)=>{ const m={lostcat:'lostCat',lostdog:'lostDog',lostpet:'lostPet',lostitem:'lostItem',danger:'danger'}; return m[tp]?t(m[tp]):(TYPE_LABEL[tp]||'Unknown'); };
     const typeClass=(t)=>({lostcat:'cat',lostdog:'dog',lostpet:'pet',lostitem:'item',danger:'danger'}[t]||'cat');
     const SLOT_IDS=['s1','s2','s3','s4','s5'];
     const fmt=(n)=>Number(n).toFixed(6);
     const fmtLatLng=(loc)=>`${fmt(loc.lat)}, ${fmt(loc.lng)}`;
     const escapeHtml=(s)=>String(s).replace(/[&<>"']/g,(m)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
-    const statusLabel = (s) => s==='found' ? 'Found' : s==='lost' ? 'Lost' : 'Open';
+    const statusLabel = (s) => s==='found' ? t('statusFound') : s==='lost' ? t('statusLost') : t('statusOpen');
     const statusClass = (s) => s==='found' ? 'status-found' : s==='lost' ? 'status-lost' : 'status-open';
 
     /* ---------- State ---------- */
-    const state={activeType:null,markers:new Map(),locations:[],draftLatLng:null,draftPhoto:null,editingId:null,saving:false,pendingPinId:null,isAdmin:false,isMod:false,isBanned:false,users:[],hbTimer:null};
+    const state={activeType:null,markers:new Map(),locations:[],draftLatLng:null,draftPhoto:null,editingId:null,saving:false,pendingPinId:null,isAdmin:false,isMod:false,isBanned:false,users:[],hbTimer:null,filterHours:0,sightingPinId:null,lang:'en'};
+
+    /* ---------- i18n ---------- */
+    const i18n={
+      en:{
+        appTitle:'Lost Pins',signIn:'Sign in with Google to continue',signOut:'Sign out',
+        search:'Search a place (e.g., Jeddah, London)',searchBtn:'Search',locateMe:'Locate me',
+        deleteAll:'Delete All Pins (mine)',users:'Users',
+        lostCat:'Lost Cat',lostDog:'Lost Dog',lostPet:'Lost Pet',lostItem:'Lost Item',danger:'Danger',
+        last24h:'Last 24h',thisWeek:'This week',thisMonth:'This month',allTime:'All time',
+        newLocation:'New location',editLocation:'Edit location',title:'Title',coordinates:'Coordinates',
+        pinType:'Pin type',photo:'Photo (optional)',uploadPhoto:'Upload photo',removePhoto:'Remove photo',
+        description:'Description',descPlaceholder:'Notes, directions, etc.',
+        contact:'Contact (phone/WhatsApp)',contactPlaceholder:'+966 5x xxx xxxx',
+        reward:'Reward (optional)',rewardPlaceholder:'e.g. 500 SAR',
+        cancel:'Cancel',save:'Save',saving:'Saving…',
+        noLocations:'No locations yet. Pick a type, then tap the map.',
+        miniNote:'Photos are auto-cropped to square and compressed.',
+        sightingTitle:'Report a Sighting',sightingPlaceholder:'e.g. Saw a cat matching description near the park fountain',
+        sightingNote:'Your current location will be recorded.',submitSighting:'Submit Sighting',
+        shareWA:'📤 WhatsApp',shareTweet:'🐦 Tweet',copyLink:'🔗 Copy Link',
+        spotted:'👁️ I Spotted This',printFlyer:'🖨️ Print Flyer',
+        markFound:'Mark Found',markLost:'Mark Lost',reopen:'Reopen',edit:'Edit',delete:'Delete',
+        view:'View',share:'📤 Share',copied:'✓ Copied!',
+        sightings:'sighting',sightingsPlural:'sightings',noSightings:'No sightings yet',
+        loginTitle:'Lost Pins',loginSubtitle:'Sign in with Google to continue',
+        langToggle:'عربي',termsTitle:'Terms & Consent',
+        statusOpen:'Open',statusFound:'Found',statusLost:'Lost'
+      },
+      ar:{
+        appTitle:'دبابيس مفقودة',signIn:'سجّل دخولك بحساب Google للمتابعة',signOut:'تسجيل خروج',
+        search:'ابحث عن مكان (مثلاً: جدة، الرياض)',searchBtn:'بحث',locateMe:'حدد موقعي',
+        deleteAll:'حذف كل دبابيسي',users:'المستخدمون',
+        lostCat:'قطة مفقودة',lostDog:'كلب مفقود',lostPet:'حيوان مفقود',lostItem:'غرض مفقود',danger:'خطر',
+        last24h:'آخر ٢٤ ساعة',thisWeek:'هذا الأسبوع',thisMonth:'هذا الشهر',allTime:'كل الوقت',
+        newLocation:'موقع جديد',editLocation:'تعديل الموقع',title:'العنوان',coordinates:'الإحداثيات',
+        pinType:'نوع الدبوس',photo:'صورة (اختياري)',uploadPhoto:'رفع صورة',removePhoto:'إزالة الصورة',
+        description:'الوصف',descPlaceholder:'ملاحظات، اتجاهات، إلخ.',
+        contact:'التواصل (هاتف/واتساب)',contactPlaceholder:'+966 5x xxx xxxx',
+        reward:'مكافأة (اختياري)',rewardPlaceholder:'مثلاً: ٥٠٠ ريال',
+        cancel:'إلغاء',save:'حفظ',saving:'جارٍ الحفظ…',
+        noLocations:'لا توجد مواقع بعد. اختر نوعاً ثم انقر على الخريطة.',
+        miniNote:'يتم قص الصور تلقائياً وضغطها.',
+        sightingTitle:'الإبلاغ عن مشاهدة',sightingPlaceholder:'مثلاً: شاهدت قطة مشابهة للوصف بالقرب من نافورة الحديقة',
+        sightingNote:'سيتم تسجيل موقعك الحالي.',submitSighting:'إرسال المشاهدة',
+        shareWA:'📤 واتساب',shareTweet:'🐦 تغريدة',copyLink:'🔗 نسخ الرابط',
+        spotted:'👁️ شاهدت هذا',printFlyer:'🖨️ طباعة منشور',
+        markFound:'وُجد',markLost:'مفقود',reopen:'إعادة فتح',edit:'تعديل',delete:'حذف',
+        view:'عرض',share:'📤 مشاركة',copied:'✓ تم النسخ!',
+        sightings:'مشاهدة',sightingsPlural:'مشاهدات',noSightings:'لا توجد مشاهدات بعد',
+        loginTitle:'دبابيس مفقودة',loginSubtitle:'سجّل دخولك بحساب Google للمتابعة',
+        langToggle:'English',termsTitle:'الشروط والموافقة',
+        statusOpen:'مفتوح',statusFound:'وُجد',statusLost:'مفقود'
+      }
+    };
+    function t(key){ return i18n[state.lang]?.[key]||i18n.en[key]||key; }
+    function applyLang(){
+      const lang=state.lang; const isRtl=lang==='ar';
+      document.documentElement.dir=isRtl?'rtl':'ltr';
+      document.documentElement.lang=lang;
+      // Toggle button
+      const langBtn=$('langToggle'); if(langBtn) langBtn.textContent=t('langToggle');
+      // Header
+      const titleEl=document.querySelector('.title'); if(titleEl) titleEl.textContent=t('appTitle');
+      // Login screen
+      const loginTitle=document.querySelector('#loginScreen h2'); if(loginTitle) loginTitle.textContent=t('loginTitle');
+      const loginSub=document.querySelector('#loginScreen p'); if(loginSub) loginSub.textContent=t('loginSubtitle');
+      const loginBtn=document.querySelector('#loginBtn'); if(loginBtn) loginBtn.textContent=t('signIn');
+      // Sidebar controls
+      const si=$('searchInput'); if(si) si.placeholder=t('search');
+      const sb=$('searchBtn'); if(sb) sb.textContent=t('searchBtn');
+      const lb=$('locateBtn'); if(lb) lb.textContent=t('locateMe');
+      const da=$('deleteAllBtn'); if(da) da.textContent=t('deleteAll');
+      const ub=$('openUsersBtn'); if(ub) ub.textContent=t('users');
+      const lo=$('logoutBtn'); if(lo) lo.textContent=t('signOut');
+      // Mode buttons
+      const modes=[['modeCatBtn','lostCat'],['modeDogBtn','lostDog'],['modePetBtn','lostPet'],['modeItemBtn','lostItem'],['modeDangerBtn','danger']];
+      modes.forEach(([id,key])=>{ const b=$(id); if(b){ const dot=b.querySelector('.dot'); b.textContent=''; if(dot)b.appendChild(dot); b.append(t(key)); }});
+      // Time filter
+      const tfBtns=timeFilter?.querySelectorAll('button');
+      if(tfBtns){ const keys=['last24h','thisWeek','thisMonth','allTime']; tfBtns.forEach((b,i)=>{ if(keys[i]) b.textContent=t(keys[i]); }); }
+      // Pin modal
+      const labels={'titleInput':t('title'),'coordsInput':t('coordinates'),'descInput':t('description'),'contactInput':t('contact'),'rewardInput':t('reward')};
+      Object.entries(labels).forEach(([id,lbl])=>{ const el=$(id); if(el){ const label=el.previousElementSibling||el.closest('div')?.querySelector('label'); if(label&&label.tagName==='LABEL') label.textContent=lbl; }});
+      const di=$('descInput'); if(di) di.placeholder=t('descPlaceholder');
+      const ci=$('contactInput'); if(ci) ci.placeholder=t('contactPlaceholder');
+      const ri=$('rewardInput'); if(ri) ri.placeholder=t('rewardPlaceholder');
+      cancelBtn.textContent=t('cancel'); saveBtn.textContent=state.saving?t('saving'):t('save');
+      // Sighting modal
+      const st=document.querySelector('#sightingModal h3'); if(st) st.textContent=t('sightingTitle');
+      if(sightingNote) sightingNote.placeholder=t('sightingPlaceholder');
+      cancelSightingBtn.textContent=t('cancel');
+      saveSightingBtn.textContent=t('submitSighting');
+      // Re-render list
+      renderList();
+    }
+    // Lang toggle
+    const langToggle=$('langToggle');
+    if(langToggle) langToggle.onclick=()=>{
+      state.lang=state.lang==='en'?'ar':'en';
+      localStorage.setItem('lostpins_lang',state.lang);
+      applyLang();
+    };
+    // Restore saved lang
+    const savedLang=localStorage.getItem('lostpins_lang');
+    if(savedLang&&i18n[savedLang]) state.lang=savedLang;
+    applyLang();
     const clampZoom=(z)=>Math.max(1,Math.min(19,z|0));
 
     /* ---------- Search & locate ---------- */
@@ -534,6 +734,7 @@
       setPhotoPreview(null); setSaving(false);
       modalTitle.textContent='New location';
       titleInput.value=''; descInput.value=''; coordsInput.value=`${fmt(latlng.lat)}, ${fmt(latlng.lng)}`;
+      contactInput.value=''; rewardInput.value='';
       const t=state.activeType||'lostcat';
       const r=document.querySelector(`input[name="pinType"][value="${t}"]`); if(r) r.checked=true;
       typeGroup.style.display='none'; typePreview.textContent='Pin type: '+typeName(t);
@@ -544,6 +745,7 @@
       if(!canEditLoc(loc)) return alert('You can edit only your own pins (or be mod/admin).');
       state.editingId=id; state.draftLatLng={lat:loc.lat,lng:loc.lng}; setPhotoPreview(loc.photo||null);
       modalTitle.textContent='Edit location'; titleInput.value=loc.title||''; descInput.value=loc.description||''; coordsInput.value=`${fmt(loc.lat)}, ${fmt(loc.lng)}`;
+      contactInput.value=loc.contact||''; rewardInput.value=loc.reward||'';
       const r=document.querySelector(`input[name="pinType"][value="${loc.type}"]`); if(r) r.checked=true;
       if(state.isAdmin){ typeGroup.style.display='flex'; typePreview.textContent=''; }
       else { typeGroup.style.display='none'; typePreview.textContent='Pin type: '+typeName(loc.type); }
@@ -574,7 +776,7 @@
     }
 
     /* ---------- CRUD & Resolve ---------- */
-    async function createPin({id,title,description,type,lat,lng,photo}){
+    async function createPin({id,title,description,type,lat,lng,photo,contact,reward}){
       const user=auth.currentUser; if(!user) return;
       const uid=user.uid; const email=(user.email||'').toLowerCase();
       const privileged=state.isAdmin||state.isMod;
@@ -588,6 +790,7 @@
       }
       batch.set(doc(db,'pins',pinId),{
         title,description,type,lat,lng,photo:photo||null,
+        contact:contact||null,reward:reward||null,
         ownerUid:uid,ownerEmail:email,ownerUsername:user.displayName||email.split('@')[0],
         status:'open',resolvedAt:null,resolvedBy:null,
         createdAt:serverTimestamp(),slot:slot||null
@@ -605,8 +808,8 @@
       await updateDoc(doc(db,'pins',id), patch);
     }
 
-    async function updatePin(id,{title,description,lat,lng,photo,type}){
-      const patch={title,description,lat,lng,photo:photo||null};
+    async function updatePin(id,{title,description,lat,lng,photo,type,contact,reward}){
+      const patch={title,description,lat,lng,photo:photo||null,contact:contact||null,reward:reward||null};
       if(state.isAdmin && type && TYPES.includes(type)) patch.type=type;
       await updateDoc(doc(db,'pins',id),patch);
     }
@@ -636,6 +839,8 @@
       setSaving(true);
       const title=titleInput.value.trim()||'(untitled)';
       const description=descInput.value.trim();
+      const contact=contactInput.value.trim();
+      const reward=rewardInput.value.trim();
       if(!state.draftLatLng){ closePinModal(); return; }
       try{
         if(state.editingId){
@@ -644,10 +849,10 @@
             const r=document.querySelector('input[name="pinType"]:checked')?.value;
             if(TYPES.includes(r)) newType=r;
           }
-          await updatePin(state.editingId,{title,description,lat:state.draftLatLng.lat,lng:state.draftLatLng.lng,photo:state.draftPhoto,type:newType});
+          await updatePin(state.editingId,{title,description,lat:state.draftLatLng.lat,lng:state.draftLatLng.lng,photo:state.draftPhoto,type:newType,contact,reward});
         }else{
           if(!state.activeType){ alert('Select a pin type first.'); setSaving(false); return; }
-          await createPin({id:state.pendingPinId,title,description,type:state.activeType,lat:state.draftLatLng.lat,lng:state.draftLatLng.lng,photo:state.draftPhoto});
+          await createPin({id:state.pendingPinId,title,description,type:state.activeType,lat:state.draftLatLng.lat,lng:state.draftLatLng.lng,photo:state.draftPhoto,contact,reward});
         }
         closePinModal();
       }catch(e){ alert(e?.message||'Save failed (rules/quota).'); setSaving(false); }
@@ -669,15 +874,29 @@
         acts.push(`<a href="#" data-action="edit" data-id="${loc.id}">Edit</a>`);
         acts.push(`<a href="#" data-action="delete" data-id="${loc.id}" style="color:#ffb3b3">Delete</a>`);
       }
-      return `<div style="min-width:240px">${img}
+
+      const contactHtml=loc.contact?`<div style="margin:6px 0"><a class="contact-pill" href="https://wa.me/${loc.contact.replace(/[^0-9+]/g,'')}" target="_blank" rel="noopener">📱 ${escapeHtml(loc.contact)}</a></div>`:'';
+      const rewardHtml=loc.reward?`<div style="margin:4px 0"><span class="reward-badge">💰 Reward: ${escapeHtml(loc.reward)}</span></div>`:'';
+      const shareUrl=`${location.origin}${location.pathname}?pin=${loc.id}`;
+      const shareText=encodeURIComponent(`${loc.title} — Lost Pins\n${shareUrl}`);
+
+      return `<div style="min-width:260px;max-width:320px">${img}
         <div style="font-weight:600;font-size:15px;margin-bottom:4px">${escapeHtml(loc.title||'(untitled)')}</div>
         ${who?`<div style="font-size:12px;margin-bottom:4px"><span style="background:rgba(122,162,247,.12);color:#bdd6ff;padding:2px 7px;border-radius:999px;border:1px solid rgba(122,162,247,.2)">👤 ${escapeHtml(who)}</span></div>`:''}
         <div style="color:#9aa3ad;font-size:12px;margin-bottom:6px">
           ${typeName(loc.type)} · <span class="status-pill ${statusClass(loc.status)}">${statusLabel(loc.status)}</span>
-          · <span class="status-pill ${statusClass(loc.status)}">${statusLabel(loc.status)}</span>
         </div>
-        ${loc.description?`<div style="white-space:pre-wrap;margin-bottom:8px">${escapeHtml(loc.description)}</div>`:''}
-        ${acts.length?`<div style="display:flex;gap:8px;flex-wrap:wrap">${acts.join(' ')}</div>`:''}
+        ${rewardHtml}${contactHtml}
+        ${loc.description?`<div style="white-space:pre-wrap;margin-bottom:8px;font-size:13px">${escapeHtml(loc.description)}</div>`:''}
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+          <a class="popup-action share" href="https://wa.me/?text=${shareText}" target="_blank" rel="noopener">📤 WhatsApp</a>
+          <a class="popup-action share" href="https://twitter.com/intent/tweet?text=${shareText}" target="_blank" rel="noopener">🐦 Tweet</a>
+          <a class="popup-action share" href="#" data-action="copylink" data-url="${escapeHtml(shareUrl)}">🔗 Copy Link</a>
+          <a class="popup-action sight" href="#" data-action="sighting" data-id="${loc.id}">👁️ I Spotted This</a>
+          <a class="popup-action flyer" href="#" data-action="flyer" data-id="${loc.id}">🖨️ Print Flyer</a>
+        </div>
+        <div id="sightings-${loc.id}" class="sightings-list"></div>
+        ${acts.length?`<div style="display:flex;gap:8px;flex-wrap:wrap;border-top:1px dashed rgba(255,255,255,.08);padding-top:6px">${acts.join(' ')}</div>`:''}
       </div>`;
     }
     function tooltipHtml(loc){
@@ -711,9 +930,14 @@
               if(act==='found') await setPinStatus(id,'found');
               if(act==='lost') await setPinStatus(id,'lost');
               if(act==='reopen') await setPinStatus(id,'open');
+              if(act==='copylink'){ const url=a.getAttribute('data-url'); await navigator.clipboard?.writeText(url); a.textContent='✓ Copied!'; setTimeout(()=>{a.textContent='🔗 Copy Link';},1500); }
+              if(act==='sighting'){ state.sightingPinId=id; sightingNote.value=''; sightingModal.hidden=false; }
+              if(act==='flyer'){ generateFlyer(id); }
             }catch(e){ alert(e?.message||'Update failed.'); }
           });
         });
+        // Load sightings
+        loadSightings(loc.id);
       });
       m.addTo(map); state.markers.set(loc.id,m);
     }
@@ -732,13 +956,14 @@
     function renderList(){
       const list=$('locationList'); if(!list) return;
       list.innerHTML='';
-      if(!state.locations.length){
+      const filtered=state.locations.filter(loc=>isVisibleByFilter(loc));
+      if(!filtered.length){
         const li=document.createElement('li'); li.className='loc';
         li.innerHTML='<div class="title-row"><div class="title-text" style="color:var(--muted)">No locations yet. Pick a type, then tap the map.</div></div>';
         list.appendChild(li); return;
       }
       const u=auth.currentUser;
-      for(const loc of state.locations){
+      for(const loc of filtered){
         const li=document.createElement('li'); li.className='loc'; li.dataset.id=loc.id;
 
         // Title row
@@ -754,7 +979,13 @@
         // Actions row
         const actions=document.createElement('div'); actions.className='actions-row';
         const flyBtn=document.createElement('button'); flyBtn.textContent='View'; flyBtn.onclick=()=>{ map.flyTo([loc.lat,loc.lng],Math.max(map.getZoom(),15),{duration:0.7}); const m=state.markers.get(loc.id); if(m) m.openPopup(); };
-        actions.append(flyBtn);
+        const shareBtn=document.createElement('button'); shareBtn.textContent='📤 Share'; shareBtn.onclick=()=>{
+          const url=`${location.origin}${location.pathname}?pin=${loc.id}`;
+          const text=`${loc.title} — Lost Pins\n${url}`;
+          if(navigator.share){ navigator.share({title:loc.title,text,url}).catch(()=>{}); }
+          else { navigator.clipboard?.writeText(text); shareBtn.textContent='✓ Copied!'; setTimeout(()=>{shareBtn.textContent='📤 Share';},1500); }
+        };
+        actions.append(flyBtn,shareBtn);
         if(canEditLoc(loc)){
           const editBtn=document.createElement('button'); editBtn.textContent='Edit'; editBtn.onclick=()=>openEditModal(loc.id);
           const delBtn=document.createElement('button'); delBtn.textContent='Delete'; delBtn.className='danger'; delBtn.onclick=()=>confirmDelete(loc.id);
@@ -770,7 +1001,11 @@
         }
 
         // Meta row
-        const meta=document.createElement('div'); meta.className='meta'; meta.textContent=fmtLatLng(loc);
+        const meta=document.createElement('div'); meta.className='meta';
+        let metaText=fmtLatLng(loc);
+        if(loc.reward) metaText+=' · 💰 '+loc.reward;
+        if(loc.contact) metaText+=' · 📱 '+loc.contact;
+        meta.textContent=metaText;
 
         li.append(titleRow,actions,meta);
         list.appendChild(li);
@@ -778,15 +1013,256 @@
     }
 
     /* ---------- Feeds ---------- */
+    /* ---------- Printable Flyer ---------- */
+    function generateFlyer(pinId){
+      const loc=state.locations.find(x=>x.id===pinId); if(!loc) return;
+      const shareUrl=`${location.origin}${location.pathname}?pin=${loc.id}`;
+      const qrUrl=`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(shareUrl)}&bgcolor=ffffff&color=000000`;
+      const typeLabel=typeName(loc.type);
+      const statusColor=loc.status==='found'?'#2ecc71':loc.status==='lost'?'#e74c3c':'#f39c12';
+      const bannerColor=loc.type==='danger'?'#e74c3c':loc.type==='lostcat'?'#7aa2f7':loc.type==='lostdog'?'#f7b955':loc.type==='lostpet'?'#3ac97a':'#bb9af7';
+      const w=window.open('','_blank','width=800,height=1100');
+      if(!w){ alert('Please allow popups to print flyers.'); return; }
+      w.document.write(`<!DOCTYPE html><html><head><title>Lost Pins Flyer - ${escapeHtml(loc.title)}</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#fff;color:#222;padding:40px;max-width:800px;margin:0 auto}
+.banner{background:${bannerColor};color:#fff;text-align:center;padding:24px;border-radius:16px 16px 0 0;font-size:36px;font-weight:800;letter-spacing:2px;text-transform:uppercase}
+.card{border:3px solid ${bannerColor};border-radius:16px;overflow:hidden;margin-bottom:20px}
+.body{padding:24px;display:flex;gap:24px}
+.photo{width:280px;height:280px;object-fit:cover;border-radius:12px;border:2px solid #eee;flex-shrink:0}
+.no-photo{width:280px;height:280px;display:flex;align-items:center;justify-content:center;background:#f5f5f5;border-radius:12px;font-size:64px;flex-shrink:0}
+.details{flex:1;display:flex;flex-direction:column;gap:12px}
+.pet-name{font-size:28px;font-weight:700;color:#222}
+.desc{font-size:15px;line-height:1.5;color:#444;white-space:pre-wrap}
+.info-row{display:flex;gap:16px;flex-wrap:wrap}
+.info-pill{background:#f0f0f0;padding:6px 14px;border-radius:999px;font-size:14px;font-weight:600}
+.reward{background:#fff3cd;color:#856404;border:2px solid #ffc107;padding:12px 20px;border-radius:12px;font-size:20px;font-weight:700;text-align:center}
+.footer{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-top:2px dashed #eee}
+.qr-section{display:flex;align-items:center;gap:16px}
+.qr-section img{width:120px;height:120px}
+.qr-text{font-size:13px;color:#666;max-width:200px}
+.contact-big{font-size:24px;font-weight:800;color:${bannerColor};text-align:right}
+.contact-label{font-size:12px;color:#888;text-transform:uppercase;letter-spacing:1px}
+.status-bar{text-align:center;padding:8px;font-size:13px;font-weight:600;color:${statusColor};border-top:1px solid #eee}
+.tear-strips{display:flex;border-top:2px dashed #ccc;padding-top:8px}
+.tear-strip{flex:1;text-align:center;border-right:1px dashed #ccc;padding:8px 4px;font-size:11px;writing-mode:vertical-rl;height:100px}
+.tear-strip:last-child{border-right:none}
+.tear-strip b{font-size:13px;color:${bannerColor}}
+@media print{body{padding:20px} .no-break{page-break-inside:avoid}}
+</style></head><body>
+<div class="card no-break">
+  <div class="banner">${loc.type==='danger'?'⚠️ DANGER ZONE':loc.type.startsWith('lost')?'🔍 '+typeLabel.toUpperCase():'📋 '+typeLabel.toUpperCase()}</div>
+  <div class="body">
+    ${loc.photo?`<img class="photo" src="${loc.photo}" alt="Photo">`:'<div class="no-photo">📷</div>'}
+    <div class="details">
+      <div class="pet-name">${escapeHtml(loc.title||'(untitled)')}</div>
+      <div class="info-row">
+        <span class="info-pill">📍 ${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)}</span>
+        <span class="info-pill" style="background:${statusColor}20;color:${statusColor}">${statusLabel(loc.status)}</span>
+        ${loc.ownerUsername?`<span class="info-pill">👤 ${escapeHtml(loc.ownerUsername)}</span>`:''}
+      </div>
+      ${loc.description?`<div class="desc">${escapeHtml(loc.description)}</div>`:''}
+      ${loc.reward?`<div class="reward">💰 REWARD: ${escapeHtml(loc.reward)}</div>`:''}
+    </div>
+  </div>
+  <div class="footer">
+    <div class="qr-section">
+      <img src="${qrUrl}" alt="QR Code">
+      <div class="qr-text">Scan to view this pin on Lost Pins or visit:<br><b>${escapeHtml(shareUrl)}</b></div>
+    </div>
+    ${loc.contact?`<div><div class="contact-label">Contact</div><div class="contact-big">📱 ${escapeHtml(loc.contact)}</div></div>`:''}
+  </div>
+  <div class="status-bar">Posted on Lost Pins · ${new Date().toLocaleDateString()}</div>
+</div>
+${loc.contact?`
+<div class="tear-strips no-break">
+  ${'<div class="tear-strip"><b>'+escapeHtml(loc.contact)+'</b><br>'+escapeHtml(loc.title||'Lost')+'</div>'.repeat(7)}
+</div>`:''}
+</body></html>`);
+      w.document.close();
+      w.onload=()=>setTimeout(()=>w.print(),600);
+    }
+
+    /* ---------- Sightings ---------- */
+    async function loadSightings(pinId){
+      const container=document.getElementById('sightings-'+pinId); if(!container) return;
+      try{
+        const q=query(collection(db,'pins',pinId,'sightings'),orderBy('createdAt','desc'));
+        const snap=await getDocs(q);
+        if(snap.empty){ container.innerHTML='<div style="font-size:11px;color:var(--muted)">No sightings yet</div>'; return; }
+        container.innerHTML='<div style="font-size:11px;color:#7aa2f7;margin-bottom:4px">👁️ '+snap.size+' sighting'+(snap.size>1?'s':'')+':</div>';
+        snap.forEach(d=>{
+          const s=d.data();
+          const div=document.createElement('div'); div.className='sighting-item';
+          const ago=s.createdAt?timeAgo(s.createdAt):'just now';
+          const who=s.reporterName||'Someone';
+          div.innerHTML=`<span class="sighting-dot"></span><b>${escapeHtml(who)}</b> · ${ago}${s.note?' — '+escapeHtml(s.note.slice(0,100)):''}${s.lat?' · <a href="#" onclick="event.preventDefault();map.flyTo(['+s.lat+','+s.lng+'],16,{duration:0.5})">📍 view</a>':''}`;
+          container.appendChild(div);
+        });
+      }catch(e){ container.innerHTML=''; }
+    }
+
+    cancelSightingBtn.onclick=()=>{ sightingModal.hidden=true; state.sightingPinId=null; };
+    sightingModal.addEventListener('click',(e)=>{ if(e.target===sightingModal){ sightingModal.hidden=true; state.sightingPinId=null; }});
+    saveSightingBtn.onclick=async ()=>{
+      const pinId=state.sightingPinId; if(!pinId) return;
+      const user=auth.currentUser; if(!user) return;
+      const note=sightingNote.value.trim();
+      saveSightingBtn.disabled=true; saveSightingBtn.textContent='Submitting…';
+      try{
+        let lat=null,lng=null;
+        if(navigator.geolocation){
+          try{
+            const pos=await new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{timeout:5000}));
+            lat=pos.coords.latitude; lng=pos.coords.longitude;
+          }catch{}
+        }
+        await setDoc(doc(collection(db,'pins',pinId,'sightings')),{
+          note, lat, lng,
+          reporterUid:user.uid,
+          reporterName:user.displayName||user.email?.split('@')[0]||'Anonymous',
+          createdAt:serverTimestamp()
+        });
+        sightingModal.hidden=true; state.sightingPinId=null;
+        // Refresh sightings in popup
+        loadSightings(pinId);
+      }catch(e){ alert(e?.message||'Failed to submit sighting.'); }
+      saveSightingBtn.disabled=false; saveSightingBtn.textContent='Submit Sighting';
+    };
+
+    /* ---------- Browser Notifications ---------- */
+    const notifState={enabled:false,userLat:null,userLng:null,seenPins:new Set(),radiusKm:5};
+    const notifToggle=$('notifToggle'), notifRadius=$('notifRadius');
+
+    function haversineKm(lat1,lng1,lat2,lng2){
+      const R=6371; const dLat=(lat2-lat1)*Math.PI/180; const dLng=(lng2-lng1)*Math.PI/180;
+      const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+      return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+    }
+
+    async function enableNotifications(){
+      if(!('Notification' in window)){ alert('Your browser does not support notifications.'); return false; }
+      const perm=await Notification.requestPermission();
+      if(perm!=='granted'){ alert('Notification permission denied. Enable it in browser settings.'); return false; }
+      // Get user location
+      return new Promise(resolve=>{
+        navigator.geolocation?.getCurrentPosition(
+          pos=>{ notifState.userLat=pos.coords.latitude; notifState.userLng=pos.coords.longitude; resolve(true); },
+          ()=>{ notifState.userLat=null; notifState.userLng=null; resolve(true); }, // still enable, just no location filter
+          {enableHighAccuracy:true,timeout:8000}
+        );
+      });
+    }
+
+    function checkAndNotify(pin){
+      if(!notifState.enabled) return;
+      if(notifState.seenPins.has(pin.id)) return;
+      notifState.seenPins.add(pin.id);
+      // Skip own pins
+      const user=auth.currentUser; if(user && pin.ownerUid===user.uid) return;
+      // Distance check
+      if(notifState.radiusKm>0 && notifState.userLat!=null){
+        const d=haversineKm(notifState.userLat,notifState.userLng,pin.lat,pin.lng);
+        if(d>notifState.radiusKm) return;
+      }
+      // Show notification
+      const body=`${typeName(pin.type)} — ${pin.title||'New pin'}${pin.reward?' · 💰 '+pin.reward:''}`;
+      try{
+        const n=new Notification('🔍 New Pin Nearby',{
+          body, icon:pin.photo||undefined, tag:pin.id,
+          data:{pinId:pin.id,lat:pin.lat,lng:pin.lng}
+        });
+        n.onclick=()=>{ window.focus(); map.flyTo([pin.lat,pin.lng],16,{duration:0.8}); const m=state.markers.get(pin.id); if(m) setTimeout(()=>m.openPopup(),900); };
+      }catch{}
+    }
+
+    function updateNotifUI(){
+      if(notifToggle){
+        notifToggle.textContent=notifState.enabled?'🔔 Alerts: On':'🔔 Alerts: Off';
+        notifToggle.classList.toggle('active',notifState.enabled);
+      }
+    }
+
+    if(notifToggle) notifToggle.onclick=async()=>{
+      if(notifState.enabled){ notifState.enabled=false; updateNotifUI(); localStorage.setItem('lostpins_notif','off'); return; }
+      const ok=await enableNotifications();
+      if(ok){ notifState.enabled=true; updateNotifUI(); localStorage.setItem('lostpins_notif','on');
+        // Seed seen pins so we don't alert for existing ones
+        state.locations.forEach(p=>notifState.seenPins.add(p.id));
+      }
+    };
+    if(notifRadius) notifRadius.onchange=()=>{
+      notifState.radiusKm=parseInt(notifRadius.value)||0;
+      localStorage.setItem('lostpins_notif_radius',notifState.radiusKm);
+    };
+    // Restore notification prefs
+    if(localStorage.getItem('lostpins_notif')==='on'){
+      enableNotifications().then(ok=>{
+        if(ok){ notifState.enabled=true; state.locations.forEach(p=>notifState.seenPins.add(p.id)); updateNotifUI(); }
+      });
+    }
+    const savedRadius=localStorage.getItem('lostpins_notif_radius');
+    if(savedRadius!=null){ notifState.radiusKm=parseInt(savedRadius)||0; if(notifRadius) notifRadius.value=String(notifState.radiusKm); }
+
+    /* ---------- Time filter ---------- */
+    function applyTimeFilter(){
+      const now=Date.now();
+      const cutoff=state.filterHours>0 ? now-(state.filterHours*3600000) : 0;
+      for(const loc of state.locations){
+        const m=state.markers.get(loc.id); if(!m) continue;
+        const ts=loc.createdAt?.toMillis?loc.createdAt.toMillis():(loc.createdAt?.seconds?loc.createdAt.seconds*1000:now);
+        if(ts>=cutoff){ if(!map.hasLayer(m)) m.addTo(map); }
+        else { if(map.hasLayer(m)) map.removeLayer(m); }
+      }
+      renderList();
+    }
+    function isVisibleByFilter(loc){
+      if(state.filterHours<=0) return true;
+      const now=Date.now();
+      const cutoff=now-(state.filterHours*3600000);
+      const ts=loc.createdAt?.toMillis?loc.createdAt.toMillis():(loc.createdAt?.seconds?loc.createdAt.seconds*1000:now);
+      return ts>=cutoff;
+    }
+    if(timeFilter){
+      timeFilter.querySelectorAll('button').forEach(btn=>{
+        btn.onclick=()=>{
+          timeFilter.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+          btn.classList.add('active');
+          state.filterHours=parseInt(btn.dataset.hours)||0;
+          applyTimeFilter();
+        };
+      });
+    }
+
+    /* ---------- Deep link (?pin=ID) ---------- */
+    function checkDeepLink(){
+      const params=new URLSearchParams(location.search);
+      const pinId=params.get('pin');
+      if(!pinId) return;
+      const check=()=>{
+        const loc=state.locations.find(x=>x.id===pinId);
+        if(loc){
+          map.flyTo([loc.lat,loc.lng],16,{duration:0.8});
+          setTimeout(()=>{ const m=state.markers.get(loc.id); if(m) m.openPopup(); },900);
+          return true;
+        }
+        return false;
+      };
+      if(!check()) setTimeout(check,2000); // retry after data loads
+    }
+
     let unsubPins=null,unsubUsers=null;
     function startPinsFeed(){
       if(unsubPins) return;
       const qPins=query(collection(db,'pins'),orderBy('createdAt','desc'));
+      let isFirstSnap=true;
       unsubPins=onSnapshot(qPins,(snap)=>{
         const seen=new Set();
-        snap.forEach(d=>{ const p={id:d.id,...d.data()}; seen.add(p.id); upsertLocalPin(p); });
+        snap.forEach(d=>{ const p={id:d.id,...d.data()}; seen.add(p.id); upsertLocalPin(p); if(!isFirstSnap) checkAndNotify(p); });
+        isFirstSnap=false;
         for(const id of Array.from(state.markers.keys())) if(!seen.has(id)){ removeMarker(id); state.locations=state.locations.filter(x=>x.id!==id); }
-        renderList();
+        renderList(); applyTimeFilter();
       });
     }
     function stopFeeds(){ if(unsubPins){unsubPins();unsubPins=null;} if(unsubUsers){unsubUsers();unsubUsers=null;} }
@@ -949,6 +1425,10 @@
           {enableHighAccuracy:true,timeout:10000,maximumAge:300000}
         );
       }
+
+      // Deep link
+      setTimeout(checkDeepLink,1000);
+      applyLang();
     }
   </script>
 </body>

@@ -193,6 +193,19 @@
     .notif-radius{font-size:11px;color:var(--muted);margin-top:2px}
     .notif-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 
+    /* Avatars */
+    .avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;border:2px solid var(--border);flex-shrink:0}
+    .avatar-sm{width:20px;height:20px;border-radius:50%;object-fit:cover;border:1.5px solid var(--border);flex-shrink:0;vertical-align:middle}
+    .avatar-lg{width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid var(--border);cursor:pointer}
+    .avatar-placeholder{display:inline-flex;align-items:center;justify-content:center;background:#1a2744;color:#7aa2f7;font-weight:700;font-size:13px}
+    .avatar-placeholder.sm{font-size:10px}
+    .profile-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);margin-bottom:6px}
+    .profile-row .name{font-weight:600;font-size:14px}
+    .profile-row .email{font-size:11px;color:var(--muted)}
+    .profile-edit-btn{font-size:11px;padding:2px 8px;border-radius:999px;background:rgba(122,162,247,.1);
+      color:#7aa2f7;border:1px solid rgba(122,162,247,.2);cursor:pointer}
+    .profile-edit-btn:hover{background:rgba(122,162,247,.2)}
+
     /* Sightings list in popup */
     .sightings-list{margin-top:6px;max-height:120px;overflow:auto}
     .sighting-item{font-size:11px;color:var(--muted);padding:3px 0;border-bottom:1px dashed rgba(255,255,255,.06)}
@@ -229,6 +242,15 @@
           <div id="whoami" class="who"></div>
         </div>
         <button id="logoutBtn">Sign out</button>
+      </div>
+      <div class="profile-row" id="profileRow" style="display:none;padding:8px 16px">
+        <img id="profileAvatar" class="avatar-lg" src="" alt="" title="Click to change photo">
+        <div style="flex:1;min-width:0">
+          <div id="profileName" class="name"></div>
+          <div id="profileEmail" class="email"></div>
+        </div>
+        <button id="changeAvatarBtn" class="profile-edit-btn">📷 Change</button>
+        <input id="avatarInput" type="file" accept="image/*" style="display:none">
       </div>
       <div class="controls">
         <input id="searchInput" type="text" placeholder="Search a place (e.g., KAUST, Jeddah)" />
@@ -498,6 +520,9 @@
     const sightingModal=$('sightingModal'), sightingNote=$('sightingNote'),
       cancelSightingBtn=$('cancelSightingBtn'), saveSightingBtn=$('saveSightingBtn');
     const timeFilter=$('timeFilter');
+    const profileRow=$('profileRow'), profileAvatar=$('profileAvatar'),
+      profileName=$('profileName'), profileEmail=$('profileEmail'),
+      changeAvatarBtn=$('changeAvatarBtn'), avatarInput=$('avatarInput');
 
     const pinHint=$('pinHint');
 
@@ -646,6 +671,84 @@
     const savedLang=localStorage.getItem('lostpins_lang');
     if(savedLang&&i18n[savedLang]) state.lang=savedLang;
     applyLang();
+
+    /* ---------- Avatars ---------- */
+    let myAvatarB64=null; // current user's avatar as small base64
+
+    function avatarHtml(src,name,cls='avatar'){
+      if(src) return `<img class="${cls}" src="${src}" alt="">`;
+      const initial=(name||'?').charAt(0).toUpperCase();
+      const sizeClass=cls.includes('sm')?'sm':'';
+      return `<span class="${cls} avatar-placeholder ${sizeClass}">${initial}</span>`;
+    }
+
+    async function urlToBase64(url,size=64){
+      return new Promise((resolve)=>{
+        const img=new Image();
+        img.crossOrigin='anonymous';
+        img.onload=()=>{
+          const c=document.createElement('canvas'); c.width=size; c.height=size;
+          const ctx=c.getContext('2d'); ctx.drawImage(img,0,0,size,size);
+          resolve(c.toDataURL('image/jpeg',0.8));
+        };
+        img.onerror=()=>resolve(null);
+        img.src=url;
+      });
+    }
+
+    async function processAvatarFile(file){
+      return new Promise((resolve,reject)=>{
+        const reader=new FileReader();
+        reader.onload=(e)=>{
+          const img=new Image();
+          img.onload=()=>{
+            const c=document.createElement('canvas'); c.width=64; c.height=64;
+            const ctx=c.getContext('2d');
+            const s=Math.min(img.width,img.height);
+            const sx=(img.width-s)/2, sy=(img.height-s)/2;
+            ctx.drawImage(img,sx,sy,s,s,0,0,64,64);
+            resolve(c.toDataURL('image/jpeg',0.8));
+          };
+          img.onerror=()=>reject(new Error('Invalid image'));
+          img.src=e.target.result;
+        };
+        reader.onerror=()=>reject(new Error('Read failed'));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function updateProfileUI(user,avatarSrc){
+      if(!profileRow) return;
+      profileRow.style.display='flex';
+      profileName.textContent=user.displayName||user.email?.split('@')[0]||'';
+      profileEmail.textContent=user.email||'';
+      if(avatarSrc){
+        profileAvatar.src=avatarSrc; profileAvatar.style.display='';
+      } else {
+        profileAvatar.src=''; profileAvatar.style.display='none';
+      }
+    }
+
+    // Avatar upload handlers
+    if(changeAvatarBtn) changeAvatarBtn.onclick=()=>avatarInput?.click();
+    if(profileAvatar) profileAvatar.onclick=()=>avatarInput?.click();
+    if(avatarInput) avatarInput.onchange=async(e)=>{
+      const f=e.target.files?.[0]; if(!f) return;
+      try{
+        const b64=await processAvatarFile(f);
+        myAvatarB64=b64;
+        const user=auth.currentUser; if(!user) return;
+        await updateDoc(doc(db,'users',user.uid),{avatarB64:b64});
+        updateProfileUI(user,b64);
+        // Update existing pins with new avatar
+        const myPins=state.locations.filter(p=>p.ownerUid===user.uid);
+        for(const p of myPins){
+          try{ await updateDoc(doc(db,'pins',p.id),{ownerAvatar:b64}); }catch{}
+        }
+      }catch(err){ alert('Could not process image: '+err.message); }
+      avatarInput.value='';
+    };
+
     const clampZoom=(z)=>Math.max(1,Math.min(19,z|0));
 
     /* ---------- Search & locate ---------- */
@@ -792,6 +895,7 @@
         title,description,type,lat,lng,photo:photo||null,
         contact:contact||null,reward:reward||null,
         ownerUid:uid,ownerEmail:email,ownerUsername:user.displayName||email.split('@')[0],
+        ownerAvatar:myAvatarB64||null,
         status:'open',resolvedAt:null,resolvedBy:null,
         createdAt:serverTimestamp(),slot:slot||null
       });
@@ -866,6 +970,7 @@
     function markerPopupHtml(loc,canEdit){
       const img=loc.photo?`<img class="popup-img" src="${loc.photo}" alt="" style="width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:6px">`:'';
       const who=loc.ownerUsername||loc.ownerEmail?.split('@')[0]||'';
+      const av=loc.ownerAvatar;
       const acts=[];
       if(canEdit){
         if(loc.status!=='found') acts.push(`<a href="#" data-action="found" data-id="${loc.id}">Mark Found</a>`);
@@ -882,7 +987,7 @@
 
       return `<div style="min-width:260px;max-width:320px">${img}
         <div style="font-weight:600;font-size:15px;margin-bottom:4px">${escapeHtml(loc.title||'(untitled)')}</div>
-        ${who?`<div style="font-size:12px;margin-bottom:4px"><span style="background:rgba(122,162,247,.12);color:#bdd6ff;padding:2px 7px;border-radius:999px;border:1px solid rgba(122,162,247,.2)">👤 ${escapeHtml(who)}</span></div>`:''}
+        ${who?`<div style="font-size:12px;margin-bottom:4px;display:flex;align-items:center;gap:6px">${avatarHtml(av,who,'avatar-sm')}<span style="background:rgba(122,162,247,.12);color:#bdd6ff;padding:2px 7px;border-radius:999px;border:1px solid rgba(122,162,247,.2)">${escapeHtml(who)}</span></div>`:''}
         <div style="color:#9aa3ad;font-size:12px;margin-bottom:6px">
           ${typeName(loc.type)} · <span class="status-pill ${statusClass(loc.status)}">${statusLabel(loc.status)}</span>
         </div>
@@ -970,8 +1075,10 @@
         const titleRow=document.createElement('div'); titleRow.className='title-row';
         const titleText=document.createElement('div'); titleText.className='title-text';
         const who=loc.ownerUsername||loc.ownerEmail?.split('@')[0]||'';
-        const whoTag=(who?` <span class="who" style="margin-left:6px;color:#7aa2f7;font-size:12px">👤 ${escapeHtml(who)}</span>`:'');
-        titleText.innerHTML = `${escapeHtml(loc.title||'(untitled)')}${whoTag}`;
+        const avSrc=loc.ownerAvatar||'';
+        const avTag=avatarHtml(avSrc,who,'avatar-sm');
+        const whoTag=(who?` <span class="who" style="margin-left:4px;color:#7aa2f7;font-size:12px">${escapeHtml(who)}</span>`:'');
+        titleText.innerHTML = `<span style="display:inline-flex;align-items:center;gap:5px">${avTag}${escapeHtml(loc.title||'(untitled)')}${whoTag}</span>`;
         const typeBadge=document.createElement('span'); typeBadge.className=`badge ${typeClass(loc.type)}`; typeBadge.textContent=typeName(loc.type);
         const statusPill=document.createElement('span'); statusPill.className=`status-pill ${statusClass(loc.status)}`; statusPill.textContent=statusLabel(loc.status);
         titleRow.append(titleText, typeBadge, statusPill);
@@ -1097,7 +1204,8 @@ ${loc.contact?`
           const div=document.createElement('div'); div.className='sighting-item';
           const ago=s.createdAt?timeAgo(s.createdAt):'just now';
           const who=s.reporterName||'Someone';
-          div.innerHTML=`<span class="sighting-dot"></span><b>${escapeHtml(who)}</b> · ${ago}${s.note?' — '+escapeHtml(s.note.slice(0,100)):''}${s.lat?' · <a href="#" onclick="event.preventDefault();map.flyTo(['+s.lat+','+s.lng+'],16,{duration:0.5})">📍 view</a>':''}`;
+          const sAvatar=s.reporterAvatar||'';
+          div.innerHTML=`${avatarHtml(sAvatar,who,'avatar-sm')} <b>${escapeHtml(who)}</b> · ${ago}${s.note?' — '+escapeHtml(s.note.slice(0,100)):''}${s.lat?' · <a href="#" onclick="event.preventDefault();map.flyTo(['+s.lat+','+s.lng+'],16,{duration:0.5})">📍 view</a>':''}`;
           container.appendChild(div);
         });
       }catch(e){ container.innerHTML=''; }
@@ -1122,6 +1230,7 @@ ${loc.contact?`
           note, lat, lng,
           reporterUid:user.uid,
           reporterName:user.displayName||user.email?.split('@')[0]||'Anonymous',
+          reporterAvatar:myAvatarB64||null,
           createdAt:serverTimestamp()
         });
         sightingModal.hidden=true; state.sightingPinId=null;
@@ -1362,6 +1471,7 @@ ${loc.contact?`
 
       if(!user){
         document.body.classList.remove('auth'); whoami.textContent=''; whoamiTop.textContent='';
+        myAvatarB64=null; if(profileRow) profileRow.style.display='none';
         return;
       }
       if(!isAllowedEmail(user.email)){ gateError.innerHTML=`This account (<b>${user.email}</b>) isn’t allowed. Use your KAUST account.`; await signOut(auth); return; }
@@ -1407,6 +1517,24 @@ ${loc.contact?`
       whoamiTop.textContent=user.email+(tags.length?' • '+tags.join(' • '):'');
 
       updateUsersButtons();
+
+      // Load/create avatar
+      const existingAvatar=udoc.data()?.avatarB64||null;
+      const existingUrl=udoc.data()?.avatarUrl||null;
+      if(existingAvatar){
+        myAvatarB64=existingAvatar;
+      } else if(user.photoURL){
+        // Store Google photo URL as fallback
+        const photoUrl=user.photoURL.replace(/=s\d+/,'=s64');
+        if(!existingUrl){ await updateDoc(doc(db,'users',user.uid),{avatarUrl:photoUrl}).catch(()=>{}); }
+        // Try to convert to base64 for offline/inline use
+        try{
+          const b64=await urlToBase64(photoUrl,64);
+          if(b64){ myAvatarB64=b64; await updateDoc(doc(db,'users',user.uid),{avatarB64:b64}).catch(()=>{}); }
+          else { myAvatarB64=photoUrl; } // use URL directly
+        }catch{ myAvatarB64=photoUrl; }
+      }
+      updateProfileUI(user,myAvatarB64);
 
       // presence heartbeat
       try{ await updateDoc(doc(db,'users',user.uid),{lastActiveAt:serverTimestamp()}); }catch{}

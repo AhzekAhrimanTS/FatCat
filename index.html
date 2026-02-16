@@ -57,8 +57,9 @@
     html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);
       font-family:var(--font);font-weight:400;font-size:15px;-webkit-font-smoothing:antialiased}
 
-    #app{display:grid;grid-template-columns:var(--sidebar-w) 1fr;grid-template-rows:auto 1fr;height:100vh}
+    #app{display:grid;grid-template-columns:var(--sidebar-w) 1fr;grid-template-rows:auto auto 1fr;height:100vh}
     #resourceBar{grid-column:1/-1}
+    #filterBar{grid-column:1/-1}
     #sidebar{background:var(--bg-elev);border-right:1px solid var(--border);display:flex;flex-direction:column;
       min-width:calc(var(--sidebar-w) - 40px)}
     #map{height:100%;width:100%}
@@ -78,17 +79,29 @@
     .xp-bar-wrap{width:80px;height:5px;background:var(--border);border-radius:999px;overflow:hidden}
     .xp-bar-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--pink));border-radius:999px;transition:width .6s ease}
 
+    /* ═══ FILTER BAR ═══ */
+    #filterBar{background:var(--bg-elev);border-bottom:1px solid var(--border);padding:8px 16px;
+      display:flex;align-items:center;gap:12px;box-shadow:var(--shadow-sm);overflow-x:auto;scrollbar-width:none}
+    #filterBar::-webkit-scrollbar{display:none}
+    .filter-section{display:flex;align-items:center;gap:6px;flex-shrink:0}
+    .filter-section.filter-search{flex:0 0 auto}
+    .filter-section.filter-search input{width:180px;padding:7px 12px;border-radius:999px;border:1px solid var(--border-strong);
+      background:var(--bg);color:var(--fg);font-family:var(--font);font-size:13px;transition:all .2s}
+    .filter-section.filter-search input:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px rgba(255,107,107,.1);width:220px}
+    .filter-section.filter-search button{padding:7px 10px;border-radius:999px;font-size:14px;min-width:36px}
+    .filter-modes button{padding:6px 12px;border-radius:999px;font-size:12px;font-weight:600}
+    .filter-time button{padding:5px 10px;border-radius:999px;font-size:11px;font-weight:600}
+    .filter-time button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+    .filter-right{margin-left:auto;gap:6px}
+    .notif-select{font-size:11px;padding:5px 6px;background:var(--bg);color:var(--fg);border:1px solid var(--border-strong);
+      border-radius:999px;font-family:var(--font);cursor:pointer}
+    .filter-sep{width:1px;height:24px;background:var(--border);flex-shrink:0}
+
     .brand{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
     .brand .title{font-family:var(--font-display);font-weight:800;font-size:20px;
       background:linear-gradient(135deg,var(--accent),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
     .brand .who{display:block;font-size:12px;color:var(--muted);margin-top:2px}
     .brand .left{display:flex;flex-direction:column}
-
-    .controls{padding:12px 16px;border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr auto;gap:8px}
-    .controls input[type="text"]{background:var(--bg);border:1px solid var(--border-strong);color:var(--fg);
-      padding:10px 14px;border-radius:var(--radius);font-family:var(--font);font-size:14px;transition:all .2s}
-    .controls input[type="text"]:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px rgba(255,107,107,.12)}
-    .controls .row{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 
     button,label.btn{background:var(--bg);border:1px solid var(--border-strong);color:var(--fg);
       padding:8px 14px;border-radius:var(--radius);cursor:pointer;font-size:13px;font-family:var(--font);
@@ -143,6 +156,7 @@
     body.auth #gate{display:none}
     body:not(.auth) #app{filter:blur(6px);pointer-events:none;user-select:none}
     body:not(.auth) #resourceBar{display:none}
+    body:not(.auth) #filterBar{display:none}
 
     .modal-backdrop[hidden]{display:none}
     .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);display:grid;place-items:center;z-index:3000;padding:16px;
@@ -211,6 +225,7 @@
     @media(max-width:1040px){
       #app{grid-template-columns:1fr;grid-template-rows:auto auto 1fr}
       #sidebar{display:none}
+      #filterBar{display:none}
       #topbar{display:flex}
       #bottomBar{display:grid}
       #map{height:100vh}
@@ -226,10 +241,6 @@
     #inAppWarning{display:none;position:fixed;bottom:64px;left:0;right:0;z-index:1300;
       background:#fef2f2;color:#dc2626;border-top:1px solid #fca5a5;padding:10px 14px;font-size:13px;font-weight:500}
     .leaflet-container{background:#e8e8e8}
-
-    .time-filter{display:flex;gap:6px;flex-wrap:wrap;grid-column:1/-1}
-    .time-filter button{font-size:12px;padding:6px 12px;border-radius:999px}
-    .time-filter button.active{background:var(--accent);border-color:var(--accent);color:#fff}
 
     .reward-badge{display:inline-block;font-size:12px;padding:3px 10px;border-radius:999px;
       background:var(--orange-light);color:#b45309;border:1px solid #fde68a;font-weight:600}
@@ -254,14 +265,14 @@
       font-weight:700;box-shadow:var(--shadow);transition:all .2s}
     .lang-toggle:hover{background:var(--bg)}
     [dir="rtl"] .sidebar{direction:rtl;text-align:right}
-    [dir="rtl"] .controls input{text-align:right}
+    [dir="rtl"] .filter-section input{text-align:right}
+    [dir="rtl"] .filter-right{margin-left:0;margin-right:auto}
     [dir="rtl"] .type-group{direction:rtl}
     [dir="rtl"] .lang-toggle{right:auto;left:16px}
 
-    .notif-toggle{background:var(--bg-elev);border:1px solid var(--border-strong);border-radius:var(--radius);padding:5px 12px;
-      font-size:15px;cursor:pointer;color:var(--muted);transition:all .15s}
+    .notif-toggle{background:var(--bg-elev);border:1px solid var(--border-strong);border-radius:999px;padding:6px 10px;
+      font-size:14px;cursor:pointer;color:var(--muted);transition:all .15s;line-height:1}
     .notif-toggle.active{color:var(--orange);border-color:var(--orange);background:var(--orange-light)}
-    .notif-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 
     .avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.1);flex-shrink:0}
     .avatar-sm{width:22px;height:22px;border-radius:50%;object-fit:cover;border:2px solid #fff;box-shadow:0 1px 2px rgba(0,0,0,.08);flex-shrink:0;vertical-align:middle}
@@ -335,13 +346,11 @@
     [data-theme="dark"] .status-open{background:var(--blue-light);color:var(--blue);border-color:rgba(91,155,255,.25)}
     [data-theme="dark"] .status-found{background:var(--green-light);color:var(--green);border-color:rgba(61,214,118,.25)}
     [data-theme="dark"] .status-lost{background:var(--purple-light);color:var(--purple);border-color:rgba(180,122,255,.25)}
-    [data-theme="dark"] .leaflet-container{background:#181c22}
     [data-theme="dark"] #topbar{background:rgba(26,29,36,.92)}
     [data-theme="dark"] #bottomBar{background:rgba(26,29,36,.92)}
     [data-theme="dark"] .leaflet-tooltip.pin-tooltip{background:var(--bg-elev);color:var(--fg);border-color:var(--border-strong)}
     [data-theme="dark"] .modal{background:var(--bg-elev);border-color:var(--border-strong)}
     [data-theme="dark"] .modal input[type="text"],[data-theme="dark"] .modal textarea{background:var(--bg);border-color:var(--border-strong);color:var(--fg)}
-    [data-theme="dark"] .controls input[type="text"]{background:var(--bg);border-color:var(--border-strong)}
 
     /* Theme toggle */
     .theme-toggle{position:fixed;bottom:16px;right:72px;z-index:9999;background:var(--bg-elev);color:var(--fg);
@@ -387,14 +396,49 @@
         <div class="xp-bar-wrap"><div class="xp-bar-fill" id="xpBarFill" style="width:0%"></div></div>
       </div>
     </div>
-    <!-- Desktop sidebar -->
+    <!-- Horizontal filter bar -->
+    <div id="filterBar">
+      <div class="filter-section filter-search">
+        <input id="searchInput" type="text" placeholder="Search a place…" />
+        <button id="searchBtn" title="Find place">🔍</button>
+        <button id="locateBtn" title="Center on my location">📍</button>
+      </div>
+      <div class="filter-section filter-modes">
+        <button id="modeCatBtn"   class="mode-btn cat"><span class="dot"></span>Cat</button>
+        <button id="modeDogBtn"   class="mode-btn dog"><span class="dot"></span>Dog</button>
+        <button id="modePetBtn"   class="mode-btn pet"><span class="dot"></span>Pet</button>
+        <button id="modeItemBtn"  class="mode-btn item"><span class="dot"></span>Item</button>
+        <button id="modeDangerBtn" class="mode-btn dang"><span class="dot"></span>Danger</button>
+      </div>
+      <div class="filter-section filter-time" id="timeFilter">
+        <button data-hours="24">24h</button>
+        <button data-hours="168">Week</button>
+        <button data-hours="720">Month</button>
+        <button data-hours="0" class="active">All</button>
+      </div>
+      <div class="filter-section filter-right">
+        <button id="notifToggle" class="notif-toggle" title="Get alerts for new pins nearby">🔔</button>
+        <select id="notifRadius" class="notif-select">
+          <option value="2">2 km</option>
+          <option value="5" selected>5 km</option>
+          <option value="10">10 km</option>
+          <option value="25">25 km</option>
+          <option value="50">50 km</option>
+          <option value="0">Any</option>
+        </select>
+        <button id="openUsersBtn" style="display:none">👥</button>
+        <button id="deleteAllBtn" class="danger" style="font-size:12px">🗑️ My Pins</button>
+      </div>
+    </div>
+
+    <!-- Desktop sidebar (list only) -->
     <aside id="sidebar">
       <div class="brand">
         <div class="left">
           <div class="title">Lost Pins</div>
           <div id="whoami" class="who"></div>
         </div>
-        <button id="logoutBtn">Sign out</button>
+        <button id="logoutBtn" style="font-size:12px">Sign out</button>
       </div>
       <div class="profile-row" id="profileRow" style="display:none;padding:8px 16px">
         <img id="profileAvatar" class="avatar-lg" src="" alt="" title="Click to change photo">
@@ -404,39 +448,6 @@
         </div>
         <button id="changeAvatarBtn" class="profile-edit-btn">📷 Change</button>
         <input id="avatarInput" type="file" accept="image/*" style="display:none">
-      </div>
-      <div class="controls">
-        <input id="searchInput" type="text" placeholder="Search a place (e.g., KAUST, Jeddah)" />
-        <button id="searchBtn" title="Find place">Search</button>
-        <div class="row">
-          <button id="locateBtn" title="Center on my location">Locate me</button>
-          <button id="deleteAllBtn" class="danger">Delete All Pins (mine)</button>
-          <button id="openUsersBtn" style="display:none">Users</button>
-        </div>
-        <div class="row">
-          <button id="modeCatBtn"   class="mode-btn cat"><span class="dot"></span>Lost Cat</button>
-          <button id="modeDogBtn"   class="mode-btn dog"><span class="dot"></span>Lost Dog</button>
-          <button id="modePetBtn"   class="mode-btn pet"><span class="dot"></span>Lost Pet</button>
-          <button id="modeItemBtn"  class="mode-btn item"><span class="dot"></span>Lost Item</button>
-          <button id="modeDangerBtn" class="mode-btn dang"><span class="dot"></span>Danger</button>
-        </div>
-        <div class="time-filter" id="timeFilter">
-          <button data-hours="24">Last 24h</button>
-          <button data-hours="168">This week</button>
-          <button data-hours="720">This month</button>
-          <button data-hours="0" class="active">All time</button>
-        </div>
-        <div class="notif-row">
-          <button id="notifToggle" class="notif-toggle" title="Get alerts for new pins nearby">🔔 Alerts: Off</button>
-          <select id="notifRadius" style="font-size:12px;padding:4px;background:var(--panel);color:var(--fg);border:1px solid var(--border);border-radius:6px">
-            <option value="2">2 km</option>
-            <option value="5" selected>5 km</option>
-            <option value="10">10 km</option>
-            <option value="25">25 km</option>
-            <option value="50">50 km</option>
-            <option value="0">Any distance</option>
-          </select>
-        </div>
       </div>
       <ul id="locationList"></ul>
     </aside>
@@ -692,9 +703,7 @@
     const VIEW_KEY='pinboard.mapview.v5';
     const savedView=JSON.parse(localStorage.getItem(VIEW_KEY)||"null");
     const map=L.map('map',{center:savedView?[savedView.lat,savedView.lng]:[20,0],zoom:savedView?Math.max(1,Math.min(19,savedView.zoom|0)):2,worldCopyJump:true});
-    let currentTiles=L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap &copy; CARTO',subdomains:'abcd'}).addTo(map);
-    const TILE_LIGHT='https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-    const TILE_DARK='https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap &copy; CARTO',subdomains:'abcd'}).addTo(map);
     map.on('moveend',()=>{const c=map.getCenter();localStorage.setItem(VIEW_KEY,JSON.stringify({lat:c.lat,lng:c.lng,zoom:map.getZoom()}));});
 
     /* Auto-locate on first visit (no saved view) */
@@ -788,11 +797,10 @@
       const loginTitle=document.querySelector('#loginScreen h2'); if(loginTitle) loginTitle.textContent=t('loginTitle');
       const loginSub=document.querySelector('#loginScreen p'); if(loginSub) loginSub.textContent=t('loginSubtitle');
       const loginBtn=document.querySelector('#googleBtn'); if(loginBtn) loginBtn.textContent=t('signIn');
-      // Sidebar controls
+      // Filter bar controls (keep icons for search/locate)
       const si=$('searchInput'); if(si) si.placeholder=t('search');
-      const sb=$('searchBtn'); if(sb) sb.textContent=t('searchBtn');
-      const lb=$('locateBtn'); if(lb) lb.textContent=t('locateMe');
-      const da=$('deleteAllBtn'); if(da) da.textContent=t('deleteAll');
+      // searchBtn and locateBtn keep their emoji labels
+      const da=$('deleteAllBtn'); if(da) da.innerHTML='🗑️ '+t('deleteAll');
       const ub=$('openUsersBtn'); if(ub) ub.textContent=t('users');
       const lo=$('logoutBtn'); if(lo) lo.textContent=t('signOut');
       // Mode buttons
@@ -834,10 +842,6 @@
       document.documentElement.setAttribute('data-theme',theme);
       if(themeToggle) themeToggle.textContent=theme==='dark'?'☀️':'🌙';
       if(themeToggle) themeToggle.title=theme==='dark'?'Switch to light mode':'Switch to dark mode';
-      // Swap map tiles
-      const url=theme==='dark'?TILE_DARK:TILE_LIGHT;
-      if(currentTiles) map.removeLayer(currentTiles);
-      currentTiles=L.tileLayer(url,{maxZoom:19,attribution:'&copy; OpenStreetMap &copy; CARTO',subdomains:'abcd'}).addTo(map);
     }
     // Restore saved theme
     const savedTheme=localStorage.getItem('lostpins_theme')||(window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
